@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+
+# Environment
+.env
+
+# OpenClaw agent-maintained files (diverge between local and remote)
+workspace/MEMORY.md
+workspace/memory/
+workspace/BOOT.md
+workspace/HEARTBEAT.md
+workspace/BOOTSTRAP.md
+
+# Archives pulled from droplet (large, reproducible)
+workspace/archives/neurotech/*.md
+workspace/archives/neurotech/*.json
+!workspace/archives/neurotech/.gitkeep
+
+# Local test output
+dev/sample_output/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# MLflow (future)
+mlruns/
+mlartifacts/
+mlflow.db
