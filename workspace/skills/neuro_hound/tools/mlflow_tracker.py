@@ -120,6 +120,7 @@ def log_run(
         artifact_patterns = [
             (f"{today}.md", "report"),
             (f"{today}.html", "report"),
+            ("dashboard.html", "dashboard"),
             (f"{today}.alerts.json", "alerts"),
             (f"{today}.full.json", "results"),
         ]
