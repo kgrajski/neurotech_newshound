@@ -332,6 +332,12 @@ This project shares design patterns with [trading_etf](https://github.com/kgrajs
 
 ---
 
+## Article
+
+[Your Next Research Assistant May Be a Config File](https://www.linkedin.com/pulse/your-next-research-assistant-may-config-file-kamil-grajski-iypne/) — LinkedIn article introducing the project, architecture, and design philosophy.
+
+---
+
 ## License
 
 MIT
