@@ -10,14 +10,17 @@ Built with [LangGraph](https://github.com/langchain-ai/langgraph). Deployed on [
 
 Each week, the agent:
 
-1. **Fetches** recent publications from PubMed and preprints from bioRxiv/medRxiv
+1. **Fetches** from 15 sources — PubMed, journal RSS feeds (Nature Neuroscience, J Neural Engineering, Neuron, ...), preprint servers (bioRxiv, medRxiv, arXiv), general press (NYT, FT, STAT News), FDA MedWatch, and Tavily wideband search
 2. **Pre-filters** with domain-specific regex patterns (fast, free, deterministic)
-3. **Scores** each candidate with an LLM that understands neuroscience — assessing relevance, categorizing, and flagging vaporware
-4. **Clusters** scored items into 2–5 themes with significance ratings
-5. **Writes** an executive brief (TL;DR, themes, alerts, what-to-watch)
-6. **Reviews** the brief via a Reflection Pattern — a reviewer LLM critiques the analysis and adjusts scores
+3. **Deduplicates** against a history of previously-scored items — skips confirmed low-value repeats, re-evaluates high-value items
+4. **Scores** each candidate with an LLM that understands neuroscience — assessing relevance, categorizing, and flagging vaporware
+5. **Clusters** scored items into 2–5 themes with significance ratings
+6. **Writes** an executive brief (TL;DR, themes, alerts, what-to-watch)
+7. **Reviews** the brief via a Reflection Pattern — a reviewer LLM critiques the analysis and adjusts scores
+8. **Produces** a polished HTML report, markdown report, alerts JSON, and full results JSON
+9. **Logs** to MLflow — parameters, token/cost metrics, per-source yield, and report artifacts
 
-The entire pipeline runs in ~2 minutes and costs ~$0.005 per run with `gpt-4o-mini`.
+The entire pipeline runs in ~3 minutes and costs ~$0.008 per run with `gpt-4o-mini`.
 
 ---
 
@@ -25,20 +28,23 @@ The entire pipeline runs in ~2 minutes and costs ~$0.005 per run with `gpt-4o-mi
 
 ```mermaid
 flowchart TD
-    subgraph fetch ["Phase 1: Fetch (no LLM)"]
-        A["fetch_pubmed<br>(NCBI E-utilities)"] --> C["prefilter<br>(regex triage)"]
-        B["fetch_rss<br>(bioRxiv · medRxiv)"] --> C
+    subgraph fetch ["Fetch (no LLM cost)"]
+        A["fetch_pubmed<br>(NCBI E-utilities)"] --> D["save_registry<br>(source stats)"]
+        B["fetch_rss<br>(13 feeds: journals, preprints,<br>press, FDA)"] --> D
+        C["fetch_tavily<br>(wideband search)"] --> D
     end
 
-    C -->|"conditional edge<br>(skip if empty)"| D
+    D --> E["prefilter<br>(regex + dedup)"]
 
-    subgraph llm ["Phase 2: LLM Pipeline"]
-        D["score_items<br>(LLM × N items)"] --> E["summarize_themes<br>(cluster into themes)"]
-        E --> F["write_brief<br>(executive briefing)"]
-        F --> G["review<br>(Reflection Pattern)"]
+    E -->|"conditional edge<br>(skip if empty)"| F
+
+    subgraph llm ["LLM Pipeline"]
+        F["score_items<br>(LLM × N items)"] --> G["summarize_themes<br>(cluster into themes)"]
+        G --> H["write_brief<br>(executive briefing)"]
+        H --> I["review<br>(Reflection Pattern)"]
     end
 
-    G --> H["Report · Alerts · JSON"]
+    I --> J["HTML Report · Markdown<br>Alerts JSON · MLflow"]
 
     style fetch fill:#f0f4f8,stroke:#4a90d9
     style llm fill:#fff3e0,stroke:#e67e22
@@ -46,8 +52,10 @@ flowchart TD
 
 ### Design Patterns
 
-- **Two-Stage Scoring**: Regex pre-filter (free, ~70 → ~25 items) followed by LLM assessment with domain-aware judgment. This keeps costs near-zero while leveraging LLM reasoning where it matters.
+- **Two-Stage Scoring**: Regex pre-filter (free, ~300 → ~50 items) followed by LLM assessment with domain-aware judgment. Keeps costs near-zero while leveraging LLM reasoning where it matters.
+- **Deduplication**: Hash-based history tracks every scored item. Items scored < 7 in prior runs are skipped (confirmed low-value). Items ≥ 7 are re-evaluated (things evolve — a preprint becomes a publication, a trial advances).
 - **Reflection Pattern**: The reviewer node critiques the executive brief, checks calibration of significance ratings, flags missed connections, and calls out vaporware — mimicking a PI reviewing a research associate's work.
+- **Source Registry**: JSON-persisted registry tracks per-source yield stats (items fetched, in-scope count, last hit date). Supports auto-discovery of new sources via Tavily and cold-source pruning.
 - **Conditional Edge**: If nothing passes the regex pre-filter (quiet week), the LLM pipeline is skipped entirely. No API cost on empty weeks.
 - **Multi-Model Routing**: Different LLMs for analysis vs. review (e.g., `gpt-4o-mini` for bulk scoring, `gpt-4o` for critical review). Configurable via CLI or environment variables.
 
@@ -55,23 +63,29 @@ flowchart TD
 
 ## Sample Output
 
-From a real run (2026-02-16, 7-day lookback):
+From a real run (2026-02-16, 7-day lookback, 15 sources):
 
 | Metric | Value |
 |--------|-------|
-| Raw items fetched | 70 |
-| After regex pre-filter | 27 |
-| LLM-scored items | 27 |
-| Priority alerts (9–10) | 1 |
-| Themes identified | 4 |
-| LLM calls | 30 |
-| Total tokens | 21,895 |
-| Cost | $0.005 |
-| Duration | ~2 min |
+| Raw items fetched | 293 |
+| Sources active | 15 |
+| After regex pre-filter | 53 |
+| LLM-scored items | 53 |
+| Priority alerts (9–10) | 6 |
+| Themes identified | 4 (1 breakthrough) |
+| LLM calls | 56 |
+| Total tokens | 36,115 |
+| Cost | $0.008 |
+| Duration | ~3 min |
 
-**Alert detected**: *"At-home movement state classification using totally implantable cortical-basal ganglia neural interface"* — scored 9/10 (implantable_bci). First-in-human, at-home classification of movement states using a fully implantable neural interface for Parkinson's disease.
+**Alerts detected** (from Tavily wideband — not in any curated RSS feed):
+- *"Neuralink competitor Paradromics completes first human brain implant"* — score 9 (implantable_bci)
+- *"Brain-Computer Interface Clinical Trials - Johns Hopkins Medicine"* — score 9 (implantable_bci)
+- *"Precision Neuroscience receives FDA clearance for brain implant"* — score 9 (regulatory)
 
-The LLM correctly scored 19 of 27 pre-filtered items as `out_of_scope` (PubMed's broad query pulls in oncology papers with "ECOG" performance status — the LLM distinguishes this from ECoG electrocorticography).
+**Theme: "Advancements in Implantable BCIs"** — rated **breakthrough** (11 items from PubMed, Tavily, STAT News).
+
+The LLM correctly distinguished `ECOG` (oncology performance status) from `ECoG` (electrocorticography) — scoring the former as 1/out_of_scope and the latter as 7-8/ecog_seeg.
 
 ---
 
@@ -89,17 +103,22 @@ neurotech_newshound/
 │   │       ├── graph.py               # LangGraph StateGraph definition
 │   │       ├── requirements.txt       # Python dependencies
 │   │       ├── nodes/                 # Graph nodes (one file per node)
-│   │       │   ├── fetch.py           #   PubMed + RSS fetchers
-│   │       │   ├── prefilter.py       #   Regex pre-filter
+│   │       │   ├── fetch.py           #   PubMed + RSS + Tavily fetchers
+│   │       │   ├── prefilter.py       #   Regex pre-filter + dedup
 │   │       │   ├── score.py           #   LLM per-item scoring
 │   │       │   ├── summarize.py       #   Theme clustering + executive brief
-│   │       │   └── review.py          #   Reflection (reviewer critique)
+│   │       │   └── review.py          #   Reflection + dedup history update
 │   │       └── tools/                 # Shared utilities
 │   │           ├── http.py            #   HTTP + SSL helper
 │   │           ├── pubmed.py          #   PubMed E-utilities client
-│   │           ├── rss.py             #   RSS feed parser
+│   │           ├── rss.py             #   Registry-driven RSS/Atom parser
+│   │           ├── tavily.py          #   Tavily wideband search
+│   │           ├── sources.py         #   Source registry (JSON persistence)
 │   │           ├── scoring.py         #   Regex scoring patterns
-│   │           └── llm.py             #   LLM factory + usage tracker
+│   │           ├── dedup.py           #   Deduplication history
+│   │           ├── llm.py             #   LLM factory + usage tracker
+│   │           ├── html_report.py     #   HTML report generator
+│   │           └── mlflow_tracker.py  #   MLflow experiment logging
 │   └── archives/neurotech/            # Reports land here (on droplet)
 ├── dev/
 │   ├── test_run.py                    # Local test runner
@@ -114,15 +133,39 @@ neurotech_newshound/
 
 ---
 
+## Data Sources
+
+### Curated (15 sources)
+
+| Category | Sources |
+|----------|---------|
+| **Database** | [PubMed](https://pubmed.ncbi.nlm.nih.gov/) (NCBI E-utilities) |
+| **Journals** | Nature Neuroscience, Nature Biomedical Engineering, J Neural Engineering, Neuron, Science Robotics |
+| **Preprints** | [bioRxiv](https://www.biorxiv.org/) (neuroscience), [medRxiv](https://www.medrxiv.org/), [arXiv](https://arxiv.org/) q-bio.NC |
+| **Press** | NYT Science, NYT Health, FT Technology, [STAT News](https://www.statnews.com/) |
+| **Regulatory** | [FDA MedWatch](https://www.fda.gov/safety/medwatch-fda-safety-information-and-adverse-event-reporting-program) |
+| **Search** | [Tavily](https://tavily.com/) wideband (5 neurotech queries) |
+
+### Auto-Discovery
+
+Tavily results are analyzed for domains that yield multiple high-scoring items. These can be proposed as new curated sources. The registry caps at 40 sources and prunes cold (30-day no-hit) discovered sources automatically.
+
+All data sources except Tavily and LLMs are free and require no API keys.
+
+---
+
 ## Scoring
 
-### Two-Stage Pipeline
+### Three-Stage Pipeline
 
 **Stage 1 — Regex Pre-filter** (free, deterministic):
 Broad pattern matching keeps items mentioning BCIs, ECoG, sEEG, intracortical recording, microstimulation, etc. Removes obvious non-matches before any API calls.
 
-**Stage 2 — LLM Scoring** (per-item, domain-aware):
-Each pre-filtered item gets an individual LLM call with a neuroscience-specific prompt. The LLM returns a score, category, assessment, and vaporware flag.
+**Stage 2 — Deduplication** (free, history-based):
+Items previously scored < 7 are skipped. Items ≥ 7 are re-evaluated. First-time items always scored.
+
+**Stage 3 — LLM Scoring** (per-item, domain-aware):
+Each remaining item gets an individual LLM call with a neuroscience-specific prompt. The LLM returns a score, category, assessment, and vaporware flag.
 
 | Score | Meaning | Examples |
 |-------|---------|----------|
@@ -144,11 +187,12 @@ Each pre-filtered item gets an individual LLM call with a neuroscience-specific 
 
 - Python 3.11+
 - An [OpenAI](https://platform.openai.com/) API key (for `gpt-4o-mini`). Gemini and Claude also supported.
+- Optional: [Tavily](https://tavily.com/) API key (for wideband search)
 
 ### Setup
 
 ```bash
-git clone https://github.com/your-username/neurotech_newshound.git
+git clone https://github.com/kgrajski/neurotech_newshound.git
 cd neurotech_newshound
 
 pip install -r workspace/skills/neuro_hound/requirements.txt
@@ -170,9 +214,17 @@ python dev/test_run.py --days 7 --model gpt-4o
 ```
 
 Output goes to `dev/sample_output/`:
-- `YYYY-MM-DD.md` — Full report with executive brief
+- `YYYY-MM-DD.html` — Polished HTML intelligence briefing
+- `YYYY-MM-DD.md` — Markdown report with executive brief
 - `YYYY-MM-DD.alerts.json` — Priority items (score 9–10)
 - `YYYY-MM-DD.full.json` — Machine-readable results + usage metrics
+
+### View MLflow Results
+
+```bash
+mlflow ui --port 5000
+# Open http://127.0.0.1:5000
+```
 
 ### Deploy to OpenClaw Droplet
 
@@ -191,26 +243,16 @@ bash scripts/fetch_reports.sh
 
 ---
 
-## Data Sources
-
-| Source | Type | API Key Required |
-|--------|------|:---:|
-| [PubMed](https://pubmed.ncbi.nlm.nih.gov/) (NCBI E-utilities) | Peer-reviewed articles | No |
-| [bioRxiv](https://www.biorxiv.org/) | Neuroscience preprints | No |
-| [medRxiv](https://www.medrxiv.org/) | Clinical preprints | No |
-
-All sources are free and require no API keys. Only the LLM scoring/synthesis step requires an API key.
-
----
-
 ## Technologies
 
 | Layer | Technologies |
 |-------|-------------|
 | **Agentic AI** | LangGraph, LangChain |
 | **LLMs** | GPT-4o-mini (default), GPT-4o, Gemini 2.0 Flash, Claude (multi-model routing) |
-| **Data Sources** | PubMed E-utilities, bioRxiv/medRxiv RSS |
-| **NLP** | Regex pre-filter, LLM-based domain scoring |
+| **Data Sources** | PubMed E-utilities, RSS/Atom (13 feeds), Tavily Search |
+| **NLP** | Regex pre-filter, LLM-based domain scoring, deduplication |
+| **Observability** | MLflow (params, metrics, artifacts per run) |
+| **Output** | HTML report, Markdown, JSON, MLflow artifacts |
 | **Deployment** | OpenClaw, rsync, Digital Ocean |
 | **Development** | Cursor IDE, Python 3.11+, python-dotenv |
 
@@ -221,8 +263,10 @@ All sources are free and require no API keys. Only the LLM scoring/synthesis ste
 | Phase | What | Status |
 |-------|------|--------|
 | **1** | Pure Python: PubMed + RSS fetch, regex scoring, markdown report | Done |
-| **2** | LangGraph pipeline: LLM scoring, thematic synthesis, executive brief, reflection | **Active** |
-| 3 | MLflow integration: run metrics, cost tracking, artifact logging, experiment comparison | Planned |
+| **2** | LangGraph pipeline: LLM scoring, thematic synthesis, executive brief, reflection | Done |
+| **3** | Source expansion: 15 sources (journals, press, FDA, Tavily wideband search) | Done |
+| **4** | HTML report, MLflow observability, deduplication | **Done** |
+| 5 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
 
 This project shares design patterns with [trading_etf](https://github.com/kgrajski/trading_etf), an ETF trading system with an agentic AI analyst — same LangGraph architecture, Reflection Pattern, and multi-model routing approach applied to a different domain.
 
