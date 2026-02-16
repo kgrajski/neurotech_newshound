@@ -1,6 +1,7 @@
-"""Review node — Reflection Pattern (LLM critiques the brief)."""
+"""Review node — Reflection Pattern (LLM critiques the brief) + dedup update."""
 from state import HoundState
 from tools.llm import create_llm, invoke_llm, parse_json
+from tools.dedup import update_history, save_history
 
 
 def review(state: HoundState) -> HoundState:
@@ -108,5 +109,12 @@ Respond in JSON:
     except Exception as e:
         state["errors"].append(f"Review: {e}")
         state["review"] = {"assessment": "ERROR", "reviewer_notes": str(e)}
+
+    # Update dedup history with all scored items (after reviewer adjustments)
+    history = state.get("_dedup_history")
+    if history is not None:
+        update_history(history, state.get("scored_items", []))
+        save_history(history)
+        print(f"  Dedup history updated: {len(history)} items tracked")
 
     return state

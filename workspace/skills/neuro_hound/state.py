@@ -31,6 +31,7 @@ class HoundState(TypedDict):
     # --- Source management ---
     _registry: Optional[Dict[str, Any]]       # Source registry (transient, not serialized)
     source_discoveries: List[Dict[str, Any]]  # Domains discovered via Tavily
+    _dedup_history: Optional[Dict[str, Any]]  # Dedup history (transient, not serialized)
 
     # --- Metadata ---
     errors: List[str]

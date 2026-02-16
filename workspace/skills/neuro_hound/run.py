@@ -125,6 +125,7 @@ def run_phase2(args, out_dir: str):
         "review": None,
         "_registry": None,
         "source_discoveries": [],
+        "_dedup_history": None,
         "errors": [],
         "usage": {},
     }

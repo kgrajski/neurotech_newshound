@@ -23,8 +23,9 @@ workspace/archives/neurotech/*.json
 # Local test output
 dev/sample_output/
 
-# Source registry (runtime stats, regenerated from defaults)
+# Runtime data (regenerated each run)
 workspace/skills/neuro_hound/sources.json
+workspace/skills/neuro_hound/seen_items.json
 
 # OS
 .DS_Store
