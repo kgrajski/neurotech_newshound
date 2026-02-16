@@ -6,6 +6,7 @@
 #   bash scripts/fetch_reports.sh
 #
 # Pulls archives/neurotech/ from the droplet into workspace/archives/neurotech/.
+# Includes HTML reports, dashboard, markdown, JSON, and alert files.
 
 set -euo pipefail
 
@@ -40,13 +41,26 @@ echo ""
 echo "=== Fetch complete ==="
 
 # Show what we got
-REPORT_COUNT=$(find "$LOCAL_ARCHIVES" -name "*.md" -not -name ".gitkeep" | wc -l | tr -d ' ')
-ALERT_COUNT=$(find "$LOCAL_ARCHIVES" -name "*.alerts.json" | wc -l | tr -d ' ')
-echo "  Reports: ${REPORT_COUNT}"
-echo "  Alert files: ${ALERT_COUNT}"
+REPORT_COUNT=$(find "$LOCAL_ARCHIVES" -name "*.md" -not -name ".gitkeep" 2>/dev/null | wc -l | tr -d ' ')
+HTML_COUNT=$(find "$LOCAL_ARCHIVES" -name "*.html" -not -name "dashboard.html" 2>/dev/null | wc -l | tr -d ' ')
+ALERT_COUNT=$(find "$LOCAL_ARCHIVES" -name "*.alerts.json" 2>/dev/null | wc -l | tr -d ' ')
+JSON_COUNT=$(find "$LOCAL_ARCHIVES" -name "*.full.json" 2>/dev/null | wc -l | tr -d ' ')
+HAS_DASHBOARD="no"
+[[ -f "${LOCAL_ARCHIVES}dashboard.html" ]] && HAS_DASHBOARD="yes"
 
-# Show most recent
-LATEST=$(find "$LOCAL_ARCHIVES" -name "*.md" -not -name ".gitkeep" | sort -r | head -1)
+echo "  Markdown reports: ${REPORT_COUNT}"
+echo "  HTML reports:     ${HTML_COUNT}"
+echo "  Alert files:      ${ALERT_COUNT}"
+echo "  Full JSON:        ${JSON_COUNT}"
+echo "  Dashboard:        ${HAS_DASHBOARD}"
+
+# Show most recent and offer to open
+LATEST=$(find "$LOCAL_ARCHIVES" -name "*.html" -not -name "dashboard.html" 2>/dev/null | sort -r | head -1)
 if [[ -n "$LATEST" ]]; then
+    echo ""
     echo "  Latest: $(basename "$LATEST")"
+    echo ""
+    echo "To view:"
+    echo "  open \"${LATEST}\""
+    [[ "$HAS_DASHBOARD" == "yes" ]] && echo "  open \"${LOCAL_ARCHIVES}dashboard.html\""
 fi

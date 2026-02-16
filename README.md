@@ -67,6 +67,11 @@ flowchart TD
 
 ## Sample Output
 
+**Browse the actual output from a real run:**
+
+- [**HTML Intelligence Briefing**](docs/samples/report.html) — the full report with executive brief, themes, alerts, and scored items
+- [**Operational Dashboard**](docs/samples/dashboard.html) — source health, config, run metrics, dedup history
+
 From a real run (2026-02-16, 7-day lookback, 21 sources):
 
 | Metric | Value |
@@ -126,12 +131,17 @@ neurotech_newshound/
 │   │           ├── html_dashboard.py  #   Operational dashboard generator
 │   │           └── mlflow_tracker.py  #   MLflow experiment logging
 │   └── archives/neurotech/            # Reports land here (on droplet)
+├── docs/
+│   └── samples/                       # Sample output for README viewers
+│       ├── report.html                #   HTML intelligence briefing
+│       └── dashboard.html             #   Operational dashboard
 ├── dev/
 │   ├── test_run.py                    # Local test runner
 │   └── sample_output/                 # Local test output (gitignored)
 ├── scripts/
 │   ├── deploy.sh                      # rsync workspace → droplet
-│   └── fetch_reports.sh               # rsync reports ← droplet
+│   ├── fetch_reports.sh               # rsync reports ← droplet
+│   └── run_remote.sh                  # Deploy + run + fetch in one command
 ├── .env.example
 ├── .gitignore
 └── README.md

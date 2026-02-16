@@ -17,6 +17,7 @@ workspace/BOOTSTRAP.md
 
 # Archives pulled from droplet (large, reproducible)
 workspace/archives/neurotech/*.md
+workspace/archives/neurotech/*.html
 workspace/archives/neurotech/*.json
 !workspace/archives/neurotech/.gitkeep
 

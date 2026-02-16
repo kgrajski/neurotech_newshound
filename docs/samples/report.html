@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NeuroTech NewsHound — 2026-02-16</title>
+<style>
+:root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent-gold: #f0c040;
+    --accent-blue: #58a6ff;
+    --accent-red: #f85149;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+}
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+/* Header */
+.header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px;
+}
+.header h1 {
+    font-size: 1.6rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent-gold), var(--accent-blue));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.header .date { color: var(--muted); font-size: 0.95rem; }
+
+/* Stat bar */
+.stat-bar {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    padding: 16px 20px; background: var(--surface); border-radius: 8px;
+    margin-bottom: 24px; border: 1px solid var(--border);
+}
+.stat { text-align: center; }
+.stat .val { font-size: 1.4rem; font-weight: 700; color: var(--accent-gold); }
+.stat .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Executive brief */
+.brief-box {
+    background: var(--surface); border-radius: 8px; padding: 20px;
+    margin-bottom: 24px; border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-blue);
+}
+.brief-box h2 { font-size: 1.1rem; color: var(--accent-blue); margin-bottom: 12px; }
+.brief-box p, .brief-box li { color: var(--text); font-size: 0.92rem; margin-bottom: 8px; }
+
+/* Themes */
+.themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.theme-card {
+    background: var(--surface); border-radius: 8px; padding: 16px;
+    border: 1px solid var(--border);
+}
+.theme-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.theme-name { font-weight: 600; font-size: 0.95rem; }
+.badge {
+    font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    color: #fff; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.theme-narrative { color: var(--muted); font-size: 0.85rem; margin-bottom: 8px; }
+.theme-items { font-size: 0.75rem; color: var(--muted); }
+
+/* Alerts */
+.alerts-section { margin-bottom: 24px; }
+.alerts-section h2 { font-size: 1.1rem; color: var(--accent-red); margin-bottom: 12px; }
+.alert-card {
+    display: flex; gap: 16px; background: var(--surface); border-radius: 8px;
+    padding: 16px; margin-bottom: 12px; border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-red);
+}
+.alert-score {
+    min-width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1.1rem; color: #fff; flex-shrink: 0;
+}
+.alert-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+.alert-assessment { color: var(--muted); font-size: 0.85rem; margin: 6px 0; }
+.alert-link { color: var(--accent-blue); text-decoration: none; font-size: 0.85rem; }
+.alert-link:hover { text-decoration: underline; }
+
+/* Category badges */
+.cat-badge {
+    font-size: 0.65rem; font-weight: 600; padding: 2px 6px; border-radius: 6px;
+    color: #fff; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap;
+}
+
+/* Items table */
+.items-section { margin-bottom: 24px; }
+.items-section h2 { font-size: 1.1rem; color: var(--text); margin-bottom: 12px; }
+.items-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.items-table th {
+    text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--border);
+    color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.items-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.items-table tr:hover { background: rgba(88, 166, 255, 0.05); }
+.items-table a { color: var(--accent-blue); text-decoration: none; }
+.items-table a:hover { text-decoration: underline; }
+.score-pill {
+    display: inline-block; min-width: 28px; padding: 2px 8px; border-radius: 12px;
+    text-align: center; color: #fff; font-weight: 700; font-size: 0.8rem;
+}
+.assessment-cell { color: var(--muted); max-width: 300px; }
+.source-cell { color: var(--muted); white-space: nowrap; }
+.vaporware {
+    background: var(--accent-red); color: #fff; font-size: 0.6rem;
+    padding: 1px 5px; border-radius: 4px; font-weight: 700; vertical-align: middle;
+}
+.muted { color: var(--muted); font-style: italic; }
+
+/* Review */
+.review-box {
+    background: var(--surface); border-radius: 8px; padding: 16px;
+    margin-bottom: 24px; border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-gold);
+}
+.review-header {
+    display: flex; justify-content: space-between; margin-bottom: 8px;
+    font-weight: 600; color: var(--accent-gold);
+}
+.review-quality { font-size: 0.85rem; }
+.review-box p { color: var(--muted); font-size: 0.88rem; margin-bottom: 6px; }
+.review-picks { font-size: 0.85rem; }
+
+/* Sources */
+.sources-bar { margin-bottom: 24px; }
+.sources-bar h3 { font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; }
+.source-chip {
+    display: inline-block; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 3px 10px; margin: 3px 4px 3px 0; font-size: 0.75rem;
+    color: var(--muted);
+}
+.source-chip b { color: var(--text); }
+
+/* Footer */
+.footer {
+    text-align: center; padding: 16px 0; margin-top: 24px;
+    border-top: 1px solid var(--border); color: var(--muted); font-size: 0.75rem;
+}
+.footer a { color: var(--accent-blue); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+    <h1>NeuroTech NewsHound</h1>
+    <div class="date">Intelligence Briefing — 2026-02-16</div>
+</div>
+
+<div class="stat-bar">
+    <div class="stat"><div class="val">485</div><div class="label">Fetched</div></div>
+    <div class="stat"><div class="val">27</div><div class="label">In-Scope</div></div>
+    <div class="stat"><div class="val">27</div><div class="label">Scored</div></div>
+    <div class="stat"><div class="val" style="color:var(--accent-red)">4</div><div class="label">Alerts</div></div>
+    <div class="stat"><div class="val">4</div><div class="label">Themes</div></div>
+    <div class="stat"><div class="val">21,620</div><div class="label">Tokens</div></div>
+    <div class="stat"><div class="val">$0.0052</div><div class="label">Cost</div></div>
+    <div class="stat"><div class="val">122s</div><div class="label">Duration</div></div>
+</div>
+
+<div class="brief-box">
+    <h2>Executive Brief</h2>
+    <h2>NeuroTech Intelligence Briefing</h2>
+<h3>TL;DR</h3>
+<p>This week marked a pivotal moment for implantable brain-computer interfaces (BCIs) with significant advancements, including multiple first-in-human trials and FDA clearances. The growing regulatory support and influx of funding signal a transformative period for neurotechnology, with implications for treating neurological disorders.</p>
+<h3>Themes</h3>
+<h4>Advancements in Implantable BCIs</h4>
+<p><strong>What&#x27;s new:</strong> Neuralink and Paradromics achieved first-in-human implantations of their BCIs, while other trials demonstrated promising results in communication and movement classification.</p>
+<p><strong>Why it matters:</strong> These milestones not only validate the safety and efficacy of these technologies but also enhance the potential for improving the quality of life for individuals with severe disabilities.</p>
+<h4>Regulatory Milestones</h4>
+<p><strong>What&#x27;s new:</strong> The FDA granted clearances for several BCI devices, including the first wireless cortical interface.</p>
+<p><strong>Why it matters:</strong> Regulatory support is crucial for accelerating the clinical application of neurotechnologies, which can lead to innovative treatments for neurological conditions.</p>
+<h4>Innovations in Neurostimulation and Monitoring</h4>
+<p><strong>What&#x27;s new:</strong> Research has advanced techniques in intracranial EEG and optogenetics, enhancing our understanding of brain function and surgical outcomes.</p>
+<p><strong>Why it matters:</strong> These innovations are essential for developing more effective treatment strategies and improving patient outcomes in neurology.</p>
+<h4>Funding and Investment in Neurotechnology</h4>
+<p><strong>What&#x27;s new:</strong> The neurotechnology sector saw a surge in funding, highlighted by Synchron&#x27;s $200 million raise.</p>
+<p><strong>Why it matters:</strong> Increased investment is likely to drive rapid advancements in BCI technologies, fostering innovation that can significantly benefit patients with neurological impairments.</p>
+<h3>Priority Alerts</h3>
+<ul>
+<li><strong>[9] Precise Robotically IMplanted Brain-Computer InterfacE:</strong> The PRIME Study represents a critical first-in-human trial for Neuralink&#x27;s N1 Implant, focusing on clinical safety and device functionality.</li>
+<li><strong>[9] Results from a First-in-Human “Intelligent BCI” Trial:</strong> This trial emphasizes the ethical implications of patient autonomy in BCI applications, a crucial consideration as technology advances.</li>
+<li><strong>[9] Brain-Computer Interface Clinical Trials:</strong> The focus on stable decoding for communication in patients with muscular weakness is a significant step forward for BCI technology.</li>
+<li><strong>[9] Neuralink competitor Paradromics completes first human implant:</strong> This achievement underscores the competitive landscape in neurotechnology and the importance of safe neural recordings.</li>
+<li><strong>[9] FDA Clears Brain–Computer Interface Device for the Measurement ...:</strong> The approval of the Layer 7 Cortical Interface could catalyze further developments in wireless BCI applications.</li>
+<li><strong>[9] At-home movement state classification using totally implantable cortical-basal g:</strong> This research highlights the potential for closed-loop neuromodulation in real-world settings, crucial for treating conditions like Parkinson&#x27;s disease.</li>
+</ul>
+<h3>What to Watch</h3>
+<p>1. Monitor the outcomes of the ongoing clinical trials for implantable BCIs, particularly those focusing on communication and mobility.</p>
+<p>2. Keep an eye on further FDA approvals and regulatory developments that could impact the deployment of new neurotechnologies.</p>
+<p>3. Watch for trends in funding and investment within the neurotechnology sector, as these will likely influence the pace of innovation and market competition.</p>
+</div>
+
+<h2 style="font-size:1.1rem; margin-bottom:12px;">Themes</h2>
+<div class="themes">
+        <div class="theme-card">
+            <div class="theme-header">
+                <span class="theme-name">Advancements in Implantable BCIs</span>
+                <span class="badge" style="background:#e74c3c">BREAKTHROUGH</span>
+            </div>
+            <p class="theme-narrative">This week saw significant milestones in the field of implantable brain-computer interfaces (BCIs), with multiple first-in-human trials and FDA clearances. Notably, Neuralink and Paradromics both achieved human implantations, marking a pivotal moment in neurotechnology that could enhance communication and mobility for patients with severe disabilities.</p>
+            <span class="theme-items">9 items</span>
+        </div>
+        <div class="theme-card">
+            <div class="theme-header">
+                <span class="theme-name">Regulatory Milestones</span>
+                <span class="badge" style="background:#f39c12">NOTABLE</span>
+            </div>
+            <p class="theme-narrative">The FDA&#x27;s recent approvals for several brain-computer interface devices highlight the growing regulatory support for neurotechnology innovations. These clearances not only validate the safety and efficacy of these devices but also pave the way for broader clinical applications, potentially transforming the treatment landscape for neurological disorders.</p>
+            <span class="theme-items">4 items</span>
+        </div>
+        <div class="theme-card">
+            <div class="theme-header">
+                <span class="theme-name">Innovations in Neurostimulation and Monitoring</span>
+                <span class="badge" style="background:#f39c12">NOTABLE</span>
+            </div>
+            <p class="theme-narrative">Recent research has advanced our understanding of neurostimulation and monitoring techniques, particularly through the use of intracranial EEG and optogenetics. These innovations are crucial for improving surgical outcomes and enhancing our understanding of brain function, which can lead to better treatment strategies for neurological conditions.</p>
+            <span class="theme-items">9 items</span>
+        </div>
+        <div class="theme-card">
+            <div class="theme-header">
+                <span class="theme-name">Funding and Investment in Neurotechnology</span>
+                <span class="badge" style="background:#f39c12">NOTABLE</span>
+            </div>
+            <p class="theme-narrative">The neurotechnology sector is witnessing a surge in funding, with Synchron raising $200 million and significant investments flowing into various brain-computer interface startups. This influx of capital is expected to accelerate innovation and development in the field, potentially leading to breakthroughs that can improve the quality of life for individuals with neurological impairments.</p>
+            <span class="theme-items">3 items</span>
+        </div></div>
+
+<div class="alerts-section">
+    <h2>Priority Alerts</h2>
+    
+            <div class="alert-card">
+                <div class="alert-score" style="background:#e74c3c">9</div>
+                <div class="alert-body">
+                    <div class="alert-title">Precise Robotically IMplanted Brain-Computer InterfacE</div>
+                    <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
+                    <p class="alert-assessment">The PRIME Study represents a first-in-human trial for the Neuralink N1 Implant, which is a significant milestone in the field of implantable brain-computer interfaces. Its focus on clinical safety and device functionality is critical for advancing neurotechnology applications.</p>
+                    <a href="https://clinicaltrials.gov/study/NCT06429735" target="_blank" class="alert-link">Tavily (clinicaltrials.gov) &rarr;</a>
+                </div>
+            </div>
+            <div class="alert-card">
+                <div class="alert-score" style="background:#e74c3c">9</div>
+                <div class="alert-body">
+                    <div class="alert-title">Results from a First-in-Human “Intelligent BCI” Trial</div>
+                    <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
+                    <p class="alert-assessment">This research item discusses a first-in-human trial of an intelligent BCI, which is highly relevant to the NeuroTech field as it addresses the clinical application and implications of implantable BCIs. The focus on patient autonomy and sense of self adds significant ethical considerations to the advancement of this technology.</p>
+                    <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6418065/" target="_blank" class="alert-link">Tavily (pmc.ncbi.nlm.nih.gov) &rarr;</a>
+                </div>
+            </div>
+            <div class="alert-card">
+                <div class="alert-score" style="background:#e74c3c">9</div>
+                <div class="alert-body">
+                    <div class="alert-title">Brain-Computer Interface Clinical Trials</div>
+                    <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
+                    <p class="alert-assessment">This research item focuses on a clinical trial for an implantable brain-computer interface (BCI) aimed at improving communication for patients with muscular weakness, which is highly relevant to the NeuroTech field. The study&#x27;s emphasis on stable decoding without recalibration for an extended period is significant for advancing BCI technology.</p>
+                    <a href="https://www.hopkinsmedicine.org/neurology-neurosurgery/clinical-trials/brain-computer-interface" target="_blank" class="alert-link">Tavily (www.hopkinsmedicine.org) &rarr;</a>
+                </div>
+            </div>
+            <div class="alert-card">
+                <div class="alert-score" style="background:#e74c3c">9</div>
+                <div class="alert-body">
+                    <div class="alert-title">Neuralink competitor Paradromics completes first human implant</div>
+                    <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
+                    <p class="alert-assessment">This research item reports on Paradromics successfully implanting its brain-computer interface in a human for the first time, marking a significant milestone in the NeuroTech field. The ability to safely implant and record neural activity is crucial for advancing BCI technology.</p>
+                    <a href="https://www.cnbc.com/2025/06/02/neuralink-paradromics-human-implant.html" target="_blank" class="alert-link">Tavily (www.cnbc.com) &rarr;</a>
+                </div>
+            </div>
+</div>
+
+
+        <div class="review-box">
+            <div class="review-header">
+                <span>Reviewer: NEEDS_REVISION</span>
+                <span class="review-quality">Quality: 7/10</span>
+            </div>
+            <p>The briefing highlights significant advancements in the BCI field, but some assessments may be overly optimistic regarding immediate impacts. The ethical considerations surrounding patient autonomy in BCI applications should be emphasized. Overall, the report is solid but could benefit from a deeper analysis of the implications of these advancements.</p>
+            <p class="review-picks"><strong>Top picks:</strong> Neuralink&#x27;s N1 Implant trial (PRIME Study), FDA clearance of Layer 7 Cortical Interface, Synchron&#x27;s $200 million funding round</p>
+        </div>
+
+<div class="sources-bar">
+    <h3>Sources (20 active)</h3>
+    <span class="source-chip">pubmed <b>40</b></span><span class="source-chip">nature <b>40</b></span><span class="source-chip">science <b>40</b></span><span class="source-chip">neuron <b>40</b></span><span class="source-chip">ieee_tnsre <b>40</b></span><span class="source-chip">nejm <b>40</b></span><span class="source-chip">nyt_science <b>37</b></span><span class="source-chip">biorxiv_neuro <b>30</b></span><span class="source-chip">lancet_neuro <b>26</b></span><span class="source-chip">ft_tech <b>25</b></span><span class="source-chip">tavily_wideband <b>25</b></span><span class="source-chip">nyt_health <b>20</b></span><span class="source-chip">stat_news <b>20</b></span><span class="source-chip">fda_medwatch <b>20</b></span><span class="source-chip">jne <b>10</b></span><span class="source-chip">nature_neuro <b>8</b></span><span class="source-chip">nature_bme <b>8</b></span><span class="source-chip">sci_transl_med <b>7</b></span><span class="source-chip">arxiv_qbio_nc <b>7</b></span><span class="source-chip">sci_robotics <b>2</b></span>
+</div>
+
+<div class="items-section">
+    <h2>All Scored Items (27)</h2>
+    <table class="items-table">
+        <thead><tr>
+            <th>Score</th><th>Category</th><th>Title</th><th>Assessment</th><th>Source</th>
+        </tr></thead>
+        <tbody>
+            <tr>
+                <td><span class="score-pill" style="background:#e74c3c">9</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://clinicaltrials.gov/study/NCT06429735" target="_blank">Precise Robotically IMplanted Brain-Computer InterfacE</a></td>
+                <td class="assessment-cell">The PRIME Study represents a first-in-human trial for the Neuralink N1 Implant, which is a significant milestone in the field of implantable brain-com</td>
+                <td class="source-cell">Tavily (clinicaltrials.gov)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#e74c3c">9</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6418065/" target="_blank">Results from a First-in-Human “Intelligent BCI” Trial</a></td>
+                <td class="assessment-cell">This research item discusses a first-in-human trial of an intelligent BCI, which is highly relevant to the NeuroTech field as it addresses the clinica</td>
+                <td class="source-cell">Tavily (pmc.ncbi.nlm.nih.gov)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#e74c3c">9</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://www.hopkinsmedicine.org/neurology-neurosurgery/clinical-trials/brain-computer-interface" target="_blank">Brain-Computer Interface Clinical Trials</a></td>
+                <td class="assessment-cell">This research item focuses on a clinical trial for an implantable brain-computer interface (BCI) aimed at improving communication for patients with mu</td>
+                <td class="source-cell">Tavily (www.hopkinsmedicine.org)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#e74c3c">9</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://www.cnbc.com/2025/06/02/neuralink-paradromics-human-implant.html" target="_blank">Neuralink competitor Paradromics completes first human implant</a></td>
+                <td class="assessment-cell">This research item reports on Paradromics successfully implanting its brain-computer interface in a human for the first time, marking a significant mi</td>
+                <td class="source-cell">Tavily (www.cnbc.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8 *</span></td>
+                <td><span class="cat-badge" style="background:#e67e22">regulatory</span></td>
+                <td><a href="https://practicalneurology.com/news/fda-clears-braincomputer-interface-device-for-the-measurement-and-stimulation-of-cortical-brain-activity/2474229/" target="_blank">FDA Clears Brain–Computer Interface Device for the Measurement ...</a></td>
+                <td class="assessment-cell">The FDA clearance of the Layer 7 Cortical Interface represents a significant milestone in the neurotechnology field, as it is the first wireless BCI d</td>
+                <td class="source-cell">Tavily (practicalneurology.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://pubmed.ncbi.nlm.nih.gov/41687696/" target="_blank">Stimulus-driven and behavior-driving activity along the cortical auditory hierarchy.</a></td>
+                <td class="assessment-cell">This study utilizes intracranial electroencephalography (iEEG) to investigate auditory processing in the human cortex, which is relevant to understand</td>
+                <td class="source-cell">PubMed</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://www.nature.com/articles/s41597-021-01099-z" target="_blank">Intracranial electrophysiological recordings from the human brain ...</a></td>
+                <td class="assessment-cell">This research item focuses on intracranial EEG (iEEG) recordings using stereo EEG (sEEG) from human subjects, which is highly relevant to the NeuroTec</td>
+                <td class="source-cell">Tavily (www.nature.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://www.sciencedirect.com/science/article/abs/pii/S0928425704000348" target="_blank">Intracranial EEG and human brain mapping - ScienceDirect.com</a></td>
+                <td class="assessment-cell">This paper reviews the use of intracranial electro-encephalography (iEEG) for understanding the neural basis of human cognition, which is directly rel</td>
+                <td class="source-cell">Tavily (www.sciencedirect.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#9b59b6">stimulation</span></td>
+                <td><a href="https://www.cell.com/neuron/fulltext/S0896-6273(25)00928-6?rss=yes" target="_blank">A mesoscale optogenetics system for precise and robust stimulation of the primate cortex</a></td>
+                <td class="assessment-cell">This research presents a novel optogenetic system for precise cortical stimulation in primates, which is highly relevant for advancing brain-computer </td>
+                <td class="source-cell">Neuron</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#e67e22">regulatory</span></td>
+                <td><a href="https://www.medtechdive.com/news/precision-neuroscience-brain-implant-fda-cleared/745913/" target="_blank">Precision Neuroscience receives FDA clearance for brain implant</a></td>
+                <td class="assessment-cell">This research item reports on Precision Neuroscience receiving FDA clearance for an electrode array intended for brain mapping, which is a significant</td>
+                <td class="source-cell">Tavily (www.medtechdive.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#e67e22">regulatory</span></td>
+                <td><a href="https://www.cnbc.com/2025/04/17/brain-implant-cleared-fda-musk-neuralink-rival-precision-neuroscience.html" target="_blank">Brain implant cleared by FDA for Musk Neuralink rival Precision</a></td>
+                <td class="assessment-cell">This research item discusses the FDA clearance of a brain implant by Precision Neuroscience, which is significant as it represents a regulatory milest</td>
+                <td class="source-cell">Tavily (www.cnbc.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#e67e22">regulatory</span></td>
+                <td><a href="https://www.fiercebiotech.com/medtech/fda-clears-precision-neurosciences-minimally-invasive-brain-computer-interface-implant" target="_blank">FDA clears Precision Neuroscience&#x27;s minimally invasive brain ...</a></td>
+                <td class="assessment-cell">This research item discusses FDA clearance for a minimally invasive brain-computer interface implant, which is significant for the NeuroTech field as </td>
+                <td class="source-cell">Tavily (www.fiercebiotech.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
+                <td><a href="https://www.fiercebiotech.com/medtech/synchron-raises-200m-advance-its-brain-computer-interface-paralysis" target="_blank">Synchron raises $200M to advance its brain-computer interface</a></td>
+                <td class="assessment-cell">This research item discusses Synchron&#x27;s successful funding round to advance its nonsurgical brain-computer interface for individuals with paralysis, w</td>
+                <td class="source-cell">Tavily (www.fiercebiotech.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7 *</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://pubmed.ncbi.nlm.nih.gov/41686905/" target="_blank">At-home movement state classification using totally implantable cortical-basal ganglia neu</a></td>
+                <td class="assessment-cell">This research presents a significant advancement in the field of neurotechnology by demonstrating the first in-human, at-home classification of moveme</td>
+                <td class="source-cell">PubMed</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://pubmed.ncbi.nlm.nih.gov/41697465/" target="_blank">Integration of intraoperative ultrasound and depth-electrode electrocorticography for rese</a></td>
+                <td class="assessment-cell">This research item focuses on the integration of intraoperative ultrasound and depth-electrode electrocorticography for improving surgical outcomes in</td>
+                <td class="source-cell">PubMed</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://pubmed.ncbi.nlm.nih.gov/41697244/" target="_blank">Impact of antiseizure medication taper on electroencephalographic dynamics in focal epilep</a></td>
+                <td class="assessment-cell">This study focuses on the effects of antiseizure medication tapering on electroencephalographic dynamics in patients with drug-resistant epilepsy usin</td>
+                <td class="source-cell">PubMed</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://pubmed.ncbi.nlm.nih.gov/41689586/" target="_blank">Beyond seizure control: The impact of SEEG-guided radiofrequency thermocoagulation on qual</a></td>
+                <td class="assessment-cell">This study evaluates the effectiveness of SEEG-guided radiofrequency thermocoagulation in improving seizure control and quality of life for patients w</td>
+                <td class="source-cell">PubMed</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://pubmed.ncbi.nlm.nih.gov/41687693/" target="_blank">How vigilance states influence source imaging of physiological brain oscillations: evidenc</a></td>
+                <td class="assessment-cell">This research focuses on intracranial EEG and its implications for understanding cortical oscillations during different vigilance states, which is rel</td>
+                <td class="source-cell">PubMed</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://en.wikipedia.org/wiki/Electrocorticography" target="_blank">Electrocorticography - Wikipedia</a></td>
+                <td class="assessment-cell">The Wikipedia entry on Electrocorticography (ECoG) provides foundational knowledge about a key technique in intracranial electrophysiological monitori</td>
+                <td class="source-cell">Tavily (en.wikipedia.org)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://www.fieldtriptoolbox.org/tutorial/intracranial/human_ecog/" target="_blank">Analysis of human ECoG and sEEG recordings - FieldTrip toolbox</a></td>
+                <td class="assessment-cell">This research item focuses on the analysis of human ECoG and sEEG recordings, which are crucial for understanding neural activity in clinical settings</td>
+                <td class="source-cell">Tavily (www.fieldtriptoolbox.org)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#2ecc71">methods</span></td>
+                <td><a href="http://ieeexplore.ieee.org/document/11358787" target="_blank">Attention-Adaptive BCI-AOT System Enhances Motor Recovery and Neural Engagement After Stro</a></td>
+                <td class="assessment-cell">This research focuses on a closed-loop BCI system that integrates attention monitoring to enhance motor recovery through action observation therapy, w</td>
+                <td class="source-cell">IEEE Trans Neural Systems &amp; Rehab Engineering</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#2ecc71">methods</span></td>
+                <td><a href="https://pubmed.ncbi.nlm.nih.gov/41666062/" target="_blank">A Fully Unsupervised Online Classification Algorithm for Event-Related Potential based Bra</a></td>
+                <td class="assessment-cell">This research presents a novel unsupervised classification algorithm for event-related potential (ERP) based brain-computer interfaces, addressing a s</td>
+                <td class="source-cell">PubMed</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="http://ieeexplore.ieee.org/document/11318971" target="_blank">Aperiodic Exponent of Brain Field Potentials Is Dependent on the Frequency Range It Is Est</a></td>
+                <td class="assessment-cell">This research item focuses on the aperiodic component of brain field potentials, which is relevant to ECoG/sEEG studies and could inform the understan</td>
+                <td class="source-cell">IEEE Trans Neural Systems &amp; Rehab Engineering</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://www.bioworld.com/articles/720649-paradromics-joins-bci-in-human-race" target="_blank">Paradromics joins BCI in-human race | BioWorld</a></td>
+                <td class="assessment-cell">The article discusses Paradromics&#x27; involvement in the competitive landscape of BCI systems, specifically highlighting their progress towards in-human </td>
+                <td class="source-cell">Tavily (www.bioworld.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
+                <td><a href="https://www.datacenterdynamics.com/en/news/openai-invests-in-brain-computer-interface-startup-founded-by-openai-ceo/" target="_blank">OpenAI invests in brain-computer interface startup founded by ...</a></td>
+                <td class="assessment-cell">This research item discusses OpenAI&#x27;s investment in Merge Labs, a startup focused on developing innovative brain-computer interfaces. While it highlig</td>
+                <td class="source-cell">Tavily (www.datacenterdynamics.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
+                <td><a href="https://www.linkedin.com/posts/john-e-wehrli-ph-d-j-d-m-b-a-b436532_neurotech-braincomputerinterface-bci-activity-7422005148866097152-rC9m" target="_blank">Brain-Computer Interface Sector Sees $2.5B Investment - LinkedIn</a></td>
+                <td class="assessment-cell">This research item highlights significant investment in the BCI sector, particularly in non-invasive technologies aimed at restoring speech for indivi</td>
+                <td class="source-cell">Tavily (www.linkedin.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#7f8c8d">3</span></td>
+                <td><span class="cat-badge" style="background:#7f8c8d">out_of_scope</span></td>
+                <td><a href="https://pubmed.ncbi.nlm.nih.gov/41697271/" target="_blank">Intracortical inhibition, corticospinal excitability and voluntary activation in people wi</a></td>
+                <td class="assessment-cell">This study focuses on peripheral nerve stimulation and transcranial magnetic stimulation in the context of patellofemoral pain, which is not directly </td>
+                <td class="source-cell">PubMed</td>
+            </tr></tbody>
+    </table>
+</div>
+
+<div class="footer">
+    Generated by <a href="https://github.com/kgrajski/neurotech_newshound">NeuroTech NewsHound</a>
+    &middot; Model: gpt-4o-mini &middot; 2026-02-16
+</div>
+
+</div>
+</body>
+</html>

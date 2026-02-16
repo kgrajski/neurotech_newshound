@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NeuroTech NewsHound — Dashboard</title>
+<style>
+:root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e;
+    --accent-gold: #f0c040; --accent-blue: #58a6ff; --accent-red: #f85149;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+.container { max-width: 1300px; margin: 0 auto; padding: 24px; }
+
+.header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+.header h1 { font-size: 1.6rem; font-weight: 700; background: linear-gradient(135deg, var(--accent-gold), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.header .subtitle { color: var(--muted); font-size: 0.9rem; }
+
+.nav { display: flex; gap: 16px; margin-bottom: 24px; }
+.nav a { color: var(--accent-blue); text-decoration: none; font-size: 0.9rem; padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px; }
+.nav a:hover { background: var(--surface); }
+.nav a.active { background: var(--surface); border-color: var(--accent-blue); }
+
+h2 { font-size: 1.1rem; margin: 24px 0 12px; color: var(--text); }
+h3 { font-size: 1rem; margin-bottom: 8px; color: var(--accent-gold); }
+
+.config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.config-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.config-item .label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.config-item .value { font-size: 1rem; font-weight: 600; color: var(--accent-gold); margin-top: 2px; }
+
+.info-card, .run-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.run-stats { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+.rs { text-align: center; }
+.rv { display: block; font-size: 1.3rem; font-weight: 700; color: var(--accent-gold); }
+.rl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 24px; }
+th { text-align: left; padding: 8px; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:hover { background: rgba(88, 166, 255, 0.04); }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.url-cell { color: var(--muted); font-size: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.src-link { color: var(--muted); text-decoration: none; }
+.src-link:hover { color: var(--accent-blue); }
+
+.cat-chip { font-size: 0.65rem; padding: 2px 7px; border-radius: 8px; font-weight: 600; text-transform: uppercase; color: #fff; }
+.cat-database { background: #3498db; } .cat-journal { background: #9b59b6; }
+.cat-preprint { background: #2ecc71; } .cat-press { background: #e67e22; }
+.cat-regulatory { background: #e74c3c; } .cat-search { background: #1abc9c; }
+.cat-discovered { background: #f39c12; } .cat-other { background: #7f8c8d; }
+
+.queries-list { list-style: none; padding: 0; }
+.queries-list li { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; font-family: monospace; font-size: 0.82rem; color: var(--muted); }
+
+.footer { text-align: center; padding: 16px 0; margin-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; }
+.footer a { color: var(--accent-blue); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+    <div>
+        <h1>NeuroTech NewsHound</h1>
+        <div class="subtitle">Agentic research intelligence for the NeuroTech ecosystem</div>
+    </div>
+    <div class="subtitle">Dashboard</div>
+</div>
+
+<div class="nav">
+    <a href="2026-02-16.html">Latest Report</a>
+    <a href="dashboard.html" class="active">Dashboard</a>
+</div>
+
+
+        <div class="run-card">
+            <h3>Latest Run — 2026-02-16</h3>
+            <div class="run-stats">
+                <div class="rs"><span class="rv">485</span><span class="rl">Fetched</span></div>
+                <div class="rs"><span class="rv">27</span><span class="rl">In-Scope</span></div>
+                <div class="rs"><span class="rv">27</span><span class="rl">Scored</span></div>
+                <div class="rs"><span class="rv" style="color:#e74c3c">4</span><span class="rl">Alerts</span></div>
+                <div class="rs"><span class="rv">21,620</span><span class="rl">Tokens</span></div>
+                <div class="rs"><span class="rv">$0.0052</span><span class="rl">Cost</span></div>
+                <div class="rs"><span class="rv">122s</span><span class="rl">Duration</span></div>
+            </div>
+        </div>
+
+<h2>Configuration</h2>
+<div class="config-grid">
+    <div class="config-item"><div class="label">Model</div><div class="value">gpt-4o-mini</div></div>
+    <div class="config-item"><div class="label">Reviewer</div><div class="value">gpt-4o-mini</div></div>
+    <div class="config-item"><div class="label">Lookback</div><div class="value">7 days</div></div>
+    <div class="config-item"><div class="label">Max Items/Source</div><div class="value">40</div></div>
+    <div class="config-item"><div class="label">Source Cap</div><div class="value">40</div></div>
+    <div class="config-item"><div class="label">Active Sources</div><div class="value">21</div></div>
+    <div class="config-item"><div class="label">MLflow</div><div class="value">Enabled</div></div>
+    <div class="config-item"><div class="label">Domain Focus</div><div class="value" style="font-size:0.8rem">Implantable BCIs, ECoG/sEEG, microstimulation, enabling materials</div></div>
+</div>
+
+
+        <div class="info-card">
+            <h3>Deduplication History</h3>
+            <p>59 items tracked &middot;
+               26 high-value &middot;
+               33 low-value (will be skipped)</p>
+        </div>
+
+<h2>Source Registry (21 active)</h2>
+<table>
+    <thead><tr>
+        <th>Source</th><th>Category</th><th>Origin</th><th>Health</th>
+        <th>Runs</th><th>Fetched</th><th>In-Scope</th><th>High</th><th>Last Hit</th><th>URL</th>
+    </tr></thead>
+    <tbody>
+            <tr>
+                <td><strong>PubMed</strong></td>
+                <td><span class="cat-chip cat-database">database</span></td>
+                <td>Curated</td>
+                <td><span style="color:#2ecc71">HIGH YIELD</span></td>
+                <td class="num">2</td>
+                <td class="num">80</td>
+                <td class="num">53</td>
+                <td class="num">0</td>
+                <td>2026-02-16</td>
+                <td class="url-cell">API</td>
+            </tr>
+            <tr>
+                <td><strong>Nature</strong></td>
+                <td><span class="cat-chip cat-journal">journal</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">2</td>
+                <td class="num">80</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="https://www.nature.com/nature.rss" target="_blank" class="src-link">https://www.nature.com/nature.rss</a></td>
+            </tr>
+            <tr>
+                <td><strong>Nature Neuroscience</strong></td>
+                <td><span class="cat-chip cat-journal">journal</span></td>
+                <td>Curated</td>
+                <td><span style="color:#f39c12">MODERATE</span></td>
+                <td class="num">2</td>
+                <td class="num">16</td>
+                <td class="num">2</td>
+                <td class="num">0</td>
+                <td>2026-02-16</td>
+                <td class="url-cell"><a href="https://www.nature.com/neuro.rss" target="_blank" class="src-link">https://www.nature.com/neuro.rss</a></td>
+            </tr>
+            <tr>
+                <td><strong>Nature Biomedical Engineering</strong></td>
+                <td><span class="cat-chip cat-journal">journal</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">2</td>
+                <td class="num">16</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="https://www.nature.com/natbiomedeng.rss" target="_blank" class="src-link">https://www.nature.com/natbiomedeng.rss</a></td>
+            </tr>
+            <tr>
+                <td><strong>Science</strong></td>
+                <td><span class="cat-chip cat-journal">journal</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">2</td>
+                <td class="num">80</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="https://www.science.org/action/showFeed?type=etoc&amp;feed=rss&amp;jc=science" target="_blank" class="src-link">https://www.science.org/action/showFeed?type=etoc&...</a></td>
+            </tr>
+            <tr>
+                <td><strong>Science Translational Medicine</strong></td>
+                <td><span class="cat-chip cat-journal">journal</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">2</td>
+                <td class="num">14</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="https://www.science.org/action/showFeed?type=etoc&amp;feed=rss&amp;jc=stm" target="_blank" class="src-link">https://www.science.org/action/showFeed?type=etoc&...</a></td>
+            </tr>
+            <tr>
+                <td><strong>Journal of Neural Engineering</strong></td>
+                <td><span class="cat-chip cat-journal">journal</span></td>
+                <td>Curated</td>
+                <td><span style="color:#f39c12">MODERATE</span></td>
+                <td class="num">2</td>
+                <td class="num">20</td>
+                <td class="num">4</td>
+                <td class="num">0</td>
+                <td>2026-02-16</td>
+                <td class="url-cell"><a href="https://iopscience.iop.org/journal/rss/1741-2552" target="_blank" class="src-link">https://iopscience.iop.org/journal/rss/1741-2552</a></td>
+            </tr>
+            <tr>
+                <td><strong>Neuron</strong></td>
+                <td><span class="cat-chip cat-journal">journal</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e67e22">LOW</span></td>
+                <td class="num">2</td>
+                <td class="num">80</td>
+                <td class="num">2</td>
+                <td class="num">0</td>
+                <td>2026-02-16</td>
+                <td class="url-cell"><a href="https://www.cell.com/neuron/inpress.rss" target="_blank" class="src-link">https://www.cell.com/neuron/inpress.rss</a></td>
+            </tr>
+            <tr>
+                <td><strong>Lancet Neurology</strong></td>
+                <td><span class="cat-chip cat-journal">journal</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">2</td>
+                <td class="num">52</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="http://www.thelancet.com/rssfeed/laneur_current.xml" target="_blank" class="src-link">http://www.thelancet.com/rssfeed/laneur_current.xm...</a></td>
+            </tr>
+            <tr>
+                <td><strong>IEEE Trans Neural Systems &amp; Rehab Engineering</strong></td>
+                <td><span class="cat-chip cat-journal">journal</span></td>
+                <td>Curated</td>
+                <td><span style="color:#f39c12">MODERATE</span></td>
+                <td class="num">2</td>
+                <td class="num">80</td>
+                <td class="num">10</td>
+                <td class="num">0</td>
+                <td>2026-02-16</td>
+                <td class="url-cell"><a href="https://ieeexplore.ieee.org/rss/TOC7333.XML" target="_blank" class="src-link">https://ieeexplore.ieee.org/rss/TOC7333.XML</a></td>
+            </tr>
+            <tr>
+                <td><strong>New England Journal of Medicine</strong></td>
+                <td><span class="cat-chip cat-journal">journal</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">2</td>
+                <td class="num">80</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="https://www.nejm.org/action/showFeed?jc=nejm&amp;type=etoc&amp;feed=rss" target="_blank" class="src-link">https://www.nejm.org/action/showFeed?jc=nejm&amp;t...</a></td>
+            </tr>
+            <tr>
+                <td><strong>Science Robotics</strong></td>
+                <td><span class="cat-chip cat-journal">journal</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">2</td>
+                <td class="num">4</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="https://www.science.org/action/showFeed?type=etoc&amp;feed=rss&amp;jc=scirobotics" target="_blank" class="src-link">https://www.science.org/action/showFeed?type=etoc&...</a></td>
+            </tr>
+            <tr>
+                <td><strong>bioRxiv (neuroscience)</strong></td>
+                <td><span class="cat-chip cat-preprint">preprint</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e67e22">LOW</span></td>
+                <td class="num">2</td>
+                <td class="num">60</td>
+                <td class="num">2</td>
+                <td class="num">0</td>
+                <td>2026-02-16</td>
+                <td class="url-cell"><a href="https://connect.biorxiv.org/biorxiv_xml.php?subject=neuroscience" target="_blank" class="src-link">https://connect.biorxiv.org/biorxiv_xml.php?subjec...</a></td>
+            </tr>
+            <tr>
+                <td><strong>medRxiv</strong></td>
+                <td><span class="cat-chip cat-preprint">preprint</span></td>
+                <td>Curated</td>
+                <td><span style="color:#7f8c8d">NEW</span></td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="https://connect.medrxiv.org/medrxiv_xml.php" target="_blank" class="src-link">https://connect.medrxiv.org/medrxiv_xml.php</a></td>
+            </tr>
+            <tr>
+                <td><strong>arXiv q-bio.NC</strong></td>
+                <td><span class="cat-chip cat-preprint">preprint</span></td>
+                <td>Curated</td>
+                <td><span style="color:#f39c12">MODERATE</span></td>
+                <td class="num">2</td>
+                <td class="num">14</td>
+                <td class="num">2</td>
+                <td class="num">0</td>
+                <td>2026-02-16</td>
+                <td class="url-cell"><a href="https://rss.arxiv.org/rss/q-bio.NC" target="_blank" class="src-link">https://rss.arxiv.org/rss/q-bio.NC</a></td>
+            </tr>
+            <tr>
+                <td><strong>NYT Science</strong></td>
+                <td><span class="cat-chip cat-press">press</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">2</td>
+                <td class="num">74</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="https://rss.nytimes.com/services/xml/rss/nyt/Science.xml" target="_blank" class="src-link">https://rss.nytimes.com/services/xml/rss/nyt/Scien...</a></td>
+            </tr>
+            <tr>
+                <td><strong>NYT Health</strong></td>
+                <td><span class="cat-chip cat-press">press</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">2</td>
+                <td class="num">40</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="https://rss.nytimes.com/services/xml/rss/nyt/Health.xml" target="_blank" class="src-link">https://rss.nytimes.com/services/xml/rss/nyt/Healt...</a></td>
+            </tr>
+            <tr>
+                <td><strong>FT Technology</strong></td>
+                <td><span class="cat-chip cat-press">press</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">2</td>
+                <td class="num">50</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="https://www.ft.com/technology?format=rss" target="_blank" class="src-link">https://www.ft.com/technology?format=rss</a></td>
+            </tr>
+            <tr>
+                <td><strong>STAT News</strong></td>
+                <td><span class="cat-chip cat-press">press</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">2</td>
+                <td class="num">40</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="https://www.statnews.com/feed/" target="_blank" class="src-link">https://www.statnews.com/feed/</a></td>
+            </tr>
+            <tr>
+                <td><strong>FDA MedWatch Safety</strong></td>
+                <td><span class="cat-chip cat-regulatory">regulatory</span></td>
+                <td>Curated</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">2</td>
+                <td class="num">40</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell"><a href="http://www.fda.gov/AboutFDA/ContactFDA/StayInformed/RSSFeeds/MedWatch/rss.xml" target="_blank" class="src-link">http://www.fda.gov/AboutFDA/ContactFDA/StayInforme...</a></td>
+            </tr>
+            <tr>
+                <td><strong>Tavily Wideband Search</strong></td>
+                <td><span class="cat-chip cat-search">search</span></td>
+                <td>Curated</td>
+                <td><span style="color:#2ecc71">HIGH YIELD</span></td>
+                <td class="num">2</td>
+                <td class="num">50</td>
+                <td class="num">38</td>
+                <td class="num">0</td>
+                <td>2026-02-16</td>
+                <td class="url-cell">API</td>
+            </tr></tbody>
+</table>
+
+<h2>Tavily Search Queries (5)</h2>
+<ul class="queries-list">
+    <li>&quot;brain-computer interface&quot; OR &quot;neural implant&quot; clinical trial</li><li>neuralink OR synchron OR paradromics OR &quot;blackrock neurotech&quot; OR &quot;precision neuroscience&quot;</li><li>&quot;intracranial EEG&quot; OR ECoG OR sEEG neural recording human</li><li>FDA &quot;neural device&quot; OR &quot;brain implant&quot; approval OR clearance</li><li>BCI funding OR investment &quot;neural interface&quot;</li>
+</ul>
+
+<div class="footer">
+    NeuroTech NewsHound &middot;
+    <a href="https://github.com/kgrajski/neurotech_newshound">GitHub</a> &middot;
+    Config: <code>config.yaml</code>
+</div>
+
+</div>
+</body>
+</html>
