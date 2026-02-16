@@ -63,6 +63,7 @@ ENV_CONTENT=""
 [[ -n "${OPENAI_API_KEY:-}" ]]  && ENV_CONTENT+="OPENAI_API_KEY=${OPENAI_API_KEY}\n"
 [[ -n "${TAVILY_API_KEY:-}" ]]  && ENV_CONTENT+="TAVILY_API_KEY=${TAVILY_API_KEY}\n"
 [[ -n "${GOOGLE_API_KEY:-}" ]]  && ENV_CONTENT+="GOOGLE_API_KEY=${GOOGLE_API_KEY}\n"
+[[ -n "${NOTIFY_PHONE:-}" ]]    && ENV_CONTENT+="NOTIFY_PHONE=${NOTIFY_PHONE}\n"
 
 ssh "${DROPLET_USER}@${DROPLET_HOST}" \
     "printf '${ENV_CONTENT}' > ${REMOTE_SKILL}/.env"
@@ -71,13 +72,18 @@ echo ""
 
 # ── Step 3: Install dependencies ─────────────────────────────────────
 echo "=== [3/5] Installing dependencies ==="
-ssh "${DROPLET_USER}@${DROPLET_HOST}" \
-    "cd ${REMOTE_SKILL} && pip3 install -q -r requirements.txt 2>&1 | tail -3"
+ssh "${DROPLET_USER}@${DROPLET_HOST}" "\
+    if ! python3 -m pip --version >/dev/null 2>&1; then \
+        echo '  Installing pip...' && \
+        (apt-get update -qq && apt-get install -y -qq python3-pip >/dev/null 2>&1 \
+         || curl -sS https://bootstrap.pypa.io/get-pip.py | python3); \
+    fi && \
+    cd ${REMOTE_SKILL} && python3 -m pip install -q --break-system-packages -r requirements.txt 2>&1 | tail -5"
 echo ""
 
 # ── Step 4: Run the agent ────────────────────────────────────────────
 echo "=== [4/5] Running agent ==="
-ssh -t "${DROPLET_USER}@${DROPLET_HOST}" \
+ssh "${DROPLET_USER}@${DROPLET_HOST}" \
     "cd ${REMOTE_SKILL} && python3 -u run.py $*"
 echo ""
 

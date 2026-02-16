@@ -1,48 +1,44 @@
 ---
 name: neuro_hound
-description: Agentic neurotech research intelligence — LangGraph pipeline with LLM scoring, thematic synthesis, and reflection for implantable BCI, sEEG/ECoG, microstimulation, materials, and FDA/clinical signals.
+description: Generate this week's NeuroTech intelligence briefing
+command-dispatch: tool
+command-tool: exec
+command-arg-mode: raw
+user-invocable: true
 ---
 
 ## What it does
+NeuroTech NewsHound — agentic research intelligence for the NeuroTech ecosystem.
+
 Generates a dated intelligence briefing by:
-1) Fetching recent PubMed items and bioRxiv/medRxiv RSS preprints
+1) Fetching from 21 sources — PubMed, journal RSS (Nature, Science, Neuron, NEJM, ...), preprints (bioRxiv, medRxiv, arXiv), press (NYT, FT, STAT), FDA, and Tavily wideband search
 2) Pre-filtering with regex for in-scope neurotech items (fast, free)
-3) LLM-scoring each candidate with domain-aware assessment (score 1-10, category, reasoning)
-4) Clustering scored items into 2-5 themes with significance assessment
-5) Writing an executive brief (TL;DR, themes, alerts, what-to-watch)
-6) Reflection: reviewer LLM critiques the brief and adjusts scores
+3) Deduplicating against previously-scored items
+4) LLM-scoring each candidate (score 1-10, category, reasoning)
+5) Clustering into themes with significance assessment
+6) Writing an executive brief
+7) Reflection: reviewer LLM critiques and adjusts scores
+8) Producing HTML report, dashboard, markdown, alerts JSON, MLflow logs
 
-## Architecture
-```
-fetch_pubmed → fetch_rss → prefilter (regex)
-    → [conditional: skip if empty]
-    → score_items (LLM per-item)
-    → summarize_themes (LLM)
-    → write_brief (LLM)
-    → review (LLM reflection)
-```
+## Use
+From Telegram: `/neuro_hound --days 7`
 
-## Run (manual)
-From workspace root:
-- Full pipeline: `python3 skills/neuro_hound/run.py --days 7`
-- Custom model: `python3 skills/neuro_hound/run.py --days 7 --model gpt-4o-mini`
-- Phase 1 only (no LLM): `python3 skills/neuro_hound/run.py --days 7 --phase1-only`
+Arguments (all optional):
+- `--days N` — lookback window (default: 7)
+- `--phase1-only` — regex scoring only, no LLM cost
+- `--model NAME` — LLM model (default: gpt-4o-mini)
 
 ## Outputs
-- `archives/neurotech/YYYY-MM-DD.md` — Full report with executive brief
-- `archives/neurotech/YYYY-MM-DD.alerts.json` — Items scored 9-10
-- `archives/neurotech/YYYY-MM-DD.full.json` — Machine-readable results + usage metrics
+- `archives/neurotech/YYYY-MM-DD.html` — HTML intelligence briefing
+- `archives/neurotech/dashboard.html` — Operational dashboard
+- `archives/neurotech/YYYY-MM-DD.md` — Markdown report
+- `archives/neurotech/YYYY-MM-DD.alerts.json` — Priority items (score 9-10)
+- `archives/neurotech/YYYY-MM-DD.full.json` — Full results + usage metrics
 
-## Configuration knobs (CLI)
-- `--days N` : lookback window (default: 7)
-- `--max N` : max items per source (default: 40)
-- `--model NAME` : LLM for scoring/synthesis (default: gpt-4o-mini)
-- `--reviewer NAME` : LLM for reflection review (default: same as model)
-- `--phase1-only` : regex scoring only, skip LLM pipeline
-- `--output-dir PATH` : override output directory
+## Configuration
+All settings in `config.yaml` — sources, models, Tavily queries, MLflow.
 
 ## Environment Variables
-- `HOUND_LLM_MODEL` : default model (overridden by --model)
-- `HOUND_REVIEWER_MODEL` : default reviewer model
-- `GOOGLE_API_KEY` : for Gemini models
-- `OPENAI_API_KEY` : for GPT models
+- `OPENAI_API_KEY` — for GPT models (required)
+- `TAVILY_API_KEY` — for Tavily wideband search (optional)
+- `GOOGLE_API_KEY` — for Gemini models (optional)

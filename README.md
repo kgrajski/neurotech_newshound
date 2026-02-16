@@ -139,9 +139,11 @@ neurotech_newshound/
 │   ├── test_run.py                    # Local test runner
 │   └── sample_output/                 # Local test output (gitignored)
 ├── scripts/
-│   ├── deploy.sh                      # rsync workspace → droplet
+│   ├── deploy.sh                      # rsync workspace → droplet + install deps
 │   ├── fetch_reports.sh               # rsync reports ← droplet
-│   └── run_remote.sh                  # Deploy + run + fetch in one command
+│   ├── run_remote.sh                  # Deploy + run + fetch in one command
+│   ├── install_cron.sh                # Set up weekly Saturday cron on droplet
+│   └── cron_run.sh                    # Cron wrapper (runs agent + notifications)
 ├── .env.example
 ├── .gitignore
 └── README.md
@@ -275,17 +277,26 @@ mlflow ui --port 5000
 ### Deploy to OpenClaw Droplet
 
 ```bash
-# Push code to droplet
+# Push code + API keys + install deps
 bash scripts/deploy.sh
 
-# Run on droplet (via SSH or OpenClaw chat)
+# Run on droplet via SSH
 ssh root@your-droplet
-cd ~/.openclaw/workspace
-python3 skills/neuro_hound/run.py --days 7
+cd /root/.openclaw/workspace/skills/neuro_hound
+python3 -u run.py --days 7
 
 # Fetch reports back locally
 bash scripts/fetch_reports.sh
 ```
+
+### Weekly Cron Job
+
+```bash
+# Install Saturday 6am ET cron on the droplet
+bash scripts/install_cron.sh
+```
+
+The cron job runs the agent every Saturday and sends a notification via WhatsApp/Telegram (set `NOTIFY_PHONE` in `.env`).
 
 ---
 
@@ -313,8 +324,9 @@ bash scripts/fetch_reports.sh
 | **2** | LangGraph pipeline: LLM scoring, thematic synthesis, executive brief, reflection | Done |
 | **3** | Source expansion: 21 sources (journals, press, FDA, Tavily wideband search) | Done |
 | **4** | HTML report, MLflow observability, deduplication | Done |
-| **5** | Config-driven architecture, operational dashboard, branding | **Done** |
-| 6 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
+| **5** | Config-driven architecture, operational dashboard, branding | Done |
+| **6** | OpenClaw deployment, weekly cron, WhatsApp/Telegram notifications | **Done** |
+| 7 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
 
 This project shares design patterns with [trading_etf](https://github.com/kgrajski/trading_etf), an ETF trading system with an agentic AI analyst — same LangGraph architecture, Reflection Pattern, and multi-model routing approach applied to a different domain.
 

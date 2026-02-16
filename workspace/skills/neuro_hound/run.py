@@ -371,7 +371,10 @@ def main():
     ap.add_argument("--phase1-only", action="store_true", help="Phase 1 only: regex scoring, no LLM")
     args = ap.parse_args()
 
-    out_dir = args.output_dir or os.path.join(os.getcwd(), "archives", "neurotech")
+    # Default: workspace/archives/neurotech/ (two levels up from skill dir)
+    skill_dir = os.path.dirname(os.path.abspath(__file__))
+    workspace_dir = os.path.dirname(os.path.dirname(skill_dir))
+    out_dir = args.output_dir or os.path.join(workspace_dir, "archives", "neurotech")
     os.makedirs(out_dir, exist_ok=True)
 
     if args.phase1_only:
