@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NeuroTech Hound — Agentic research intelligence skill.
+NeuroTech NewsHound — Agentic research intelligence skill.
 
 Usage:
     python3 skills/neuro_hound/run.py --days 7
@@ -60,7 +60,7 @@ def run_phase1(args, out_dir: str):
     alerts = [x for x in scored if x["score"] >= 9]
 
     # Write report
-    lines = [f"# Neuro Hound Report — {today} (Phase 1 / Regex Only)", "",
+    lines = [f"# NeuroTech NewsHound Report — {today} (Phase 1 / Regex Only)", "",
              f"- Lookback: {args.days} day(s)", f"- Total fetched: {len(all_items)}",
              f"- In-scope: {len(scored)}", f"- Alerts (9-10): {len(alerts)}", ""]
     lines.append("## Alerts (9–10)\n")
@@ -98,11 +98,13 @@ def run_phase2(args, out_dir: str):
     reset_tracker()
     today = dt.date.today().isoformat()
 
-    model = args.model or os.getenv("HOUND_LLM_MODEL", "gpt-4o-mini")
-    reviewer = args.reviewer or os.getenv("HOUND_REVIEWER_MODEL", "") or model
+    from tools.config import get_default_model, get_default_reviewer, get_agent_name
+    model = args.model or os.getenv("HOUND_LLM_MODEL", "") or get_default_model()
+    reviewer = args.reviewer or os.getenv("HOUND_REVIEWER_MODEL", "") or get_default_reviewer() or model
+    agent_name = get_agent_name()
 
     print(f"\n{'='*60}")
-    print("NEUROTECH HOUND — Agentic Intelligence Briefing")
+    print(f"{agent_name.upper()} — Agentic Intelligence Briefing")
     print(f"{'='*60}")
     print(f"  Model: {model}")
     print(f"  Reviewer: {reviewer}")
@@ -140,7 +142,7 @@ def run_phase2(args, out_dir: str):
 
     # --- Write full report ---
     lines = []
-    lines.append(f"# Neuro Hound Report — {today}")
+    lines.append(f"# {agent_name} Report — {today}")
     lines.append("")
     lines.append(f"- Model: {model} | Reviewer: {reviewer}")
     lines.append(f"- Lookback: {args.days} days | Fetched: {len(final_state['raw_items'])} | In-scope: {len(final_state['prefiltered_items'])}")
@@ -242,6 +244,7 @@ def run_phase2(args, out_dir: str):
             review=review_data,
             alerts=alerts,
             metadata={
+                "agent_name": agent_name,
                 "date": today,
                 "model": model,
                 "raw_count": len(final_state["raw_items"]),
@@ -259,6 +262,41 @@ def run_phase2(args, out_dir: str):
     except Exception as e:
         final_state.get("errors", []).append(f"HTML report: {e}")
         print(f"  [warn] HTML report generation failed: {e}")
+
+    # Generate dashboard HTML
+    try:
+        from tools.html_dashboard import generate_dashboard
+        from tools.config import load_config
+        from tools.dedup import load_history
+        config = load_config()
+        registry = final_state.get("_registry") or {}
+        dedup_history = final_state.get("_dedup_history") or load_history()
+        high_val = sum(1 for v in dedup_history.values() if v.get("score", 0) >= 7)
+        dashboard_html = generate_dashboard(
+            registry=registry,
+            config=config,
+            run_metadata={
+                "date": today,
+                "raw_count": len(final_state["raw_items"]),
+                "prefiltered_count": len(final_state["prefiltered_items"]),
+                "scored_count": len(scored),
+                "alert_count": len(alerts),
+                "tokens": tracker.input_tokens + tracker.output_tokens,
+                "cost": tracker.estimate_cost(model),
+                "duration_seconds": duration,
+            },
+            history_summary={
+                "total": len(dedup_history),
+                "high_value": high_val,
+                "low_value": len(dedup_history) - high_val,
+            },
+        )
+        out_dashboard = os.path.join(out_dir, "dashboard.html")
+        with open(out_dashboard, "w") as f:
+            f.write(dashboard_html)
+    except Exception as e:
+        final_state.get("errors", []).append(f"Dashboard: {e}")
+        print(f"  [warn] Dashboard generation failed: {e}")
 
     # Full results JSON (for MLflow artifacts in Phase 3)
     full_results = {
@@ -295,16 +333,20 @@ def run_phase2(args, out_dir: str):
     print(f"{'='*60}")
     # Log to MLflow
     try:
+        from tools.config import get_mlflow_config
         from tools.mlflow_tracker import log_run
-        log_run(
-            final_state=final_state,
-            tracker=tracker,
-            duration=duration,
-            out_dir=out_dir,
-            model=model,
-            reviewer_model=reviewer,
-            days=args.days,
-        )
+        mlflow_cfg = get_mlflow_config()
+        if mlflow_cfg.get("enabled", True):
+            log_run(
+                final_state=final_state,
+                tracker=tracker,
+                duration=duration,
+                out_dir=out_dir,
+                model=model,
+                reviewer_model=reviewer,
+                days=args.days,
+                experiment_name=mlflow_cfg.get("experiment_name", "neurotech-newshound"),
+            )
     except Exception as e:
         print(f"  [warn] MLflow logging failed: {e}")
 
@@ -315,7 +357,7 @@ def run_phase2(args, out_dir: str):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="NeuroTech Hound — agentic research intelligence")
+    ap = argparse.ArgumentParser(description="NeuroTech NewsHound — agentic research intelligence")
     ap.add_argument("--days", type=int, default=7, help="Lookback window in days")
     ap.add_argument("--max", type=int, default=40, help="Max items per source")
     ap.add_argument("--output-dir", type=str, default=None, help="Output directory")

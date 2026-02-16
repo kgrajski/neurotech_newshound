@@ -1,172 +1,20 @@
 """
-Source registry — tracks all data sources (curated + discovered).
+Source registry — tracks runtime stats for all data sources.
 
-Persists to sources.json alongside this file. Tracks per-source yield
-statistics so we can prioritize high-value sources and prune cold ones.
-
-Design:
-    - Curated sources are locked (cannot be auto-pruned)
-    - Discovered sources (from Tavily) can be pruned after 30 days of silence
-    - Total sources capped at MAX_SOURCES (default 40)
-    - Stats updated after each run
+Sources are defined in config.yaml (user-editable).
+This module manages the runtime stats overlay (sources.json):
+    - Per-source yield stats (fetched, in_scope, last_hit)
+    - Discovered source tracking (from Tavily)
+    - Cold-source pruning for discovered sources
 """
 import datetime as dt
 import json
 import os
 from typing import Any, Dict, List, Optional
 
+from tools.config import get_sources, get_max_sources, get_enabled_sources_from_config
+
 SOURCES_FILE = os.path.join(os.path.dirname(__file__), "..", "sources.json")
-MAX_SOURCES = 40
-
-
-# ── Default curated sources ────────────────────────────────────────────
-
-DEFAULT_SOURCES: List[Dict[str, Any]] = [
-    # --- Core databases (API-based) ---
-    {
-        "id": "pubmed",
-        "name": "PubMed",
-        "category": "database",
-        "type": "api",
-        "enabled": True,
-        "curated": True,
-    },
-
-    # --- Preprint servers (RSS) ---
-    {
-        "id": "biorxiv_neuro",
-        "name": "bioRxiv (neuroscience)",
-        "category": "preprint",
-        "type": "rss",
-        "url": "https://connect.biorxiv.org/biorxiv_xml.php?subject=neuroscience",
-        "enabled": True,
-        "curated": True,
-    },
-    {
-        "id": "medrxiv",
-        "name": "medRxiv",
-        "category": "preprint",
-        "type": "rss",
-        "url": "https://connect.medrxiv.org/medrxiv_xml.php",
-        "enabled": True,
-        "curated": True,
-    },
-    {
-        "id": "arxiv_qbio_nc",
-        "name": "arXiv q-bio.NC",
-        "category": "preprint",
-        "type": "rss",
-        "url": "https://rss.arxiv.org/rss/q-bio.NC",
-        "enabled": True,
-        "curated": True,
-    },
-
-    # --- Peer-reviewed journals (RSS/Atom) ---
-    {
-        "id": "nature_neuro",
-        "name": "Nature Neuroscience",
-        "category": "journal",
-        "type": "rss",
-        "url": "https://www.nature.com/neuro.rss",
-        "enabled": True,
-        "curated": True,
-    },
-    {
-        "id": "nature_bme",
-        "name": "Nature Biomedical Engineering",
-        "category": "journal",
-        "type": "rss",
-        "url": "https://www.nature.com/natbiomedeng.rss",
-        "enabled": True,
-        "curated": True,
-    },
-    {
-        "id": "jne",
-        "name": "Journal of Neural Engineering",
-        "category": "journal",
-        "type": "rss",
-        "url": "https://iopscience.iop.org/journal/rss/1741-2552",
-        "enabled": True,
-        "curated": True,
-    },
-    {
-        "id": "neuron",
-        "name": "Neuron",
-        "category": "journal",
-        "type": "rss",
-        "url": "https://www.cell.com/neuron/inpress.rss",
-        "enabled": True,
-        "curated": True,
-    },
-    {
-        "id": "sci_robotics",
-        "name": "Science Robotics",
-        "category": "journal",
-        "type": "rss",
-        "url": "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=scirobotics",
-        "enabled": True,
-        "curated": True,
-    },
-
-    # --- Regulatory (RSS) ---
-    {
-        "id": "fda_medwatch",
-        "name": "FDA MedWatch Safety",
-        "category": "regulatory",
-        "type": "rss",
-        "url": "http://www.fda.gov/AboutFDA/ContactFDA/StayInformed/RSSFeeds/MedWatch/rss.xml",
-        "enabled": True,
-        "curated": True,
-    },
-
-    # --- General press (RSS — headlines + summaries, paywalled body) ---
-    {
-        "id": "nyt_science",
-        "name": "NYT Science",
-        "category": "press",
-        "type": "rss",
-        "url": "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml",
-        "enabled": True,
-        "curated": True,
-    },
-    {
-        "id": "nyt_health",
-        "name": "NYT Health",
-        "category": "press",
-        "type": "rss",
-        "url": "https://rss.nytimes.com/services/xml/rss/nyt/Health.xml",
-        "enabled": True,
-        "curated": True,
-    },
-    {
-        "id": "ft_tech",
-        "name": "FT Technology",
-        "category": "press",
-        "type": "rss",
-        "url": "https://www.ft.com/technology?format=rss",
-        "enabled": True,
-        "curated": True,
-    },
-    {
-        "id": "stat_news",
-        "name": "STAT News",
-        "category": "press",
-        "type": "rss",
-        "url": "https://www.statnews.com/feed/",
-        "enabled": True,
-        "curated": True,
-    },
-
-    # --- Tavily wideband search ---
-    {
-        "id": "tavily_wideband",
-        "name": "Tavily Wideband Search",
-        "category": "search",
-        "type": "tavily",
-        "enabled": True,
-        "curated": True,
-    },
-]
 
 
 def _empty_stats() -> Dict[str, Any]:
@@ -181,27 +29,42 @@ def _empty_stats() -> Dict[str, Any]:
 
 
 def load_sources(path: Optional[str] = None) -> Dict[str, Any]:
-    """Load source registry from JSON, or create default."""
+    """
+    Load source registry: config.yaml sources + runtime stats overlay.
+
+    On first run, initializes stats for all configured sources.
+    On subsequent runs, merges any new sources from config.yaml.
+    """
     path = path or SOURCES_FILE
+    config_sources = get_sources()
+
     if os.path.exists(path):
         with open(path) as f:
             registry = json.load(f)
-        # Ensure all defaults are present (new curated sources added in code)
+        # Merge in any new sources from config
         existing_ids = {s["id"] for s in registry.get("sources", [])}
-        for default in DEFAULT_SOURCES:
-            if default["id"] not in existing_ids:
-                default["stats"] = _empty_stats()
-                registry["sources"].append(default)
+        for cs in config_sources:
+            if cs["id"] not in existing_ids:
+                registry["sources"].append({**cs, "curated": True, "stats": _empty_stats()})
+        # Update source definitions from config (URL changes, etc.)
+        config_by_id = {s["id"]: s for s in config_sources}
+        for s in registry["sources"]:
+            if s["id"] in config_by_id:
+                cfg = config_by_id[s["id"]]
+                s["name"] = cfg.get("name", s.get("name", ""))
+                s["url"] = cfg.get("url", s.get("url", ""))
+                s["enabled"] = cfg.get("enabled", s.get("enabled", True))
+                s["category"] = cfg.get("category", s.get("category", ""))
+                s["type"] = cfg.get("type", s.get("type", ""))
         return registry
 
-    # First run — initialize from defaults
+    # First run — initialize from config
     sources = []
-    for s in DEFAULT_SOURCES:
-        entry = {**s, "stats": _empty_stats()}
-        sources.append(entry)
+    for cs in config_sources:
+        sources.append({**cs, "curated": True, "stats": _empty_stats()})
 
     registry = {
-        "max_sources": MAX_SOURCES,
+        "max_sources": get_max_sources(),
         "created": dt.date.today().isoformat(),
         "last_pruned": None,
         "sources": sources,
@@ -255,20 +118,16 @@ def add_discovered_source(
     category: str = "discovered",
     source_type: str = "rss",
 ) -> bool:
-    """
-    Add a Tavily-discovered source to the registry.
-    Returns True if added, False if at cap or already exists.
-    """
+    """Add a Tavily-discovered source. Returns True if added."""
     existing_ids = {s["id"] for s in registry["sources"]}
     if source_id in existing_ids:
         return False
 
     enabled_count = len([s for s in registry["sources"] if s.get("enabled", True)])
-    if enabled_count >= registry.get("max_sources", MAX_SOURCES):
-        # Try pruning first
+    if enabled_count >= registry.get("max_sources", get_max_sources()):
         pruned = prune_cold_sources(registry)
         enabled_count -= pruned
-        if enabled_count >= registry.get("max_sources", MAX_SOURCES):
+        if enabled_count >= registry.get("max_sources", get_max_sources()):
             return False
 
     registry["sources"].append({
@@ -286,11 +145,7 @@ def add_discovered_source(
 
 
 def prune_cold_sources(registry: Dict[str, Any], cold_days: int = 30) -> int:
-    """
-    Disable discovered sources that haven't yielded in-scope items
-    for cold_days. Curated sources are never pruned.
-    Returns count of pruned sources.
-    """
+    """Disable discovered sources with no in-scope hits for cold_days."""
     cutoff = (dt.date.today() - dt.timedelta(days=cold_days)).isoformat()
     pruned = 0
     for s in registry["sources"]:
@@ -302,7 +157,6 @@ def prune_cold_sources(registry: Dict[str, Any], cold_days: int = 30) -> int:
         if last_hit is None or last_hit < cutoff:
             s["enabled"] = False
             pruned += 1
-
     if pruned:
         registry["last_pruned"] = dt.date.today().isoformat()
     return pruned

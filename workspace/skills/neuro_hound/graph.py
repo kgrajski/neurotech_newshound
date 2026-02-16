@@ -1,5 +1,5 @@
 """
-LangGraph workflow for the NeuroTech Hound agent.
+LangGraph workflow for the NeuroTech NewsHound agent.
 
 Architecture:
     fetch_pubmed → fetch_rss → fetch_tavily → save_registry
@@ -35,7 +35,7 @@ def should_score(state: HoundState) -> str:
 
 def build_hound_graph():
     """
-    Build the NeuroTech Hound workflow graph.
+    Build the NeuroTech NewsHound workflow graph.
 
     Returns a compiled LangGraph ready for .invoke().
     """

@@ -12,7 +12,9 @@ import re
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
-TAVILY_QUERIES = [
+from tools.config import get_tavily_queries
+
+DEFAULT_QUERIES = [
     '"brain-computer interface" OR "neural implant" clinical trial',
     'neuralink OR synchron OR paradromics OR "blackrock neurotech" OR "precision neuroscience"',
     '"intracranial EEG" OR ECoG OR sEEG neural recording human',
@@ -45,7 +47,7 @@ def tavily_search(
 
     Each result becomes an item dict compatible with the pipeline.
     """
-    queries = queries or TAVILY_QUERIES
+    queries = queries or get_tavily_queries() or DEFAULT_QUERIES
     client = _get_client()
 
     seen_urls = set()

@@ -1,0 +1,206 @@
+# ──────────────────────────────────────────────────────────────────────
+# NeuroTech NewsHound — Configuration
+# ──────────────────────────────────────────────────────────────────────
+# Edit this file to customize sources, models, and behavior.
+# Changes take effect on the next run (no code edits needed).
+
+# ── Agent identity ───────────────────────────────────────────────────
+
+agent:
+  name: "NeuroTech NewsHound"
+  tagline: "Agentic research intelligence for the NeuroTech ecosystem"
+  domain: "Implantable BCIs, ECoG/sEEG, microstimulation, enabling materials"
+
+# ── Defaults ─────────────────────────────────────────────────────────
+
+defaults:
+  model: "gpt-4o-mini"            # LLM for scoring + synthesis
+  reviewer_model: ""               # Reviewer LLM (empty = same as model)
+  days: 7                          # Lookback window
+  max_items_per_source: 40         # Cap per source
+  max_sources: 40                  # Source registry cap
+
+# ── Data sources ─────────────────────────────────────────────────────
+# Each source needs: id, name, category, type, enabled
+# RSS/Atom sources also need: url
+# To add a source, copy an existing entry and change the fields.
+#
+# Categories: database, journal, preprint, press, regulatory, search
+# Types: api, rss, tavily
+
+sources:
+
+  # --- Core databases (API-based, custom fetch logic) ---
+  - id: pubmed
+    name: PubMed
+    category: database
+    type: api
+    enabled: true
+
+  # --- Preprint servers ---
+  - id: biorxiv_neuro
+    name: bioRxiv (neuroscience)
+    category: preprint
+    type: rss
+    url: "https://connect.biorxiv.org/biorxiv_xml.php?subject=neuroscience"
+    enabled: true
+
+  - id: medrxiv
+    name: medRxiv
+    category: preprint
+    type: rss
+    url: "https://connect.medrxiv.org/medrxiv_xml.php"
+    enabled: true
+
+  - id: arxiv_qbio_nc
+    name: arXiv q-bio.NC
+    category: preprint
+    type: rss
+    url: "https://rss.arxiv.org/rss/q-bio.NC"
+    enabled: true
+
+  # --- Peer-reviewed journals ---
+  - id: nature
+    name: Nature
+    category: journal
+    type: rss
+    url: "https://www.nature.com/nature.rss"
+    enabled: true
+
+  - id: nature_neuro
+    name: Nature Neuroscience
+    category: journal
+    type: rss
+    url: "https://www.nature.com/neuro.rss"
+    enabled: true
+
+  - id: nature_bme
+    name: Nature Biomedical Engineering
+    category: journal
+    type: rss
+    url: "https://www.nature.com/natbiomedeng.rss"
+    enabled: true
+
+  - id: science
+    name: Science
+    category: journal
+    type: rss
+    url: "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science"
+    enabled: true
+
+  - id: sci_transl_med
+    name: Science Translational Medicine
+    category: journal
+    type: rss
+    url: "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=stm"
+    enabled: true
+
+  - id: jne
+    name: Journal of Neural Engineering
+    category: journal
+    type: rss
+    url: "https://iopscience.iop.org/journal/rss/1741-2552"
+    enabled: true
+
+  - id: neuron
+    name: Neuron
+    category: journal
+    type: rss
+    url: "https://www.cell.com/neuron/inpress.rss"
+    enabled: true
+
+  - id: brain
+    name: Brain (Oxford)
+    category: journal
+    type: rss
+    url: "https://academic.oup.com/rss/site_5024/advanceAccess_3161.xml"
+    enabled: false   # Oxford Academic has dropped RSS for Brain; re-enable if restored
+
+  - id: lancet_neuro
+    name: Lancet Neurology
+    category: journal
+    type: rss
+    url: "http://www.thelancet.com/rssfeed/laneur_current.xml"
+    enabled: true
+
+  - id: ieee_tnsre
+    name: IEEE Trans Neural Systems & Rehab Engineering
+    category: journal
+    type: rss
+    url: "https://ieeexplore.ieee.org/rss/TOC7333.XML"
+    enabled: true
+
+  - id: nejm
+    name: New England Journal of Medicine
+    category: journal
+    type: rss
+    url: "https://www.nejm.org/action/showFeed?jc=nejm&type=etoc&feed=rss"
+    enabled: true
+
+  - id: sci_robotics
+    name: Science Robotics
+    category: journal
+    type: rss
+    url: "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=scirobotics"
+    enabled: true
+
+  # --- Regulatory ---
+  - id: fda_medwatch
+    name: FDA MedWatch Safety
+    category: regulatory
+    type: rss
+    url: "http://www.fda.gov/AboutFDA/ContactFDA/StayInformed/RSSFeeds/MedWatch/rss.xml"
+    enabled: true
+
+  # --- General press (headlines + summaries; body may be paywalled) ---
+  - id: nyt_science
+    name: NYT Science
+    category: press
+    type: rss
+    url: "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml"
+    enabled: true
+
+  - id: nyt_health
+    name: NYT Health
+    category: press
+    type: rss
+    url: "https://rss.nytimes.com/services/xml/rss/nyt/Health.xml"
+    enabled: true
+
+  - id: ft_tech
+    name: FT Technology
+    category: press
+    type: rss
+    url: "https://www.ft.com/technology?format=rss"
+    enabled: true
+
+  - id: stat_news
+    name: STAT News
+    category: press
+    type: rss
+    url: "https://www.statnews.com/feed/"
+    enabled: true
+
+  # --- Tavily wideband search ---
+  - id: tavily_wideband
+    name: Tavily Wideband Search
+    category: search
+    type: tavily
+    enabled: true
+
+# ── Tavily search queries ────────────────────────────────────────────
+# These run via Tavily's web search API to catch items outside RSS feeds.
+# Each query costs ~$0.001. Add/remove as needed.
+
+tavily_queries:
+  - '"brain-computer interface" OR "neural implant" clinical trial'
+  - 'neuralink OR synchron OR paradromics OR "blackrock neurotech" OR "precision neuroscience"'
+  - '"intracranial EEG" OR ECoG OR sEEG neural recording human'
+  - 'FDA "neural device" OR "brain implant" approval OR clearance'
+  - 'BCI funding OR investment "neural interface"'
+
+# ── MLflow ───────────────────────────────────────────────────────────
+
+mlflow:
+  enabled: true
+  experiment_name: "neurotech-newshound"
