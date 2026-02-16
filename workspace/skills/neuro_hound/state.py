@@ -28,6 +28,10 @@ class HoundState(TypedDict):
     executive_brief: Optional[str]            # Markdown brief
     review: Optional[Dict[str, Any]]          # Reviewer critique + adjustments
 
+    # --- Source management ---
+    _registry: Optional[Dict[str, Any]]       # Source registry (transient, not serialized)
+    source_discoveries: List[Dict[str, Any]]  # Domains discovered via Tavily
+
     # --- Metadata ---
     errors: List[str]
     usage: Dict[str, Any]                     # Token/cost tracking

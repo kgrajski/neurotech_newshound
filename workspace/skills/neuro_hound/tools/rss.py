@@ -1,17 +1,17 @@
-"""RSS feed parsing for bioRxiv/medRxiv (no API key required)."""
+"""RSS feed parsing — handles RSS 2.0, RSS 1.0/RDF, and Atom feeds.
+
+Now registry-driven: instead of a hardcoded feed list, accepts a list of
+source dicts from the source registry. The parse_rss() function is unchanged
+and handles all three feed formats.
+"""
 import xml.etree.ElementTree as ET
 from typing import Any, Dict, List
 
 from tools.http import http_get, safe_text
 
-RSS_FEEDS = [
-    ("bioRxiv (neuroscience)", "https://connect.biorxiv.org/biorxiv_xml.php?subject=neuroscience"),
-    ("medRxiv (all)", "https://connect.medrxiv.org/medrxiv_xml.php"),
-]
-
 
 def parse_rss(xml_bytes: bytes) -> List[Dict[str, Any]]:
-    """Parse RSS 2.0, RSS 1.0/RDF, or Atom feed."""
+    """Parse RSS 2.0, RSS 1.0/RDF, or Atom feed. Returns list of item dicts."""
     if xml_bytes[:3] == b"\xef\xbb\xbf":
         xml_bytes = xml_bytes[3:]
     root = ET.fromstring(xml_bytes)
@@ -58,17 +58,38 @@ def parse_rss(xml_bytes: bytes) -> List[Dict[str, Any]]:
     return items
 
 
-def fetch_rss_items(max_items: int) -> List[Dict[str, Any]]:
-    """High-level: fetch items from all configured RSS feeds."""
-    all_items = []
-    for name, url in RSS_FEEDS:
+def fetch_rss_source(source: Dict[str, Any], max_items: int) -> List[Dict[str, Any]]:
+    """Fetch items from a single RSS source (source dict from registry)."""
+    name = source.get("name", source.get("id", "unknown"))
+    url = source.get("url", "")
+    if not url:
+        return []
+
+    xml = http_get(url)
+    items = parse_rss(xml)[:max_items]
+    for it in items:
+        it["source"] = name
+        it["source_id"] = source.get("id", "")
+        it["source_category"] = source.get("category", "")
+    return items
+
+
+def fetch_rss_sources(sources: List[Dict[str, Any]], max_items: int) -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Fetch items from multiple RSS sources.
+
+    Returns dict of {source_id: items_list} so the caller can update
+    per-source stats in the registry.
+    """
+    results = {}
+    for source in sources:
+        sid = source.get("id", "unknown")
+        name = source.get("name", sid)
         try:
-            xml = http_get(url)
-            items = parse_rss(xml)[:max_items]
-            for it in items:
-                it["source"] = name
-            all_items.extend(items)
-            print(f"  [ok] RSS {name}: {len(items)} items")
+            items = fetch_rss_source(source, max_items)
+            results[sid] = items
+            print(f"    [ok] {name}: {len(items)} items")
         except Exception as e:
-            print(f"  [warn] RSS {name}: {e}")
-    return all_items
+            results[sid] = []
+            print(f"    [warn] {name}: {e}")
+    return results

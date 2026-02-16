@@ -26,8 +26,9 @@ load_dotenv()
 def run_phase1(args, out_dir: str):
     """Phase 1 only: fetch + regex score + basic report (no LLM)."""
     from tools.pubmed import fetch_pubmed_items
-    from tools.rss import fetch_rss_items
+    from tools.rss import fetch_rss_sources
     from tools.scoring import is_in_scope, regex_score
+    from tools.sources import load_sources, get_enabled_sources
 
     today = dt.date.today().isoformat()
     all_items = []
@@ -40,8 +41,12 @@ def run_phase1(args, out_dir: str):
     except Exception as e:
         print(f"  [warn] PubMed: {e}")
 
-    rss_items = fetch_rss_items(args.max)
-    all_items.extend(rss_items)
+    print("  Fetching RSS sources...")
+    registry = load_sources()
+    rss_sources = get_enabled_sources(registry, source_type="rss")
+    results = fetch_rss_sources(rss_sources, args.max)
+    for sid, items in results.items():
+        all_items.extend(items)
 
     # Score with regex
     scored = []
@@ -118,6 +123,8 @@ def run_phase2(args, out_dir: str):
         "themes": None,
         "executive_brief": None,
         "review": None,
+        "_registry": None,
+        "source_discoveries": [],
         "errors": [],
         "usage": {},
     }
@@ -217,6 +224,12 @@ def run_phase2(args, out_dir: str):
     with open(out_alerts, "w") as f:
         json.dump(alerts, f, indent=2, default=str)
 
+    # Source breakdown
+    source_breakdown = {}
+    for item in final_state["raw_items"]:
+        sid = item.get("source_id", item.get("source", "unknown"))
+        source_breakdown[sid] = source_breakdown.get(sid, 0) + 1
+
     # Full results JSON (for MLflow artifacts in Phase 3)
     full_results = {
         "date": today,
@@ -228,6 +241,7 @@ def run_phase2(args, out_dir: str):
         "prefiltered_count": len(final_state["prefiltered_items"]),
         "scored_count": len(scored),
         "alert_count": len(alerts),
+        "source_breakdown": source_breakdown,
         "themes": final_state.get("themes", []),
         "review": review_data,
         "usage": tracker.to_dict(),
@@ -246,6 +260,8 @@ def run_phase2(args, out_dir: str):
     print(f"Tokens: {tracker.input_tokens + tracker.output_tokens:,} | Cost: ${tracker.estimate_cost(model):.4f}")
     print(f"Alerts: {len(alerts)} | Themes: {len(final_state.get('themes', []))}")
     print(f"Categories: {', '.join(f'{k}={v}' for k, v in sorted(flags.items(), key=lambda x: -x[1]))}")
+    if source_breakdown:
+        print(f"Sources: {', '.join(f'{k}={v}' for k, v in sorted(source_breakdown.items(), key=lambda x: -x[1]))}")
     print(f"{'='*60}")
     print(f"\n[done] Report: {out_md}")
     print(f"[done] Alerts: {out_alerts}")
