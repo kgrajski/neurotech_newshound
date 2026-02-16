@@ -213,9 +213,16 @@ def run_phase2(args, out_dir: str):
             lines.append(f"- {e}")
         lines.append("")
 
+    # Source breakdown
+    source_breakdown = {}
+    for item in final_state["raw_items"]:
+        sid = item.get("source_id", item.get("source", "unknown"))
+        source_breakdown[sid] = source_breakdown.get(sid, 0) + 1
+
     # Write outputs
     report_text = "\n".join(lines)
     out_md = os.path.join(out_dir, f"{today}.md")
+    out_html = os.path.join(out_dir, f"{today}.html")
     out_alerts = os.path.join(out_dir, f"{today}.alerts.json")
     out_json = os.path.join(out_dir, f"{today}.full.json")
 
@@ -224,11 +231,33 @@ def run_phase2(args, out_dir: str):
     with open(out_alerts, "w") as f:
         json.dump(alerts, f, indent=2, default=str)
 
-    # Source breakdown
-    source_breakdown = {}
-    for item in final_state["raw_items"]:
-        sid = item.get("source_id", item.get("source", "unknown"))
-        source_breakdown[sid] = source_breakdown.get(sid, 0) + 1
+    # Generate HTML report
+    try:
+        from tools.html_report import generate_html_report
+        html_content = generate_html_report(
+            scored_items=scored,
+            themes=final_state.get("themes", []),
+            executive_brief=brief,
+            review=review_data,
+            alerts=alerts,
+            metadata={
+                "date": today,
+                "model": model,
+                "raw_count": len(final_state["raw_items"]),
+                "prefiltered_count": len(final_state["prefiltered_items"]),
+                "scored_count": len(scored),
+                "alert_count": len(alerts),
+                "duration_seconds": duration,
+                "cost": tracker.estimate_cost(model),
+                "tokens": tracker.input_tokens + tracker.output_tokens,
+                "source_breakdown": source_breakdown,
+            },
+        )
+        with open(out_html, "w") as f:
+            f.write(html_content)
+    except Exception as e:
+        final_state.get("errors", []).append(f"HTML report: {e}")
+        print(f"  [warn] HTML report generation failed: {e}")
 
     # Full results JSON (for MLflow artifacts in Phase 3)
     full_results = {
@@ -264,6 +293,7 @@ def run_phase2(args, out_dir: str):
         print(f"Sources: {', '.join(f'{k}={v}' for k, v in sorted(source_breakdown.items(), key=lambda x: -x[1]))}")
     print(f"{'='*60}")
     print(f"\n[done] Report: {out_md}")
+    print(f"[done] HTML:   {out_html}")
     print(f"[done] Alerts: {out_alerts}")
     print(f"[done] Full JSON: {out_json}")
 
