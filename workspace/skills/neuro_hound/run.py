@@ -310,8 +310,13 @@ def run_phase2(args, out_dir: str):
         "scored_count": len(scored),
         "alert_count": len(alerts),
         "source_breakdown": source_breakdown,
+        "executive_brief": brief,
+        "scored_items": scored,
+        "alerts": alerts,
         "themes": final_state.get("themes", []),
         "review": review_data,
+        "tokens": tracker.input_tokens + tracker.output_tokens,
+        "cost": tracker.estimate_cost(model),
         "usage": tracker.to_dict(),
         "errors": errors,
     }

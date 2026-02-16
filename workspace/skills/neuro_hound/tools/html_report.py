@@ -10,6 +10,7 @@ import datetime as dt
 import html
 import json
 import os
+import re
 from typing import Any, Dict, List, Optional
 
 CATEGORY_COLORS = {
@@ -46,6 +47,64 @@ def _score_color(score: int) -> str:
         return "#3498db"
     else:
         return "#7f8c8d"
+
+
+def _md_to_html(md: str) -> str:
+    """Convert markdown from LLM briefs to HTML. Handles headers, bold, italic, lists."""
+    lines = md.strip().split("\n")
+    out = []
+    in_list = False
+    for raw in lines:
+        line = raw.strip()
+        if not line:
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+            continue
+
+        # Headers: ### → h4, ## → h3, # → h2
+        m = re.match(r'^(#{1,4})\s+(.*)', line)
+        if m:
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+            level = min(len(m.group(1)) + 1, 5)  # # → h2, ## → h3, etc.
+            text = _esc(m.group(2))
+            text = _inline_md(text)
+            out.append(f"<h{level}>{text}</h{level}>")
+            continue
+
+        # Unordered list items: - or *
+        m = re.match(r'^[-*]\s+(.*)', line)
+        if m:
+            if not in_list:
+                out.append("<ul>")
+                in_list = True
+            text = _esc(m.group(1))
+            text = _inline_md(text)
+            out.append(f"<li>{text}</li>")
+            continue
+
+        # Regular paragraph
+        if in_list:
+            out.append("</ul>")
+            in_list = False
+        text = _esc(line)
+        text = _inline_md(text)
+        out.append(f"<p>{text}</p>")
+
+    if in_list:
+        out.append("</ul>")
+    return "\n".join(out)
+
+
+def _inline_md(text: str) -> str:
+    """Convert inline markdown (bold, italic) in already-escaped text."""
+    # **bold** → <strong>
+    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+    # *italic* → <em>
+    text = re.sub(r'\*(.+?)\*', r'<em>\1</em>', text)
+    return text
 
 
 def generate_html_report(
@@ -333,7 +392,7 @@ body {{
 
 <div class="brief-box">
     <h2>Executive Brief</h2>
-    {"".join(f"<p>{_esc(line)}</p>" for line in executive_brief.strip().split(chr(10)) if line.strip())}
+    {_md_to_html(executive_brief)}
 </div>
 
 <h2 style="font-size:1.1rem; margin-bottom:12px;">Themes</h2>
