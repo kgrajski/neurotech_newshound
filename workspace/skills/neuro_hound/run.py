@@ -292,6 +292,21 @@ def run_phase2(args, out_dir: str):
     if source_breakdown:
         print(f"Sources: {', '.join(f'{k}={v}' for k, v in sorted(source_breakdown.items(), key=lambda x: -x[1]))}")
     print(f"{'='*60}")
+    # Log to MLflow
+    try:
+        from tools.mlflow_tracker import log_run
+        log_run(
+            final_state=final_state,
+            tracker=tracker,
+            duration=duration,
+            out_dir=out_dir,
+            model=model,
+            reviewer_model=reviewer,
+            days=args.days,
+        )
+    except Exception as e:
+        print(f"  [warn] MLflow logging failed: {e}")
+
     print(f"\n[done] Report: {out_md}")
     print(f"[done] HTML:   {out_html}")
     print(f"[done] Alerts: {out_alerts}")
