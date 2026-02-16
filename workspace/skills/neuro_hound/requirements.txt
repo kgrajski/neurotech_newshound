@@ -1,0 +1,7 @@
+# LangGraph agent framework
+langgraph>=0.2.0
+langchain-openai>=0.2.0
+langchain-google-genai>=2.0.0
+
+# Environment
+python-dotenv>=0.5.1

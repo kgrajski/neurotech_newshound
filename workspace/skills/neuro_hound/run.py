@@ -1,397 +1,280 @@
 #!/usr/bin/env python3
 """
-NeuroTech Hound — MVP discovery + triage skill.
+NeuroTech Hound — Agentic research intelligence skill.
 
-Fetches recent items from PubMed and RSS feeds (bioRxiv, medRxiv),
-scores them for relevance to implantable BCI / ECoG / sEEG research,
-and produces a ranked markdown report with alerts.
+Usage:
+    python3 skills/neuro_hound/run.py --days 7
+    python3 skills/neuro_hound/run.py --days 14 --max 60
+    python3 skills/neuro_hound/run.py --days 7 --model gpt-4o-mini
+    python3 skills/neuro_hound/run.py --days 7 --phase1-only    # Skip LLM, regex only
 
-Phase 1: Pure Python, no LLM, no API keys required.
-Phase 2 (planned): LangGraph workflow with LLM summarization + reflection.
-Phase 3 (planned): MLflow tracking for run metrics and artifacts.
+Phase 1 (regex): Fetch + pre-filter + regex score → markdown report
+Phase 2 (LLM):   + LLM scoring + thematic synthesis + executive brief + reflection
 """
 import argparse
 import datetime as dt
 import json
 import os
-import re
-import ssl
 import sys
 import textwrap
-import urllib.parse
-import urllib.request
-import xml.etree.ElementTree as ET
+import time
 
-UA = "openclaw-neuro-hound/0.3 (MVP; no-api-keys)"
+from dotenv import load_dotenv
+load_dotenv()
 
-# SSL context — handles macOS certificate issues gracefully
-try:
-    import certifi
-    _SSL_CTX = ssl.create_default_context(cafile=certifi.where())
-except ImportError:
-    _SSL_CTX = ssl.create_default_context()
-    # macOS fallback: if default certs aren't found, disable verification
-    # (fine for public PubMed/bioRxiv; the droplet won't need this)
+
+def run_phase1(args, out_dir: str):
+    """Phase 1 only: fetch + regex score + basic report (no LLM)."""
+    from tools.pubmed import fetch_pubmed_items
+    from tools.rss import fetch_rss_items
+    from tools.scoring import is_in_scope, regex_score
+
+    today = dt.date.today().isoformat()
+    all_items = []
+
+    print("  Fetching PubMed...")
     try:
-        _SSL_CTX.load_default_certs()
-    except Exception:
-        _SSL_CTX.check_hostname = False
-        _SSL_CTX.verify_mode = ssl.CERT_NONE
+        items = fetch_pubmed_items(args.days, args.max)
+        all_items.extend(items)
+        print(f"  [ok] PubMed: {len(items)} items")
+    except Exception as e:
+        print(f"  [warn] PubMed: {e}")
 
-PUBMED_QUERY = (
-    "("
-    '"brain-computer interface"[Title/Abstract] OR BCI[Title/Abstract] OR neuroprosthe*[Title/Abstract] OR '
-    'intracortical[Title/Abstract] OR "microelectrode array"[Title/Abstract] OR "Utah array"[Title/Abstract] OR '
-    '"motor cortex"[Title/Abstract] OR "speech decoding"[Title/Abstract] OR '
-    'ECoG[Title/Abstract] OR sEEG[Title/Abstract] OR "stereo-EEG"[Title/Abstract] OR '
-    '"intracranial EEG"[Title/Abstract] OR iEEG[Title/Abstract]'
-    ") "
-    "AND ("
-    'implant*[Title/Abstract] OR human[Title/Abstract] OR participant*[Title/Abstract] OR patient*[Title/Abstract] OR '
-    'microstimulation[Title/Abstract] OR stimulation[Title/Abstract] OR "closed-loop"[Title/Abstract] OR '
-    'chronic[Title/Abstract] OR long-term[Title/Abstract] OR biocompatib*[Title/Abstract] OR hermetic[Title/Abstract] OR '
-    'encapsulation[Title/Abstract] OR coating[Title/Abstract]'
-    ")"
-)
+    rss_items = fetch_rss_items(args.max)
+    all_items.extend(rss_items)
 
-RSS_FEEDS = [
-    ("bioRxiv (neuroscience)", "https://connect.biorxiv.org/biorxiv_xml.php?subject=neuroscience"),
-    ("medRxiv (all)", "https://connect.medrxiv.org/medrxiv_xml.php"),
-]
+    # Score with regex
+    scored = []
+    for it in all_items:
+        title, summary, source = it.get("title", ""), it.get("summary", ""), it.get("source", "")
+        if is_in_scope(title, summary, source):
+            it["score"] = regex_score(title, summary, source)
+            scored.append(it)
 
-# Broad scope (used for ranking/reporting)
-IN_SCOPE_BROAD = re.compile(
-    r"\b("
-    r"brain[- ]computer interface|bci|neuroprosthe|intracortical|"
-    r"ecog|seeg|stereo-?eeg|ieeg|intracranial eeg|"
-    r"microstimulation|cortical stimulation|neural implant|implantable|"
-    r"speech decoding|handwriting decoding|neural decoder|spike(s|d)?|single[- ]unit"
-    r")\b",
-    flags=re.IGNORECASE,
-)
+    scored.sort(key=lambda x: x.get("score", 0), reverse=True)
+    alerts = [x for x in scored if x["score"] >= 9]
 
-# Strict scope (required for score >=9)
-IN_SCOPE_STRICT = re.compile(
-    r"\b("
-    r"brain[- ]computer interface|bci|neuroprosthe|"
-    r"ecog|seeg|stereo-?eeg|ieeg|intracranial eeg|"
-    r"microelectrode|microelectrode array|utah array|"
-    r"implanted|implantable|neural implant|"
-    r"single[- ]unit|spike(s|d)?|intracortical (recording|array|electrode)"
-    r")\b",
-    flags=re.IGNORECASE,
-)
+    # Write report
+    lines = [f"# Neuro Hound Report — {today} (Phase 1 / Regex Only)", "",
+             f"- Lookback: {args.days} day(s)", f"- Total fetched: {len(all_items)}",
+             f"- In-scope: {len(scored)}", f"- Alerts (9-10): {len(alerts)}", ""]
+    lines.append("## Alerts (9–10)\n")
+    if alerts:
+        for x in alerts[:20]:
+            lines.append(f"- [{x['score']}] {x.get('title', '')[:100]} ({x.get('source', '')})")
+    else:
+        lines.append("_None detected._")
+    lines.append("\n## Scored Items\n")
+    for x in scored[:50]:
+        lines.append(f"### [{x.get('score', '?')}] {x.get('title', '')[:100]}")
+        lines.append(f"- Source: {x.get('source', '')}")
+        if x.get("url"): lines.append(f"- Link: {x['url']}")
+        if x.get("summary"):
+            lines.append(f"- Summary: {textwrap.shorten(x['summary'], 400, placeholder='...')}")
+        lines.append("")
 
-# Out-of-scope modalities (common false positives)
-OUT_OF_SCOPE_HIGH = re.compile(
-    r"\b("
-    r"transcranial magnetic stimulation|tms|"
-    r"transcranial direct current|tdcs|"
-    r"transcranial alternating current|tacs"
-    r")\b",
-    flags=re.IGNORECASE,
-)
+    out_md = os.path.join(out_dir, f"{today}.md")
+    out_alerts = os.path.join(out_dir, f"{today}.alerts.json")
+    with open(out_md, "w") as f:
+        f.write("\n".join(lines))
+    with open(out_alerts, "w") as f:
+        json.dump(alerts, f, indent=2, default=str)
 
-HIGH_SIGNAL_PATTERNS = [
-    (10, r"\bfirst[- ]in[- ]human\b|\bFIH\b"),
-    (10, r"\bpivotal\b|\bPMA\b|\bDe\s?Novo\b|\b510\(k\)\b"),
-    (10, r"\bFDA\b.*\bIDE\b|\bIDE\b.*\bFDA\b|\bIDE\b (granted|approved|accepted)"),
-    (9,  r"\bhuman(s)?\b.*\bimplant\b|\bimplanted\b.*\bhuman\b|\bclinical trial\b|\btrial registration\b"),
-    (8,  r"\bECoG\b|\bsEEG\b|\bstereo-?EEG\b|\bintracranial EEG\b|\biEEG\b"),
-    (8,  r"\bsingle[- ]unit\b|\bspike(s|d)?\b"),
-    (7,  r"\bmicrostimulation\b|\bclosed[- ]loop\b"),
-    (6,  r"\bhermetic\b|\bencapsulation\b|\bcoating\b|\bmaterials?\b|\bbiocompatib"),
-]
-
-NEGATIVE_PATTERNS = [
-    (2, r"\bwearable\b|\bEEG headset\b|\bheadband\b"),
-    (2, r"\bmarketing\b|\bpress release\b|\bannounces\b"),
-]
+    print(f"\n[done] Report: {out_md}")
+    print(f"[done] Total: {len(scored)} in-scope | Alerts: {len(alerts)}")
 
 
-# =============================================================================
-# HTTP & Parsing Utilities
-# =============================================================================
+def run_phase2(args, out_dir: str):
+    """Phase 2: Full LangGraph workflow with LLM scoring + synthesis + reflection."""
+    from graph import build_hound_graph
+    from state import HoundState
+    from tools.llm import get_tracker, reset_tracker
 
-def http_get(url: str, timeout=30) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=timeout, context=_SSL_CTX) as resp:
-        return resp.read()
+    reset_tracker()
+    today = dt.date.today().isoformat()
 
+    model = args.model or os.getenv("HOUND_LLM_MODEL", "gpt-4o-mini")
+    reviewer = args.reviewer or os.getenv("HOUND_REVIEWER_MODEL", "") or model
 
-def safe_text(s: str) -> str:
-    return re.sub(r"\s+", " ", (s or "").strip())
+    print(f"\n{'='*60}")
+    print("NEUROTECH HOUND — Agentic Intelligence Briefing")
+    print(f"{'='*60}")
+    print(f"  Model: {model}")
+    print(f"  Reviewer: {reviewer}")
+    print(f"  Lookback: {args.days} days")
+    print()
 
-
-# =============================================================================
-# Scope & Scoring
-# =============================================================================
-
-def is_in_scope_broad(title: str, summary: str, source: str) -> bool:
-    return bool(IN_SCOPE_BROAD.search(f"{title}\n{summary}\n{source}"))
-
-
-def is_in_scope_strict(title: str, summary: str, source: str) -> bool:
-    return bool(IN_SCOPE_STRICT.search(f"{title}\n{summary}\n{source}"))
-
-
-def is_out_of_scope_high(title: str, summary: str) -> bool:
-    return bool(OUT_OF_SCOPE_HIGH.search(f"{title}\n{summary}"))
-
-
-def score_item(title: str, abstract_or_summary: str, source: str) -> int:
-    """Score an item 1-10 based on relevance patterns."""
-    text = f"{title}\n{abstract_or_summary}\n{source}"
-    score = 4
-
-    for val, pat in HIGH_SIGNAL_PATTERNS:
-        if re.search(pat, text, flags=re.IGNORECASE):
-            score = max(score, val)
-
-    for val, pat in NEGATIVE_PATTERNS:
-        if re.search(pat, text, flags=re.IGNORECASE):
-            score = min(score, val)
-
-    # Hard demotion for common out-of-scope modalities
-    if is_out_of_scope_high(title, abstract_or_summary) and score >= 7:
-        score = min(score, 6)
-
-    # Gate: nothing can be 9-10 unless strictly in-scope
-    if score >= 9 and not is_in_scope_strict(title, abstract_or_summary, source):
-        score = 6
-
-    return max(1, min(10, score))
-
-
-# =============================================================================
-# PubMed Fetch
-# =============================================================================
-
-def pubmed_esearch(query: str, days: int, max_items: int):
-    mindate = (dt.date.today() - dt.timedelta(days=days)).strftime("%Y/%m/%d")
-    maxdate = dt.date.today().strftime("%Y/%m/%d")
-    params = {
-        "db": "pubmed",
-        "term": query,
-        "retmode": "xml",
-        "retmax": str(max_items),
-        "mindate": mindate,
-        "maxdate": maxdate,
-        "datetype": "pdat",
-        "sort": "pub+date",
+    # Initialize state
+    initial_state: HoundState = {
+        "days": args.days,
+        "max_items": args.max,
+        "model": model,
+        "reviewer_model": reviewer,
+        "raw_items": [],
+        "prefiltered_items": [],
+        "regex_scores": {},
+        "scored_items": [],
+        "alerts": [],
+        "themes": None,
+        "executive_brief": None,
+        "review": None,
+        "errors": [],
+        "usage": {},
     }
-    url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?" + urllib.parse.urlencode(params)
-    xml = http_get(url)
-    root = ET.fromstring(xml)
-    return [el.text for el in root.findall(".//IdList/Id") if el.text]
 
+    # Build and run graph
+    graph = build_hound_graph()
+    start_time = time.time()
+    final_state = graph.invoke(initial_state)
+    duration = time.time() - start_time
 
-def pubmed_efetch(pmids):
-    if not pmids:
-        return []
-    params = {"db": "pubmed", "id": ",".join(pmids), "retmode": "xml"}
-    url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?" + urllib.parse.urlencode(params)
-    xml = http_get(url)
-    root = ET.fromstring(xml)
+    tracker = get_tracker()
 
-    items = []
-    for art in root.findall(".//PubmedArticle"):
-        pmid = art.findtext(".//PMID") or ""
-        title = safe_text(art.findtext(".//ArticleTitle") or "")
-        abstract_parts = [safe_text(x.text or "") for x in art.findall(".//Abstract/AbstractText")]
-        abstract = safe_text(" ".join([p for p in abstract_parts if p]))
-        journal = safe_text(art.findtext(".//Journal/Title") or "")
-        year = art.findtext(".//PubDate/Year") or art.findtext(".//PubDate/MedlineDate") or ""
-        url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else ""
-        items.append({
-            "source": "PubMed",
-            "title": title,
-            "summary": abstract,
-            "meta": safe_text(f"{journal} {year} PMID:{pmid}"),
-            "url": url,
-        })
-    return items
-
-
-# =============================================================================
-# RSS Fetch
-# =============================================================================
-
-def parse_rss(xml_bytes: bytes):
-    if xml_bytes[:3] == b"\xef\xbb\xbf":
-        xml_bytes = xml_bytes[3:]
-    root = ET.fromstring(xml_bytes)
-    items = []
-
-    # RSS 2.0
-    for item in root.findall(".//channel/item"):
-        items.append({
-            "title": safe_text(item.findtext("title") or ""),
-            "url": safe_text(item.findtext("link") or ""),
-            "summary": safe_text(item.findtext("description") or ""),
-            "meta": safe_text(item.findtext("pubDate") or ""),
-        })
-    if items:
-        return items
-
-    # RSS 1.0 / RDF
-    RSS1_NS = "http://purl.org/rss/1.0/"
-    RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    for item in root.findall(f".//{{{RSS1_NS}}}item"):
-        title = safe_text(item.findtext(f"{{{RSS1_NS}}}title") or "")
-        link = safe_text(item.findtext(f"{{{RSS1_NS}}}link") or "")
-        desc = safe_text(item.findtext(f"{{{RSS1_NS}}}description") or "")
-        about = item.attrib.get(f"{{{RDF_NS}}}about", "")
-        items.append({"title": title, "url": link or about, "summary": desc, "meta": ""})
-    if items:
-        return items
-
-    # Atom
-    ATOM_NS = "http://www.w3.org/2005/Atom"
-    for entry in root.findall(f".//{{{ATOM_NS}}}entry"):
-        title = safe_text(entry.findtext(f"{{{ATOM_NS}}}title") or "")
-        summary = safe_text(entry.findtext(f"{{{ATOM_NS}}}summary") or entry.findtext(f"{{{ATOM_NS}}}content") or "")
-        link = ""
-        link_el = entry.find(f"{{{ATOM_NS}}}link")
-        if link_el is not None and "href" in link_el.attrib:
-            link = safe_text(link_el.attrib["href"])
-        updated = safe_text(entry.findtext(f"{{{ATOM_NS}}}updated") or "")
-        items.append({"title": title, "url": link, "summary": summary, "meta": updated})
-
-    return items
-
-
-# =============================================================================
-# Report Generation
-# =============================================================================
-
-def md_escape(s: str) -> str:
-    return (s or "").replace("\n", " ").strip()
-
-
-def generate_report(scored: list, alerts: list, today: str, args) -> str:
-    """Generate the markdown report."""
+    # --- Write full report ---
     lines = []
     lines.append(f"# Neuro Hound Report — {today}")
     lines.append("")
-    lines.append(f"- Lookback: {args.days} day(s)")
-    lines.append(f"- Total items: {len(scored)}")
-    lines.append(f"- Alerts (9–10): {len(alerts)}")
+    lines.append(f"- Model: {model} | Reviewer: {reviewer}")
+    lines.append(f"- Lookback: {args.days} days | Fetched: {len(final_state['raw_items'])} | In-scope: {len(final_state['prefiltered_items'])}")
+    lines.append(f"- LLM calls: {tracker.calls} | Tokens: {tracker.input_tokens + tracker.output_tokens:,} | Cost: ${tracker.estimate_cost(model):.4f}")
+    lines.append(f"- Duration: {duration:.1f}s")
     lines.append("")
-    lines.append("## Alerts (9–10)")
-    lines.append("")
-    if alerts:
-        for x in alerts[:20]:
-            lines.append(f"- [{x['score']}] {md_escape(x.get('title', '(no title)'))} ({md_escape(x.get('source', ''))})")
-            if x.get("url"):
-                lines.append(f"  - {x['url']}")
-    else:
-        lines.append("_None detected in this run._")
-    lines.append("")
-    lines.append("## Top ranked (max 50)")
-    lines.append("")
-    for x in scored[:50]:
-        tags = []
-        if x.get("in_scope_strict"):
-            tags.append("strict")
-        elif x.get("in_scope_broad"):
-            tags.append("broad")
-        else:
-            tags.append("out")
-        if x.get("out_of_scope_high"):
-            tags.append("TMS/transcranial")
-        tag_str = ", ".join(tags)
 
-        lines.append(f"### [{x['score']}] {md_escape(x.get('title', '(no title)'))} ({tag_str})")
-        lines.append(f"- Source: {md_escape(x.get('source', ''))}")
-        if x.get("meta"):
-            lines.append(f"- Meta: {md_escape(x.get('meta', ''))}")
-        if x.get("url"):
-            lines.append(f"- Link: {x['url']}")
-        if x.get("summary"):
-            snippet = textwrap.shorten(md_escape(x["summary"]), width=500, placeholder="…")
-            lines.append(f"- Summary: {snippet}")
+    # Executive brief
+    brief = final_state.get("executive_brief", "")
+    if brief and not brief.startswith("_"):
+        lines.append("## Executive Brief")
+        lines.append("")
+        lines.append(brief)
         lines.append("")
 
-    return "\n".join(lines).strip() + "\n"
+    # Reviewer notes
+    review_data = final_state.get("review", {})
+    if review_data and review_data.get("assessment") not in ("SKIPPED", "ERROR", None):
+        lines.append("## Reviewer Notes")
+        lines.append("")
+        lines.append(f"**Assessment:** {review_data.get('assessment', 'N/A')} (quality: {review_data.get('quality_score', '?')}/10)")
+        lines.append("")
+        top = review_data.get("top_picks", [])
+        if top:
+            lines.append(f"**Top picks:** {', '.join(str(t) for t in top)}")
+            lines.append("")
+        vaporware = review_data.get("vaporware_flags", [])
+        if vaporware:
+            lines.append(f"**Vaporware flags:** {', '.join(str(v) for v in vaporware)}")
+            lines.append("")
+        notes = review_data.get("reviewer_notes", "")
+        if notes:
+            lines.append(notes)
+            lines.append("")
 
+    # Alerts
+    alerts = final_state.get("alerts", [])
+    lines.append("## Alerts (9-10)")
+    lines.append("")
+    if alerts:
+        for a in alerts:
+            lines.append(f"- [{a.get('llm_score', '?')}] **{a.get('title', '')[:100]}** ({a.get('category', '?')})")
+            lines.append(f"  {a.get('assessment', '')}")
+            if a.get("url"):
+                lines.append(f"  [{a.get('source', 'link')}]({a['url']})")
+            lines.append("")
+    else:
+        lines.append("_None this week._")
+        lines.append("")
 
-# =============================================================================
-# Main
-# =============================================================================
+    # Scored items
+    scored = final_state.get("scored_items", [])
+    lines.append("## All Scored Items")
+    lines.append("")
+    for x in scored[:50]:
+        adjusted = " (reviewer-adjusted)" if x.get("adjusted_by_reviewer") else ""
+        vap = " [VAPORWARE]" if x.get("vaporware") else ""
+        lines.append(f"### [{x.get('llm_score', '?')}] {x.get('title', '')[:100]}{adjusted}{vap}")
+        lines.append(f"- Category: {x.get('category', '?')} | Source: {x.get('source', '')}")
+        lines.append(f"- Assessment: {x.get('assessment', '')}")
+        if x.get("url"):
+            lines.append(f"- Link: {x['url']}")
+        lines.append("")
 
-def main():
-    ap = argparse.ArgumentParser(description="NeuroTech Hound — discovery + triage")
-    ap.add_argument("--days", type=int, default=7, help="Lookback window in days")
-    ap.add_argument("--max", type=int, default=40, help="Max items per source")
-    ap.add_argument("--output-dir", type=str, default=None,
-                    help="Output directory (default: archives/neurotech/ relative to cwd)")
-    args = ap.parse_args()
+    # Errors
+    errors = final_state.get("errors", [])
+    if errors:
+        lines.append("## Errors")
+        lines.append("")
+        for e in errors:
+            lines.append(f"- {e}")
+        lines.append("")
 
-    today = dt.date.today().isoformat()
-    out_dir = args.output_dir or os.path.join(os.getcwd(), "archives", "neurotech")
-    os.makedirs(out_dir, exist_ok=True)
+    # Write outputs
+    report_text = "\n".join(lines)
     out_md = os.path.join(out_dir, f"{today}.md")
     out_alerts = os.path.join(out_dir, f"{today}.alerts.json")
+    out_json = os.path.join(out_dir, f"{today}.full.json")
 
-    all_items = []
+    with open(out_md, "w") as f:
+        f.write(report_text)
+    with open(out_alerts, "w") as f:
+        json.dump(alerts, f, indent=2, default=str)
 
-    # --- PubMed ---
-    try:
-        pmids = pubmed_esearch(PUBMED_QUERY, args.days, args.max)
-        pub_items = pubmed_efetch(pmids[:args.max])
-        all_items.extend(pub_items)
-        print(f"[ok] PubMed: {len(pub_items)} items")
-    except Exception as e:
-        print(f"[warn] PubMed fetch failed: {e}", file=sys.stderr)
+    # Full results JSON (for MLflow artifacts in Phase 3)
+    full_results = {
+        "date": today,
+        "model": model,
+        "reviewer_model": reviewer,
+        "days": args.days,
+        "duration_seconds": duration,
+        "raw_count": len(final_state["raw_items"]),
+        "prefiltered_count": len(final_state["prefiltered_items"]),
+        "scored_count": len(scored),
+        "alert_count": len(alerts),
+        "themes": final_state.get("themes", []),
+        "review": review_data,
+        "usage": tracker.to_dict(),
+        "errors": errors,
+    }
+    with open(out_json, "w") as f:
+        json.dump(full_results, f, indent=2, default=str)
 
-    # --- RSS feeds ---
-    for name, url in RSS_FEEDS:
-        try:
-            xml = http_get(url)
-            items = parse_rss(xml)[:args.max]
-            for it in items:
-                it["source"] = name
-            all_items.extend(items)
-            print(f"[ok] RSS {name}: {len(items)} items")
-        except Exception as e:
-            print(f"[warn] RSS fetch failed ({name}): {e}", file=sys.stderr)
+    # Summary
+    flags = {cat: 0 for cat in set(x.get("category", "?") for x in scored)}
+    for x in scored:
+        flags[x.get("category", "?")] = flags.get(x.get("category", "?"), 0) + 1
 
-    # --- Score & sort ---
-    scored = []
-    for it in all_items:
-        title = it.get("title", "")
-        summary = it.get("summary", "")
-        source = it.get("source", "")
-        scored.append({
-            **it,
-            "score": score_item(title, summary, source),
-            "in_scope_broad": is_in_scope_broad(title, summary, source),
-            "in_scope_strict": is_in_scope_strict(title, summary, source),
-            "out_of_scope_high": is_out_of_scope_high(title, summary),
-        })
+    print(f"\n{'='*60}")
+    print(f"COMPLETE — {len(scored)} items scored in {duration:.1f}s")
+    print(f"Tokens: {tracker.input_tokens + tracker.output_tokens:,} | Cost: ${tracker.estimate_cost(model):.4f}")
+    print(f"Alerts: {len(alerts)} | Themes: {len(final_state.get('themes', []))}")
+    print(f"Categories: {', '.join(f'{k}={v}' for k, v in sorted(flags.items(), key=lambda x: -x[1]))}")
+    print(f"{'='*60}")
+    print(f"\n[done] Report: {out_md}")
+    print(f"[done] Alerts: {out_alerts}")
+    print(f"[done] Full JSON: {out_json}")
 
-    scored.sort(key=lambda x: (
-        x["score"],
-        x.get("in_scope_strict", False),
-        x.get("source", ""),
-        x.get("title", ""),
-    ), reverse=True)
-    alerts = [x for x in scored if x["score"] >= 9]
 
-    # --- Write outputs ---
-    report = generate_report(scored, alerts, today, args)
-    with open(out_md, "w", encoding="utf-8") as f:
-        f.write(report)
+def main():
+    ap = argparse.ArgumentParser(description="NeuroTech Hound — agentic research intelligence")
+    ap.add_argument("--days", type=int, default=7, help="Lookback window in days")
+    ap.add_argument("--max", type=int, default=40, help="Max items per source")
+    ap.add_argument("--output-dir", type=str, default=None, help="Output directory")
+    ap.add_argument("--model", type=str, default=None, help="LLM model (default: HOUND_LLM_MODEL or gemini-2.0-flash)")
+    ap.add_argument("--reviewer", type=str, default=None, help="Reviewer model (default: same as model)")
+    ap.add_argument("--phase1-only", action="store_true", help="Phase 1 only: regex scoring, no LLM")
+    args = ap.parse_args()
 
-    with open(out_alerts, "w", encoding="utf-8") as f:
-        json.dump(alerts, f, ensure_ascii=False, indent=2)
+    out_dir = args.output_dir or os.path.join(os.getcwd(), "archives", "neurotech")
+    os.makedirs(out_dir, exist_ok=True)
 
-    # --- Summary ---
-    print(f"[done] Report:  {out_md}")
-    print(f"[done] Alerts:  {out_alerts}")
-    print(f"[done] Total: {len(scored)} items | In-scope: {sum(1 for x in scored if x['in_scope_broad'])} | Alerts: {len(alerts)}")
+    if args.phase1_only:
+        run_phase1(args, out_dir)
+    else:
+        run_phase2(args, out_dir)
 
 
 if __name__ == "__main__":
+    # Ensure the skill directory is on the path for relative imports
+    skill_dir = os.path.dirname(os.path.abspath(__file__))
+    if skill_dir not in sys.path:
+        sys.path.insert(0, skill_dir)
+
     main()
