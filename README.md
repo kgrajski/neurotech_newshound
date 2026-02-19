@@ -69,8 +69,8 @@ flowchart TD
 
 **Browse the actual output from a real run:**
 
-- [**HTML Intelligence Briefing**](docs/samples/report.html) — the full report with executive brief, themes, alerts, and scored items
-- [**Operational Dashboard**](docs/samples/dashboard.html) — source health, config, run metrics, dedup history
+- [**HTML Intelligence Briefing**](https://kgrajski.github.io/neurotech_newshound/docs/samples/report.html) — the full report with executive brief, themes, alerts, and scored items
+- [**Operational Dashboard**](https://kgrajski.github.io/neurotech_newshound/docs/samples/dashboard.html) — source health, config, run metrics, dedup history
 
 From a real run (2026-02-16, 7-day lookback, 21 sources):
 
