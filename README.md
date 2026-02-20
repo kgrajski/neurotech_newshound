@@ -33,56 +33,99 @@ If you're new to agentic AI or just want a refresher, here's a cheat sheet for t
 
 Each week, the agent:
 
-1. **Fetches** from 21 sources — PubMed, journal RSS feeds (Nature, Nature Neuroscience, Science, Lancet Neurology, Neuron, NEJM, IEEE TNSRE, ...), preprint servers (bioRxiv, medRxiv, arXiv), general press (NYT, FT, STAT News), FDA MedWatch, and Tavily wideband search
-2. **Pre-filters** with domain-specific regex patterns (fast, free, deterministic)
+1. **Fetches** from 23+ sources — PubMed, journal RSS feeds (Nature, Nature Neuroscience, Science, Lancet Neurology, Neuron, NEJM, IEEE TNSRE, ...), preprint servers (bioRxiv, medRxiv, arXiv), company Substacks (auto-injected from watchlist), general press (NYT, FT, STAT News), FDA MedWatch, and Tavily wideband search (with auto-generated queries from a company watchlist of 11 BCI companies)
+2. **Pre-filters** with domain-specific regex patterns built from a 126-term domain vocabulary (fast, free, deterministic)
 3. **Deduplicates** against a history of previously-scored items — skips confirmed low-value repeats, re-evaluates high-value items
 4. **Scores** each candidate with an LLM that understands neuroscience — assessing relevance, categorizing, and flagging vaporware
 5. **Clusters** scored items into 2–5 themes with significance ratings
 6. **Writes** an executive brief (TL;DR, themes, alerts, what-to-watch)
 7. **Reviews** the brief via a Reflection Pattern — a reviewer LLM critiques the analysis and adjusts scores
-8. **Produces** a polished HTML report, operational dashboard, markdown report, alerts JSON, and full results JSON
-9. **Logs** to MLflow — parameters, token/cost metrics, per-source yield, and report artifacts
+8. **Discovers** new companies from high-scoring results and writes candidates to `discoveries.yaml` for human review and promotion to the watchlist
+9. **Produces** a polished HTML report, operational dashboard, markdown report, alerts JSON, and full results JSON
+10. **Logs** to MLflow — parameters, token/cost metrics, per-source yield, and report artifacts
 
-All sources, models, and behavior are configured via a single **`config.yaml`** — no code edits needed to add sources or change models.
+All sources, models, and behavior are configured via YAML files (`config.yaml`, `prompts.yaml`, `vocabulary.yaml`) — no code edits needed to add sources, change models, update prompts, or expand search vocabulary.
 
-The entire pipeline runs in ~2.5 minutes and costs ~$0.009 per run with `gpt-4o-mini`.
+The weekly pipeline runs in ~2.5 minutes and costs ~$0.009 per run with `gpt-4o-mini`. A separate **backfill mode** fetches 5 years of historical data from PubMed, bioRxiv, medRxiv, and arXiv using their archival APIs.
 
 ---
 
 ## Architecture
 
+The system has two operating modes: a **weekly pipeline** that monitors current activity across 23+ sources, and a **backfill mode** that builds historical depth from archival APIs (PubMed, bioRxiv, medRxiv, arXiv). Both modes feed the same dedup history and source registry.
+
+### Weekly Pipeline
+
 ```mermaid
 flowchart TD
-    subgraph fetch ["Fetch (no LLM cost)"]
-        A["fetch_pubmed<br>(NCBI E-utilities)"] --> D["save_registry<br>(source stats)"]
-        B["fetch_rss<br>(19 feeds: journals, preprints,<br>press, FDA)"] --> D
-        C["fetch_tavily<br>(wideband search)"] --> D
+    subgraph config ["Configuration Layer (YAML, no code edits)"]
+        V["vocabulary.yaml<br>(126+ domain terms)"]
+        W["config.yaml<br>(sources, watchlist,<br>curated industry)"]
+        P["prompts.yaml<br>(LLM templates)"]
     end
 
-    D --> E["prefilter<br>(regex + dedup)"]
+    V -->|"builds query<br>dynamically"| A
+    W -->|"auto-generates<br>queries + feeds"| B
+    W -->|"watchlist aliases<br>→ Tavily queries"| C
+
+    subgraph fetch ["Fetch (no LLM cost)"]
+        A["fetch_pubmed<br>(NCBI E-utilities)"] --> D["save_registry<br>(per-source stats)"]
+        B["fetch_rss<br>(19+ feeds: journals,<br>preprints, Substacks,<br>press, FDA)"] --> D
+        C["fetch_tavily<br>(wideband + watchlist<br>+ curated sources)"] --> D
+    end
+
+    D --> E["prefilter<br>(regex + dedup history)"]
 
     E -->|"conditional edge<br>(skip if empty)"| F
 
     subgraph llm ["LLM Pipeline"]
-        F["score_items<br>(LLM × N items)"] --> G["summarize_themes<br>(cluster into themes)"]
+        F["score_items<br>(LLM × N items)"] --> G["summarize_themes<br>(cluster + significance)"]
         G --> H["write_brief<br>(executive briefing)"]
-        H --> I["review<br>(Reflection Pattern)"]
+        H --> I["review<br>(Reflection Pattern<br>+ company discovery)"]
     end
 
     I --> J["HTML Report · Dashboard<br>Markdown · Alerts JSON · MLflow"]
 
+    I -->|"new companies"| K["discoveries.yaml<br>(human review)"]
+    K -->|"promote"| W
+
+    style config fill:#e8f5e9,stroke:#43a047
     style fetch fill:#f0f4f8,stroke:#4a90d9
     style llm fill:#fff3e0,stroke:#e67e22
 ```
 
+### Backfill Mode (Phase 8)
+
+```mermaid
+flowchart LR
+    subgraph backfill ["Historical Backfill (5-year depth)"]
+        BP["PubMed API<br>(POST, 6-month chunks)"]
+        BB["bioRxiv API<br>(3-month chunks,<br>client-side filter)"]
+        BM["medRxiv API<br>(3-month chunks,<br>client-side filter)"]
+        BA["arXiv API<br>(search + paginate)"]
+    end
+
+    BP --> RS["Regex Score<br>(vocabulary-based)"]
+    BB --> RS
+    BM --> RS
+    BA --> RS
+
+    RS --> DH["Dedup History<br>(seen_items.json)"]
+    RS --> AR["Backfill Archive<br>(JSON + top items)"]
+
+    style backfill fill:#f3e5f5,stroke:#8e24aa
+```
+
 ### Design Patterns
 
-- **Config-Driven Sources**: All 21+ sources defined in `config.yaml`. Add a journal by adding 4 lines of YAML — no code changes needed.
+- **Config-Driven Sources**: All 23+ sources defined in `config.yaml`. Add a journal by adding 4 lines of YAML — no code changes needed.
+- **Adaptive Source Management**: The company watchlist auto-generates Tavily queries from aliases and injects Substack RSS feeds. After each run, company discovery extracts new entities from high-scoring results and writes them to `discoveries.yaml` for human review and promotion.
+- **Dynamic Query Construction**: PubMed queries are built at runtime from `vocabulary.yaml` (126+ domain terms extracted from representative papers). The vocabulary grows as new papers are processed and self-stabilizes as domain terminology is finite.
 - **Two-Stage Scoring**: Regex pre-filter (free, ~485 → ~56 items) followed by LLM assessment with domain-aware judgment. Keeps costs near-zero while leveraging LLM reasoning where it matters.
 - **Deduplication**: Hash-based history tracks every scored item. Items scored < 7 in prior runs are skipped (confirmed low-value). Items ≥ 7 are re-evaluated (things evolve — a preprint becomes a publication, a trial advances).
 - **Reflection Pattern**: The reviewer node critiques the executive brief, checks calibration of significance ratings, flags missed connections, and calls out vaporware — mimicking a PI reviewing a research associate's work.
 - **Source Registry**: JSON-persisted registry tracks per-source yield stats (items fetched, in-scope count, last hit date). Supports auto-discovery of new sources via Tavily and cold-source pruning.
-- **Operational Dashboard**: A second HTML output shows the agent's operational state — source health, config, run metrics, dedup history, Tavily queries.
+- **Historical Backfill**: Separate entry point (`backfill.py`) fetches 5 years of archival data from PubMed, bioRxiv, medRxiv, and arXiv using their APIs (RSS feeds are current-only). Regex-scored and stored in the dedup history for future runs.
 - **Conditional Edge**: If nothing passes the regex pre-filter (quiet week), the LLM pipeline is skipped entirely. No API cost on empty weeks.
 - **Multi-Model Routing**: Different LLMs for analysis vs. review (e.g., `gpt-4o-mini` for bulk scoring, `gpt-4o` for critical review). Configurable via `config.yaml` or CLI.
 
@@ -162,7 +205,8 @@ neurotech_newshound/
 │   │       ├── config.yaml            # Sources, watchlist, models, behavior
 │   │       ├── prompts.yaml           # LLM prompt templates (editable, MLflow-tracked)
 │   │       ├── vocabulary.yaml        # Domain vocabulary for dynamic query construction
-│   │       ├── run.py                 # CLI entry point
+│   │       ├── run.py                 # CLI entry point (weekly pipeline)
+│   │       ├── backfill.py            # Historical backfill (5-year, archival APIs)
 │   │       ├── state.py               # HoundState TypedDict
 │   │       ├── graph.py               # LangGraph StateGraph definition
 │   │       ├── requirements.txt       # Python dependencies
@@ -176,8 +220,10 @@ neurotech_newshound/
 │   │           ├── config.py          #   Config + prompts + watchlist loader
 │   │           ├── vocabulary.py      #   Domain vocabulary manager + PubMed query builder
 │   │           ├── http.py            #   HTTP + SSL helper
-│   │           ├── pubmed.py          #   PubMed E-utilities client
-│   │           ├── rss.py             #   Registry-driven RSS/Atom parser
+│   │           ├── pubmed.py          #   PubMed E-utilities client (weekly + backfill)
+│   │           ├── biorxiv.py         #   bioRxiv/medRxiv API client (backfill)
+│   │           ├── arxiv.py           #   arXiv API client (backfill)
+│   │           ├── rss.py             #   Registry-driven RSS/Atom parser (weekly)
 │   │           ├── tavily.py          #   Wideband search + company discovery
 │   │           ├── sources.py         #   Source registry (JSON persistence)
 │   │           ├── scoring.py         #   Regex scoring patterns
@@ -369,6 +415,24 @@ Output goes to `dev/sample_output/`:
 - `YYYY-MM-DD.alerts.json` — Priority items (score 9–10)
 - `YYYY-MM-DD.full.json` — Machine-readable results + usage metrics
 
+### Historical Backfill
+
+```bash
+# Full 5-year backfill (PubMed + bioRxiv + medRxiv + arXiv, ~60-90 min)
+cd workspace/skills/neuro_hound
+python3 -u backfill.py --start-year 2021 --end-year 2026 2>&1 | tee backfill_log.txt
+
+# Fast pass (PubMed + arXiv only, ~5 min)
+python3 -u backfill.py --start-year 2021 --end-year 2026 --sources pubmed,arxiv
+
+# Dry run (fetch + score, don't update dedup history)
+python3 -u backfill.py --start-year 2021 --end-year 2026 --dry-run
+```
+
+Output goes to `workspace/archives/neurotech/backfill/`:
+- `backfill_YYYY-MM-DD.json` — Full archive with all scored items
+- `backfill_YYYY-MM-DD_top.md` — Top 100 items by regex score
+
 ### View MLflow Results
 
 ```bash
@@ -408,7 +472,7 @@ The cron job runs the agent every Saturday and sends a notification via WhatsApp
 |-------|-------------|
 | **Agentic AI** | LangGraph, LangChain |
 | **LLMs** | GPT-4o-mini (default), GPT-4o, Gemini 2.0 Flash, Claude (multi-model routing) |
-| **Data Sources** | PubMed E-utilities, RSS/Atom (21+ feeds incl. Substacks), Tavily Search |
+| **Data Sources** | PubMed E-utilities, RSS/Atom (21+ feeds incl. Substacks), Tavily Search, bioRxiv/medRxiv API, arXiv API |
 | **NLP** | Regex pre-filter, LLM-based domain scoring, deduplication |
 | **Observability** | MLflow (params, metrics, artifacts per run) |
 | **Output** | HTML report, operational dashboard, Markdown, JSON, MLflow artifacts |

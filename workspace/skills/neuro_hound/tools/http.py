@@ -23,5 +23,16 @@ def http_get(url: str, timeout: int = 30) -> bytes:
         return resp.read()
 
 
+def http_post(url: str, data: dict, timeout: int = 30) -> bytes:
+    """POST form-encoded data. Used for PubMed E-utilities long queries."""
+    encoded = urllib.parse.urlencode(data).encode("utf-8")
+    req = urllib.request.Request(
+        url, data=encoded,
+        headers={"User-Agent": UA, "Content-Type": "application/x-www-form-urlencoded"},
+    )
+    with urllib.request.urlopen(req, timeout=timeout, context=SSL_CTX) as resp:
+        return resp.read()
+
+
 def safe_text(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip())
