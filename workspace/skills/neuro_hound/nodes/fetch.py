@@ -35,10 +35,19 @@ def fetch_pubmed(state: HoundState) -> HoundState:
 
 
 def fetch_rss(state: HoundState) -> HoundState:
-    """Fetch from all enabled RSS sources (preprints, journals, press, regulatory)."""
+    """Fetch from all enabled RSS sources + watchlist Substack feeds."""
     print("  Fetching RSS sources...")
     registry = state.get("_registry") or load_sources()
     rss_sources = get_enabled_sources(registry, source_type="rss")
+
+    from tools.config import get_watchlist_rss_feeds
+    watchlist_feeds = get_watchlist_rss_feeds()
+    if watchlist_feeds:
+        existing_ids = {s.get("id") for s in rss_sources}
+        new_feeds = [f for f in watchlist_feeds if f["id"] not in existing_ids]
+        if new_feeds:
+            rss_sources.extend(new_feeds)
+            print(f"  +{len(new_feeds)} RSS feeds from company watchlist")
 
     if not rss_sources:
         print("  [warn] No RSS sources enabled")

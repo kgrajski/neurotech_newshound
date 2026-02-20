@@ -127,6 +127,7 @@ def run_phase2(args, out_dir: str):
         "review": None,
         "_registry": None,
         "source_discoveries": [],
+        "company_discoveries": [],
         "_dedup_history": None,
         "errors": [],
         "usage": {},
@@ -298,6 +299,11 @@ def run_phase2(args, out_dir: str):
         final_state.get("errors", []).append(f"Dashboard: {e}")
         print(f"  [warn] Dashboard generation failed: {e}")
 
+    # Write company discoveries to discoveries.yaml (append, user reviews + promotes)
+    company_discoveries = final_state.get("company_discoveries", [])
+    if company_discoveries:
+        _write_discoveries(out_dir, today, company_discoveries)
+
     # Full results JSON (for MLflow artifacts in Phase 3)
     full_results = {
         "date": today,
@@ -315,6 +321,7 @@ def run_phase2(args, out_dir: str):
         "alerts": alerts,
         "themes": final_state.get("themes", []),
         "review": review_data,
+        "company_discoveries": company_discoveries,
         "tokens": tracker.input_tokens + tracker.output_tokens,
         "cost": tracker.estimate_cost(model),
         "usage": tracker.to_dict(),
@@ -335,6 +342,9 @@ def run_phase2(args, out_dir: str):
     print(f"Categories: {', '.join(f'{k}={v}' for k, v in sorted(flags.items(), key=lambda x: -x[1]))}")
     if source_breakdown:
         print(f"Sources: {', '.join(f'{k}={v}' for k, v in sorted(source_breakdown.items(), key=lambda x: -x[1]))}")
+    if company_discoveries:
+        print(f"New companies discovered: {', '.join(d.get('name', '?') for d in company_discoveries)}")
+        print(f"  → Review in: {os.path.join(out_dir, 'discoveries.yaml')}")
     print(f"{'='*60}")
     # Log to MLflow
     try:
@@ -359,6 +369,41 @@ def run_phase2(args, out_dir: str):
     print(f"[done] HTML:   {out_html}")
     print(f"[done] Alerts: {out_alerts}")
     print(f"[done] Full JSON: {out_json}")
+
+
+def _write_discoveries(out_dir: str, run_date: str, discoveries: list):
+    """Append newly discovered companies to discoveries.yaml for user review.
+
+    The file accumulates across runs. Users promote entries to config.yaml's
+    company_watchlist and delete them from here. This is the self-updating
+    element of the watchlist: the pipeline proposes, the human disposes.
+    """
+    import yaml
+
+    disco_path = os.path.join(out_dir, "discoveries.yaml")
+    existing = []
+    if os.path.exists(disco_path):
+        with open(disco_path) as f:
+            existing = yaml.safe_load(f) or []
+
+    existing_names = {d.get("name", "").lower() for d in existing}
+    new_entries = []
+    for d in discoveries:
+        if d.get("name", "").lower() not in existing_names:
+            new_entries.append({
+                "name": d.get("name", ""),
+                "domain": d.get("domain", ""),
+                "evidence": d.get("evidence", ""),
+                "confidence": d.get("confidence", ""),
+                "discovered_on": run_date,
+                "promoted": False,
+            })
+
+    if new_entries:
+        all_entries = existing + new_entries
+        with open(disco_path, "w") as f:
+            yaml.dump(all_entries, f, default_flow_style=False, sort_keys=False)
+        print(f"  [ok] {len(new_entries)} new companies added to discoveries.yaml")
 
 
 def main():

@@ -3,33 +3,9 @@ import textwrap
 
 from state import HoundState
 from tools.llm import create_llm, invoke_llm, parse_json
+from tools.config import get_prompt, get_agent_domain
 
-
-def score_items(state: HoundState) -> HoundState:
-    """
-    Score each pre-filtered item using LLM with domain understanding.
-
-    This is the equivalent of analyze_symbols in the trading analyst.
-    Each item gets an individual LLM call that assesses relevance with
-    real neuroscience understanding — not just regex pattern matching.
-    """
-    items = state["prefiltered_items"]
-    if not items:
-        state["scored_items"] = []
-        state["alerts"] = []
-        return state
-
-    print(f"  LLM-scoring {len(items)} items with {state['model']}...")
-    llm = create_llm(state["model"])
-    scored = []
-
-    for i, item in enumerate(items):
-        title = item.get("title", "")
-        summary = textwrap.shorten(item.get("summary", ""), width=600, placeholder="...")
-        source = item.get("source", "")
-        meta = item.get("meta", "")
-
-        prompt = f"""You are a senior neurotechnology research analyst specializing in implantable BCIs, ECoG/sEEG, microstimulation, and enabling materials.
+FALLBACK_SCORE_PROMPT = """You are a senior neurotechnology research analyst specializing in {domain}.
 
 Score this research item for relevance to the NeuroTech field.
 
@@ -55,6 +31,37 @@ Respond in JSON:
  "category": "<implantable_bci|ecog_seeg|stimulation|materials|regulatory|funding|animal_study|methods|out_of_scope>",
  "assessment": "<1-2 sentences: what this is and why it matters or doesn't>",
  "vaporware": <true/false>}}"""
+
+
+def score_items(state: HoundState) -> HoundState:
+    """
+    Score each pre-filtered item using LLM with domain understanding.
+
+    Prompt is loaded from prompts.yaml with fallback to hardcoded default.
+    """
+    items = state["prefiltered_items"]
+    if not items:
+        state["scored_items"] = []
+        state["alerts"] = []
+        return state
+
+    print(f"  LLM-scoring {len(items)} items with {state['model']}...")
+    llm = create_llm(state["model"])
+    scored = []
+
+    prompt_template = get_prompt("score_item", FALLBACK_SCORE_PROMPT)
+    domain = get_agent_domain()
+
+    for i, item in enumerate(items):
+        title = item.get("title", "")
+        summary = textwrap.shorten(item.get("summary", ""), width=600, placeholder="...")
+        source = item.get("source", "")
+        meta = item.get("meta", "")
+
+        prompt = prompt_template.format(
+            title=title, source=source, meta=meta,
+            summary=summary, domain=domain,
+        )
 
         try:
             content = invoke_llm(llm, prompt, node=f"score_{i}", model_name=state["model"])

@@ -97,16 +97,46 @@ The LLM correctly distinguished `ECOG` (oncology performance status) from `ECoG`
 
 ---
 
+## Agent Specification Layers
+
+This project uses a four-layer specification architecture. Each layer has a
+single responsibility and a clear authority:
+
+| Layer | File | What it controls | Consumed by |
+|-------|------|------------------|-------------|
+| **Identity** | [`SOUL.md`](workspace/SOUL.md) | Personality, values, meta-goals | OpenClaw host agent |
+| **Specification** | [`SKILL.md`](workspace/skills/neuro_hound/SKILL.md) | Goals, tools, workflow, constraints | Developers + OpenClaw |
+| **Configuration** | [`config.yaml`](workspace/skills/neuro_hound/config.yaml) | Sources, watchlist, models | Python pipeline |
+| **Prompts** | [`prompts.yaml`](workspace/skills/neuro_hound/prompts.yaml) | LLM prompt templates | Python pipeline |
+
+**Why both SOUL.md and SKILL.md?** The project is deployed on [OpenClaw](https://openclaw.ai/),
+which uses a SOUL.md + SKILL.md convention (identity shared across skills,
+SKILL.md per capability). The [Anthropic/DeepLearning.ai pattern](https://www.deeplearning.ai/)
+centers everything on SKILL.md alone. Neither is an industry standard. We
+retain both for OpenClaw compatibility, but keep SOUL.md slim (identity only)
+and SKILL.md comprehensive (the complete operational spec). See
+[ADR-001](docs/ADR-001-agent-specification.md) for the full rationale.
+
+**An honest note on agency:** The current pipeline is an LLM-augmented
+workflow — a fixed sequence of fetch/score/synthesize/review steps. Meta-
+capabilities like company discovery and source health monitoring are
+implemented as procedural code, not agent-driven reasoning. SKILL.md documents
+this gap and the roadmap toward genuine agency. We believe honesty about the
+current level of automation is more valuable than overstating capabilities.
+
+---
+
 ## Project Structure
 
 ```
 neurotech_newshound/
 ├── workspace/                         # 1:1 mirror of OpenClaw workspace
-│   ├── SOUL.md                        # Agent identity & mission
+│   ├── SOUL.md                        # Agent identity, values, meta-goals
 │   ├── skills/
 │   │   └── neuro_hound/
-│   │       ├── SKILL.md               # Skill contract
-│   │       ├── config.yaml            # USER-EDITABLE: sources, models, behavior
+│   │       ├── SKILL.md               # Full operational specification
+│   │       ├── config.yaml            # Sources, watchlist, models, behavior
+│   │       ├── prompts.yaml           # LLM prompt templates (editable, MLflow-tracked)
 │   │       ├── run.py                 # CLI entry point
 │   │       ├── state.py               # HoundState TypedDict
 │   │       ├── graph.py               # LangGraph StateGraph definition
@@ -116,13 +146,13 @@ neurotech_newshound/
 │   │       │   ├── prefilter.py       #   Regex pre-filter + dedup
 │   │       │   ├── score.py           #   LLM per-item scoring
 │   │       │   ├── summarize.py       #   Theme clustering + executive brief
-│   │       │   └── review.py          #   Reflection + dedup history update
+│   │       │   └── review.py          #   Reflection + dedup + company discovery
 │   │       └── tools/                 # Shared utilities
-│   │           ├── config.py          #   YAML config loader
+│   │           ├── config.py          #   Config + prompts + watchlist loader
 │   │           ├── http.py            #   HTTP + SSL helper
 │   │           ├── pubmed.py          #   PubMed E-utilities client
 │   │           ├── rss.py             #   Registry-driven RSS/Atom parser
-│   │           ├── tavily.py          #   Tavily wideband search
+│   │           ├── tavily.py          #   Wideband search + company discovery
 │   │           ├── sources.py         #   Source registry (JSON persistence)
 │   │           ├── scoring.py         #   Regex scoring patterns
 │   │           ├── dedup.py           #   Deduplication history
@@ -130,8 +160,9 @@ neurotech_newshound/
 │   │           ├── html_report.py     #   HTML report generator
 │   │           ├── html_dashboard.py  #   Operational dashboard generator
 │   │           └── mlflow_tracker.py  #   MLflow experiment logging
-│   └── archives/neurotech/            # Reports land here (on droplet)
+│   └── archives/neurotech/            # Reports + discoveries land here
 ├── docs/
+│   ├── ADR-001-agent-specification.md # Architecture decision: spec layering
 │   └── samples/                       # Sample output for README viewers
 │       ├── report.html                #   HTML intelligence briefing
 │       └── dashboard.html             #   Operational dashboard
@@ -153,19 +184,11 @@ neurotech_newshound/
 
 ## Configuration
 
-All user-configurable settings live in `config.yaml`:
+Two YAML files control all runtime behavior — no code edits needed:
+
+**`config.yaml`** — sources, models, company watchlist, Tavily queries:
 
 ```yaml
-# Agent identity
-agent:
-  name: "NeuroTech NewsHound"
-  domain: "Implantable BCIs, ECoG/sEEG, microstimulation, enabling materials"
-
-# Model defaults
-defaults:
-  model: "gpt-4o-mini"
-  days: 7
-
 # Sources — add a new journal in 4 lines:
 sources:
   - id: my_journal
@@ -174,15 +197,38 @@ sources:
     type: rss
     url: "https://example.com/feed.xml"
     enabled: true
+
+# Company watchlist — auto-generates Tavily queries + RSS feeds:
+company_watchlist:
+  - name: Paradromics
+    aliases: ["paradromics"]
+    domain: "paradromics.com"
+    substack: "https://paradromics.substack.com/feed"
+    enabled: true
+
+# Curated industry sources (no RSS — searched via Tavily):
+curated_industry_sources:
+  - name: Neurofounders
+    tavily_query: 'site:neurofounders.co BCI OR neurotech'
+    enabled: true
 ```
 
-No code changes needed. The source registry merges config changes on the next run.
+**`prompts.yaml`** — all LLM prompts as editable templates:
+
+```yaml
+score_item: |
+  You are a senior neurotechnology research analyst...
+  TITLE: {title}
+  SCORING CRITERIA: ...
+```
+
+Edit prompts to iterate on analysis quality. Prompt text is logged to MLflow for tracking.
 
 ---
 
 ## Data Sources
 
-### Curated (21 sources)
+### Curated (23+ sources)
 
 | Category | Sources |
 |----------|---------|
@@ -190,12 +236,25 @@ No code changes needed. The source registry merges config changes on the next ru
 | **Journals** | Nature, Nature Neuroscience, Nature BME, Science, Science TM, Science Robotics, J Neural Engineering, Neuron, Lancet Neurology, IEEE TNSRE, NEJM |
 | **Preprints** | [bioRxiv](https://www.biorxiv.org/) (neuroscience), [medRxiv](https://www.medrxiv.org/), [arXiv](https://arxiv.org/) q-bio.NC |
 | **Press** | NYT Science, NYT Health, FT Technology, [STAT News](https://www.statnews.com/) |
+| **Substacks** | [Neurotechnology](https://neurotechnology.substack.com/), [Paradromics](https://paradromics.substack.com/) + watchlist auto-feeds |
 | **Regulatory** | [FDA MedWatch](https://www.fda.gov/safety/medwatch-fda-safety-information-and-adverse-event-reporting-program) |
-| **Search** | [Tavily](https://tavily.com/) wideband (5 neurotech queries) |
+| **Search** | [Tavily](https://tavily.com/) — static queries + auto-generated from company watchlist + curated industry sources |
+
+### Company Watchlist
+
+11 BCI companies tracked in `config.yaml`. Each entry auto-generates Tavily search queries from its aliases, and Substack RSS feeds are auto-added when a URL is provided. New companies can be added manually or promoted from `discoveries.yaml` (see below).
+
+### Curated Industry Sources
+
+Websites without RSS feeds (e.g., [Neurofounders](https://www.neurofounders.co/), IEEE Spectrum) are searched via Tavily `site:` queries.
 
 ### Auto-Discovery
 
-Tavily results are analyzed for domains that yield multiple high-scoring items. These can be proposed as new curated sources. The registry caps at 40 sources and prunes cold (30-day no-hit) discovered sources automatically.
+After each run, the pipeline:
+1. **Domain discovery**: Tracks which web domains yield multiple high-scoring items from Tavily. Proposes new RSS sources.
+2. **Company discovery**: Uses an LLM call to extract new company names from high-scoring Tavily results. Writes candidates to `discoveries.yaml` with evidence and confidence scores for human review and promotion to the watchlist.
+
+The source registry caps at 40 sources and prunes cold (30-day no-hit) discovered sources automatically.
 
 All data sources except Tavily and LLMs are free and require no API keys.
 
@@ -306,11 +365,12 @@ The cron job runs the agent every Saturday and sends a notification via WhatsApp
 |-------|-------------|
 | **Agentic AI** | LangGraph, LangChain |
 | **LLMs** | GPT-4o-mini (default), GPT-4o, Gemini 2.0 Flash, Claude (multi-model routing) |
-| **Data Sources** | PubMed E-utilities, RSS/Atom (19 feeds), Tavily Search |
+| **Data Sources** | PubMed E-utilities, RSS/Atom (21+ feeds incl. Substacks), Tavily Search |
 | **NLP** | Regex pre-filter, LLM-based domain scoring, deduplication |
 | **Observability** | MLflow (params, metrics, artifacts per run) |
 | **Output** | HTML report, operational dashboard, Markdown, JSON, MLflow artifacts |
-| **Configuration** | YAML-driven (config.yaml — sources, models, behavior) |
+| **Configuration** | YAML-driven (config.yaml + prompts.yaml — sources, models, prompts, watchlist) |
+| **Agent Specification** | SOUL.md (identity) + SKILL.md (operational spec) — see [ADR-001](docs/ADR-001-agent-specification.md) |
 | **Deployment** | OpenClaw, rsync, Digital Ocean |
 | **Development** | Cursor IDE, Python 3.11+, python-dotenv |
 
@@ -325,8 +385,11 @@ The cron job runs the agent every Saturday and sends a notification via WhatsApp
 | **3** | Source expansion: 21 sources (journals, press, FDA, Tavily wideband search) | Done |
 | **4** | HTML report, MLflow observability, deduplication | Done |
 | **5** | Config-driven architecture, operational dashboard, branding | Done |
-| **6** | OpenClaw deployment, weekly cron, WhatsApp/Telegram notifications | **Done** |
-| 7 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
+| **6** | OpenClaw deployment, weekly cron, WhatsApp/Telegram notifications | Done |
+| **7** | Company watchlist, Substack RSS, externalized prompts, auto-discovery, agent spec refactor ([ADR-001](docs/ADR-001-agent-specification.md)) | **Done** |
+| 8 | Historical backfill mode, dashboard-driven config editing | Planned |
+| 9 | Agentic meta-layer: ReAct-style reasoning about coverage gaps and source curation | Design goal |
+| 10 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
 
 This project shares design patterns with [trading_etf](https://github.com/kgrajski/trading_etf), an ETF trading system with an agentic AI analyst — same LangGraph architecture, Reflection Pattern, and multi-model routing approach applied to a different domain.
 

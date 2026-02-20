@@ -1,36 +1,13 @@
 """Summarization nodes — thematic clustering and executive brief (LLM)."""
 from state import HoundState
 from tools.llm import create_llm, invoke_llm, parse_json
+from tools.config import get_prompt, get_agent_domain
 
+FALLBACK_THEMES_PROMPT = """You are a senior neurotechnology research analyst preparing a weekly intelligence briefing.
 
-def summarize_themes(state: HoundState) -> HoundState:
-    """
-    Cluster scored items into 2-5 themes.
+Here are {item_count} scored research items from the past week:
 
-    Equivalent of analyze_themes in the trading analyst.
-    """
-    items = state["scored_items"]
-    if not items:
-        state["themes"] = []
-        return state
-
-    print("  Clustering themes...")
-    llm = create_llm(state["model"])
-
-    # Build item summaries for the prompt
-    item_lines = []
-    for x in items[:30]:  # Cap at 30 for prompt length
-        score = x.get("llm_score", "?")
-        cat = x.get("category", "?")
-        title = x.get("title", "")[:100]
-        assessment = x.get("assessment", "")[:150]
-        item_lines.append(f"- [{score}] ({cat}) {title}\n  {assessment}")
-
-    prompt = f"""You are a senior neurotechnology research analyst preparing a weekly intelligence briefing.
-
-Here are {len(items)} scored research items from the past week:
-
-{chr(10).join(item_lines)}
+{item_lines}
 
 TASK: Group these into 2-5 coherent themes based on what they're actually about (not source or score).
 
@@ -49,6 +26,54 @@ Respond in JSON:
  ],
  "overall_assessment": "quiet_week/active_week/major_developments",
  "summary": "1-2 sentence overall summary of the week in neurotech"}}"""
+
+FALLBACK_BRIEF_PROMPT = """You are writing a weekly NeuroTech intelligence briefing for a senior researcher specializing in {domain}.
+
+THEMES IDENTIFIED:
+{themes_text}
+
+PRIORITY ALERTS (score 9-10):
+{alerts_text}
+
+TOP ITEMS THIS WEEK:
+{top_items}
+
+Write a concise executive briefing in Markdown with these sections:
+
+1. **TL;DR** — 2-3 sentences: What mattered this week?
+2. **Themes** — For each theme: "What's new" (1-2 sentences) and "Why it matters" (1 sentence)
+3. **Priority Alerts** — Detail any 9-10 scored items, or note "None"
+4. **What to Watch** — 2-3 things to monitor next week based on this week's signals
+
+Be analytical, not performative. Skip filler. Have opinions on scientific validity.
+Write as a Senior Research Associate, not a corporate drone."""
+
+
+def summarize_themes(state: HoundState) -> HoundState:
+    """Cluster scored items into 2-5 themes. Prompt loaded from prompts.yaml."""
+    items = state["scored_items"]
+    if not items:
+        state["themes"] = []
+        return state
+
+    print("  Clustering themes...")
+    llm = create_llm(state["model"])
+
+    item_lines = []
+    for x in items[:30]:
+        score = x.get("llm_score", "?")
+        cat = x.get("category", "?")
+        title = x.get("title", "")[:100]
+        assessment = x.get("assessment", "")[:150]
+        item_lines.append(f"- [{score}] ({cat}) {title}\n  {assessment}")
+
+    prompt_template = get_prompt("summarize_themes", FALLBACK_THEMES_PROMPT)
+    domain = get_agent_domain()
+    prompt = prompt_template.format(
+        item_count=len(items),
+        item_lines=chr(10).join(item_lines),
+        domain=domain,
+    )
 
     try:
         content = invoke_llm(llm, prompt, node="summarize_themes", model_name=state["model"])
@@ -81,15 +106,14 @@ def write_brief(state: HoundState) -> HoundState:
 
     print("  Writing executive brief...")
     llm = create_llm(state["model"])
+    domain = get_agent_domain()
 
-    # Format themes for prompt
     themes_text = ""
     for t in themes:
         themes_text += f"\nTheme: {t.get('name', '?')} ({t.get('significance', '?')})\n"
         themes_text += f"  Narrative: {t.get('narrative', '')}\n"
         themes_text += f"  Items: {', '.join(t.get('items', []))}\n"
 
-    # Format alerts
     alerts_text = ""
     if alerts:
         for a in alerts:
@@ -97,31 +121,17 @@ def write_brief(state: HoundState) -> HoundState:
     else:
         alerts_text = "None this week."
 
-    # Top items by score
     top_items = ""
     for x in items[:10]:
         top_items += f"- [{x.get('llm_score', '?')}] {x.get('title', '')[:80]} ({x.get('category', '?')})\n"
 
-    prompt = f"""You are writing a weekly NeuroTech intelligence briefing for a senior researcher specializing in implantable BCIs, ECoG/sEEG, and neural interfaces.
-
-THEMES IDENTIFIED:
-{themes_text or "No themes identified."}
-
-PRIORITY ALERTS (score 9-10):
-{alerts_text}
-
-TOP ITEMS THIS WEEK:
-{top_items}
-
-Write a concise executive briefing in Markdown with these sections:
-
-1. **TL;DR** — 2-3 sentences: What mattered this week?
-2. **Themes** — For each theme: "What's new" (1-2 sentences) and "Why it matters" (1 sentence)
-3. **Priority Alerts** — Detail any 9-10 scored items, or note "None"
-4. **What to Watch** — 2-3 things to monitor next week based on this week's signals
-
-Be analytical, not performative. Skip filler. Have opinions on scientific validity.
-Write as a Senior Research Associate, not a corporate drone."""
+    prompt_template = get_prompt("write_brief", FALLBACK_BRIEF_PROMPT)
+    prompt = prompt_template.format(
+        themes_text=themes_text or "No themes identified.",
+        alerts_text=alerts_text,
+        top_items=top_items,
+        domain=domain,
+    )
 
     try:
         content = invoke_llm(llm, prompt, node="write_brief", model_name=state["model"])

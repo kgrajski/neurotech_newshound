@@ -144,6 +144,23 @@ sources:
     url: "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=scirobotics"
     enabled: true
 
+  # --- Company blogs / Substacks ---
+  # NOTE: Additional Substack feeds are auto-added from company_watchlist entries
+  # that have a 'substack' field. These are manually curated extras.
+  - id: neurotechnology_substack
+    name: Neurotechnology (Substack)
+    category: press
+    type: rss
+    url: "https://neurotechnology.substack.com/feed"
+    enabled: true
+
+  - id: paradromics_substack
+    name: Paradromics (Substack)
+    category: press
+    type: rss
+    url: "https://paradromics.substack.com/feed"
+    enabled: true
+
   # --- Regulatory ---
   - id: fda_medwatch
     name: FDA MedWatch Safety
@@ -188,16 +205,108 @@ sources:
     type: tavily
     enabled: true
 
+# ── Company Watchlist ────────────────────────────────────────────────
+# Tracked companies get automatic Tavily queries and RSS feeds.
+# Add new companies manually, or promote them from discoveries.yaml
+# (auto-generated after each run from high-scoring Tavily results).
+#
+# Fields:
+#   name       — Display name
+#   aliases    — Search aliases (auto-generates Tavily queries)
+#   domain     — Primary website domain
+#   substack   — Substack RSS feed URL (optional; added to RSS sources)
+#   enabled    — Set false to pause tracking without deleting
+
+company_watchlist:
+  - name: Paradromics
+    aliases: ["paradromics"]
+    domain: "paradromics.com"
+    substack: "https://paradromics.substack.com/feed"
+    enabled: true
+
+  - name: Axoft
+    aliases: ["axoft", "fleuron"]
+    domain: "axoft.us"
+    enabled: true
+
+  - name: Synchron
+    aliases: ["synchron", "stentrode"]
+    domain: "synchron.com"
+    enabled: true
+
+  - name: Precision Neuroscience
+    aliases: ["precision neuroscience", "precision neuro", "layer 7"]
+    domain: "precisionneuro.io"
+    enabled: true
+
+  - name: Blackrock Neurotech
+    aliases: ["blackrock neurotech", "blackrock microsystems"]
+    domain: "blackrockneurotech.com"
+    enabled: true
+
+  - name: Neuralink
+    aliases: ["neuralink"]
+    domain: "neuralink.com"
+    enabled: true
+
+  - name: Cortera Neurotechnologies
+    aliases: ["cortera"]
+    domain: "cortera.io"
+    enabled: true
+
+  - name: Science Corp
+    aliases: ["science corp"]
+    domain: "science.xyz"
+    enabled: true
+
+  - name: Motif Neurotech
+    aliases: ["motif neurotech"]
+    domain: "motifneuro.com"
+    enabled: true
+
+  - name: Encora Therapeutics
+    aliases: ["encora"]
+    domain: "encoratherapeutics.com"
+    enabled: true
+
+  - name: Augmental
+    aliases: ["augmental", "mouthpad"]
+    domain: "augmental.tech"
+    enabled: true
+
+# ── Curated Industry Sources ────────────────────────────────────────
+# Websites without RSS feeds — searched via Tavily site: queries.
+# Good for newsletters, aggregators, and company pages.
+
+curated_industry_sources:
+  - name: Neurofounders
+    url: "https://www.neurofounders.co/"
+    tavily_query: 'site:neurofounders.co BCI OR "brain-computer interface" OR neurotech OR "neural implant"'
+    enabled: true
+
+  - name: IEEE Spectrum Biomedical
+    url: "https://spectrum.ieee.org/"
+    tavily_query: 'site:spectrum.ieee.org brain-computer interface OR neural implant OR BCI'
+    enabled: true
+
 # ── Tavily search queries ────────────────────────────────────────────
-# These run via Tavily's web search API to catch items outside RSS feeds.
+# Static queries run in addition to auto-generated watchlist queries.
 # Each query costs ~$0.001. Add/remove as needed.
+# NOTE: Company-specific queries are auto-generated from the watchlist
+# above — you do NOT need to duplicate company names here.
 
 tavily_queries:
   - '"brain-computer interface" OR "neural implant" clinical trial'
-  - 'neuralink OR synchron OR paradromics OR "blackrock neurotech" OR "precision neuroscience"'
   - '"intracranial EEG" OR ECoG OR sEEG neural recording human'
   - 'FDA "neural device" OR "brain implant" approval OR clearance'
   - 'BCI funding OR investment "neural interface"'
+
+# ── Prompts ──────────────────────────────────────────────────────────
+# LLM prompts are in prompts.yaml (same directory as this file).
+# Edit prompts.yaml to iterate on analysis quality without touching code.
+# Each prompt is a Jinja2-style template with {variable} placeholders.
+
+prompts_file: "prompts.yaml"
 
 # ── MLflow ───────────────────────────────────────────────────────────
 
