@@ -1,26 +1,16 @@
-"""PubMed E-utilities fetch (no API key required)."""
+"""PubMed E-utilities fetch (no API key required).
+
+The search query is constructed dynamically from vocabulary.yaml via
+tools/vocabulary.py. This replaces the previous hardcoded query and
+allows the vocabulary to grow as new papers are processed.
+"""
 import datetime as dt
 import urllib.parse
 import xml.etree.ElementTree as ET
 from typing import Any, Dict, List
 
 from tools.http import http_get, safe_text
-
-PUBMED_QUERY = (
-    "("
-    '"brain-computer interface"[Title/Abstract] OR BCI[Title/Abstract] OR neuroprosthe*[Title/Abstract] OR '
-    'intracortical[Title/Abstract] OR "microelectrode array"[Title/Abstract] OR "Utah array"[Title/Abstract] OR '
-    '"motor cortex"[Title/Abstract] OR "speech decoding"[Title/Abstract] OR '
-    'ECoG[Title/Abstract] OR sEEG[Title/Abstract] OR "stereo-EEG"[Title/Abstract] OR '
-    '"intracranial EEG"[Title/Abstract] OR iEEG[Title/Abstract]'
-    ") "
-    "AND ("
-    'implant*[Title/Abstract] OR human[Title/Abstract] OR participant*[Title/Abstract] OR patient*[Title/Abstract] OR '
-    'microstimulation[Title/Abstract] OR stimulation[Title/Abstract] OR "closed-loop"[Title/Abstract] OR '
-    'chronic[Title/Abstract] OR long-term[Title/Abstract] OR biocompatib*[Title/Abstract] OR hermetic[Title/Abstract] OR '
-    'encapsulation[Title/Abstract] OR coating[Title/Abstract]'
-    ")"
-)
+from tools.vocabulary import build_pubmed_query
 
 
 def esearch(query: str, days: int, max_items: int) -> List[str]:
@@ -64,6 +54,17 @@ def efetch(pmids: List[str]) -> List[Dict[str, Any]]:
 
 
 def fetch_pubmed_items(days: int, max_items: int) -> List[Dict[str, Any]]:
-    """High-level: search + fetch PubMed items."""
-    pmids = esearch(PUBMED_QUERY, days, max_items)
+    """High-level: search + fetch PubMed items.
+
+    Query is constructed dynamically from vocabulary.yaml. Falls back to
+    a minimal hardcoded query if vocabulary.yaml is missing or empty.
+    """
+    query = build_pubmed_query()
+    if not query:
+        query = (
+            '("brain-computer interface"[Title/Abstract] OR BCI[Title/Abstract] '
+            'OR ECoG[Title/Abstract] OR "neural implant"[Title/Abstract]) '
+            'AND (human[Title/Abstract] OR implant*[Title/Abstract])'
+        )
+    pmids = esearch(query, days, max_items)
     return efetch(pmids[:max_items])

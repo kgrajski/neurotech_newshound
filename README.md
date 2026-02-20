@@ -6,6 +6,29 @@ Built with [LangGraph](https://github.com/langchain-ai/langgraph). Deployed on [
 
 ---
 
+## Agentic AI — A Quick Glossary
+
+If you're new to agentic AI or just want a refresher, here's a cheat sheet for the key concepts used in this project. Each term links to where it lives in the codebase.
+
+| Term | What It Is | Plain-English Analogy |
+|------|-----------|----------------------|
+| **Agent** | A program that uses an LLM to make decisions within a structured workflow — not just generate text, but _act_ (fetch data, score items, write reports). | A research analyst who follows a process but uses judgment at each step. |
+| [**SOUL.md**](workspace/SOUL.md) | Defines the agent's _identity_ — its name, domain focus, values, and boundaries. Short and stable. Think "who am I?" | A job description's mission statement. |
+| [**SKILL.md**](workspace/skills/neuro_hound/SKILL.md) | The complete _operational specification_ — goals, tools, workflow, scoring criteria, constraints. Think "how do I do my job?" | A detailed SOP (Standard Operating Procedure). |
+| [**config.yaml**](workspace/skills/neuro_hound/config.yaml) | Runtime settings a user edits without touching code — sources, models, company watchlist, Tavily queries. | The knobs and dials on a control panel. |
+| [**prompts.yaml**](workspace/skills/neuro_hound/prompts.yaml) | All LLM prompt templates in one file. Edit to change _how_ the LLM reasons, without changing _what_ the pipeline does. | The instructions you'd give a new hire. |
+| [**vocabulary.yaml**](workspace/skills/neuro_hound/vocabulary.yaml) | Domain vocabulary (126+ terms) used to dynamically construct PubMed queries and regex filters. Grows as new papers are processed. | A specialist's glossary that expands with experience. |
+| **Tool** | A Python module that does one thing — fetch from PubMed, search Tavily, score with regex, load config. Tools live in `tools/`. | Individual instruments in a lab. |
+| **Node** | A step in the workflow graph — each node calls one or more tools, updates the shared state, and passes control to the next node. Nodes live in `nodes/`. | A station on an assembly line. |
+| **State** | A typed Python dict (`HoundState`) that flows through the graph. Each node reads from it and writes to it. | A clipboard passed from station to station. |
+| **[LangGraph](https://github.com/langchain-ai/langgraph)** | The framework that wires nodes into a directed graph with conditional edges (e.g., "skip LLM if nothing passed regex"). | The conveyor belt connecting the stations. |
+| **Reflection Pattern** | A second LLM call that _critiques_ the first LLM's output — checking calibration, spotting missed connections, flagging vaporware. | A senior reviewer reading a junior analyst's draft. |
+| **[MLflow](https://mlflow.org/)** | Experiment tracker that logs every run — parameters, token costs, artifacts. Lets you compare runs over time. | A lab notebook that records every experiment. |
+
+> **Why so many files?** Each layer has one job: SOUL.md says _who_, SKILL.md says _how_, config.yaml says _what to monitor_, prompts.yaml says _what to ask the LLM_, and vocabulary.yaml says _what terms to search for_. This separation means you can change the search vocabulary without editing code, or swap the LLM model without touching prompts. See [ADR-001](docs/ADR-001-agent-specification.md) for the full rationale.
+
+---
+
 ## What This Project Does
 
 Each week, the agent:
@@ -108,6 +131,7 @@ single responsibility and a clear authority:
 | **Specification** | [`SKILL.md`](workspace/skills/neuro_hound/SKILL.md) | Goals, tools, workflow, constraints | Developers + OpenClaw |
 | **Configuration** | [`config.yaml`](workspace/skills/neuro_hound/config.yaml) | Sources, watchlist, models | Python pipeline |
 | **Prompts** | [`prompts.yaml`](workspace/skills/neuro_hound/prompts.yaml) | LLM prompt templates | Python pipeline |
+| **Vocabulary** | [`vocabulary.yaml`](workspace/skills/neuro_hound/vocabulary.yaml) | Domain terms for PubMed/regex queries | Python pipeline |
 
 **Why both SOUL.md and SKILL.md?** The project is deployed on [OpenClaw](https://openclaw.ai/),
 which uses a SOUL.md + SKILL.md convention (identity shared across skills,
@@ -137,6 +161,7 @@ neurotech_newshound/
 │   │       ├── SKILL.md               # Full operational specification
 │   │       ├── config.yaml            # Sources, watchlist, models, behavior
 │   │       ├── prompts.yaml           # LLM prompt templates (editable, MLflow-tracked)
+│   │       ├── vocabulary.yaml        # Domain vocabulary for dynamic query construction
 │   │       ├── run.py                 # CLI entry point
 │   │       ├── state.py               # HoundState TypedDict
 │   │       ├── graph.py               # LangGraph StateGraph definition
@@ -149,6 +174,7 @@ neurotech_newshound/
 │   │       │   └── review.py          #   Reflection + dedup + company discovery
 │   │       └── tools/                 # Shared utilities
 │   │           ├── config.py          #   Config + prompts + watchlist loader
+│   │           ├── vocabulary.py      #   Domain vocabulary manager + PubMed query builder
 │   │           ├── http.py            #   HTTP + SSL helper
 │   │           ├── pubmed.py          #   PubMed E-utilities client
 │   │           ├── rss.py             #   Registry-driven RSS/Atom parser
@@ -184,7 +210,7 @@ neurotech_newshound/
 
 ## Configuration
 
-Two YAML files control all runtime behavior — no code edits needed:
+Three YAML files control all runtime behavior — no code edits needed:
 
 **`config.yaml`** — sources, models, company watchlist, Tavily queries:
 
@@ -223,6 +249,23 @@ score_item: |
 ```
 
 Edit prompts to iterate on analysis quality. Prompt text is logged to MLflow for tracking.
+
+**`vocabulary.yaml`** — domain vocabulary for dynamic query construction:
+
+```yaml
+primary_terms:
+  interfaces:
+    - "brain-computer interface"
+    - "BCI"
+    - "neural implant"
+  recording_modalities:
+    - "electrocorticography"
+    - "ECoG"
+    - "micro-ECoG"
+    # ... 126+ terms across 12 categories
+```
+
+PubMed queries are built at runtime from this vocabulary — no hardcoded queries. Terms are extracted from representative papers and tracked with provenance metadata. A configurable `max_terms_per_category` setting (default: no limit) provides a ceiling, though term counts naturally self-stabilize as domain vocabulary is finite.
 
 ---
 
@@ -369,7 +412,7 @@ The cron job runs the agent every Saturday and sends a notification via WhatsApp
 | **NLP** | Regex pre-filter, LLM-based domain scoring, deduplication |
 | **Observability** | MLflow (params, metrics, artifacts per run) |
 | **Output** | HTML report, operational dashboard, Markdown, JSON, MLflow artifacts |
-| **Configuration** | YAML-driven (config.yaml + prompts.yaml — sources, models, prompts, watchlist) |
+| **Configuration** | YAML-driven (config.yaml + prompts.yaml + vocabulary.yaml — sources, models, prompts, vocabulary, watchlist) |
 | **Agent Specification** | SOUL.md (identity) + SKILL.md (operational spec) — see [ADR-001](docs/ADR-001-agent-specification.md) |
 | **Deployment** | OpenClaw, rsync, Digital Ocean |
 | **Development** | Cursor IDE, Python 3.11+, python-dotenv |
@@ -387,7 +430,8 @@ The cron job runs the agent every Saturday and sends a notification via WhatsApp
 | **5** | Config-driven architecture, operational dashboard, branding | Done |
 | **6** | OpenClaw deployment, weekly cron, WhatsApp/Telegram notifications | Done |
 | **7** | Company watchlist, Substack RSS, externalized prompts, auto-discovery, agent spec refactor ([ADR-001](docs/ADR-001-agent-specification.md)) | **Done** |
-| 8 | Historical backfill mode, dashboard-driven config editing | Planned |
+| **7b** | Domain vocabulary store (`vocabulary.yaml`), dynamic PubMed query construction, keyword bootstrapping from papers | **Done** |
+| 8 | Historical backfill mode (PubMed, bioRxiv/medRxiv, arXiv APIs — 5-year depth) | In progress |
 | 9 | Agentic meta-layer: ReAct-style reasoning about coverage gaps and source curation | Design goal |
 | 10 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
 

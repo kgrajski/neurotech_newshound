@@ -301,6 +301,14 @@ tavily_queries:
   - 'FDA "neural device" OR "brain implant" approval OR clearance'
   - 'BCI funding OR investment "neural interface"'
 
+# ── Vocabulary ───────────────────────────────────────────────────────
+# Domain vocabulary for dynamic search query construction.
+# Edit vocabulary.yaml to add/remove terms — no code changes needed.
+# PubMed queries are built at runtime from this vocabulary.
+# In agentic mode, terms are auto-extracted from high-scoring papers.
+
+vocabulary_file: "vocabulary.yaml"
+
 # ── Prompts ──────────────────────────────────────────────────────────
 # LLM prompts are in prompts.yaml (same directory as this file).
 # Edit prompts.yaml to iterate on analysis quality without touching code.

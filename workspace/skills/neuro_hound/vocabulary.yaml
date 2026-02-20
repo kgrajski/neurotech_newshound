@@ -1,0 +1,243 @@
+# ──────────────────────────────────────────────────────────────────────
+# NeuroTech NewsHound — Domain Vocabulary
+# ──────────────────────────────────────────────────────────────────────
+# Search query terms extracted from representative BCI literature.
+# Used by tools/vocabulary.py to dynamically construct PubMed queries,
+# enrich Tavily queries, and improve regex pre-filtering.
+#
+# Structure:
+#   primary_terms   — "Is this paper about BCI?" (OR'd in PubMed clause 1)
+#   qualifier_terms — "Is this clinically/translationally relevant?" (clause 2)
+#   provenance      — Where each term came from (for auditability)
+#
+# Limits:
+#   max_terms_per_category: 0 means no limit. Set a positive integer
+#   to cap category size. When full, new terms go to a "pending" list
+#   for human review.
+#
+# Maintenance:
+#   - Manual: edit this file directly
+#   - Agentic: tools/vocabulary.py add_terms() appends here automatically
+#     when the LLM extracts vocabulary from high-scoring papers
+#   - Terms naturally self-stabilize as domain vocabulary is finite
+# ──────────────────────────────────────────────────────────────────────
+
+settings:
+  max_terms_per_category: 0       # 0 = no limit
+  pubmed_field: "Title/Abstract"  # PubMed search field for all terms
+
+# ── Primary Terms ───────────────────────────────────────────────────
+# These define the domain. A paper matching ANY of these is a candidate.
+# Organized by sub-category for readability; flattened at query time.
+
+primary_terms:
+
+  interfaces:
+    - "brain-computer interface"
+    - "BCI"
+    - "brain-machine interface"
+    - "BMI"
+    - "neural interface"
+    - "neural implant"
+    - "neuroprosthe*"
+    - "neuromotor prosthesis"
+    - "speech neuroprosthesis"
+    - "voice synthesis neuroprosthesis"
+    - "motor neuroprosthesis"
+    - "communication prosthesis"
+
+  recording_modalities:
+    - "electrocorticography"
+    - "ECoG"
+    - "micro-electrocorticography"
+    - "micro-ECoG"
+    - "sEEG"
+    - "stereo-EEG"
+    - "stereotactic EEG"
+    - "intracranial EEG"
+    - "iEEG"
+    - intracortical
+    - "microelectrode array"
+    - "Utah array"
+    - Neuropixels
+    - "depth electrode"
+    - "subdural electrode"
+    - "subdural grid"
+    - "high-density electrode"
+
+  named_devices:
+    - Stentrode
+    - BrainGate
+    - CortiCom
+    - "Layer 7"
+    - BISC
+
+  signal_types:
+    - "high gamma"
+    - "local field potential"
+    - "LFP"
+    - "single-unit"
+    - "multi-unit"
+    - "action potential"
+    - "neural spike"
+    - "broadband high-frequency"
+    - "somatosensory evoked potential"
+    - "cortical traveling wave"
+    - "threshold crossing"
+
+  applications:
+    - "speech decoding"
+    - "motor decoding"
+    - "handwriting decoding"
+    - "cursor control"
+    - "spelling BCI"
+    - "closed-loop"
+    - "adaptive decoding"
+    - "brain-to-text"
+    - "brain-to-speech"
+    - "brain-to-voice"
+
+  brain_regions:
+    - "motor cortex"
+    - "sensorimotor cortex"
+    - "ventral precentral gyrus"
+    - "superior temporal gyrus"
+    - "Broca's area"
+    - "supplementary motor area"
+    - "precentral gyrus"
+    - "postcentral gyrus"
+    - "inferior frontal gyrus"
+
+# ── Qualifier Terms ─────────────────────────────────────────────────
+# These filter for clinical/translational relevance. A paper must match
+# at least one primary AND one qualifier term.
+
+qualifier_terms:
+
+  clinical:
+    - "implant*"
+    - human
+    - "participant*"
+    - "patient*"
+    - "clinical trial"
+    - "first-in-human"
+    - tetraplegia
+    - "spinal cord injury"
+    - "amyotrophic lateral sclerosis"
+    - ALS
+    - "locked-in"
+    - anarthria
+    - dysarthria
+    - paralysis
+    - epilepsy
+
+  recording_context:
+    - chronic
+    - "long-term"
+    - longitudinal
+    - "signal stability"
+    - "recording stability"
+    - "representational drift"
+    - "failure mode"
+    - "signal degradation"
+
+  stimulation:
+    - microstimulation
+    - stimulation
+    - neuromodulation
+    - "deep brain stimulation"
+    - DBS
+    - "cortical stimulation"
+    - "responsive neurostimulation"
+
+  materials:
+    - "biocompatib*"
+    - hermetic
+    - encapsulation
+    - coating
+    - PEDOT
+    - "PEDOT:PSS"
+    - hydrogel
+    - "conductive hydrogel"
+    - "titanium nitride"
+    - parylene
+    - polyimide
+    - platinum
+    - "platinum-iridium"
+    - "carbon nanotube"
+    - graphene
+    - "foreign body response"
+    - biohybrid
+    - "living neural interface"
+
+  regulatory:
+    - FDA
+    - IDE
+    - PMA
+    - "510(k)"
+    - "De Novo"
+    - "investigational device"
+    - "non-significant risk"
+
+  methods:
+    - "Kalman filter"
+    - "recurrent neural network"
+    - "convolutional neural network"
+    - "deep learning"
+    - "linear discriminant analysis"
+    - "neural manifold"
+    - "population decoding"
+
+# ── Provenance ──────────────────────────────────────────────────────
+# Tracks where terms were sourced from. Not used in query construction,
+# but valuable for auditability and convergence tracking.
+
+provenance:
+  batch_1:
+    date: "2026-02-17"
+    papers:
+      - "Anumanchipalli et al. 2019"
+      - "Bouchard et al. 2013"
+      - "Card et al. 2024"
+      - "Chang 2024"
+      - "Herff et al. 2015"
+      - "Metzger et al. 2023"
+      - "Moses et al. 2021"
+      - "Patel et al. 2024"
+      - "Pun et al. 2024"
+      - "Silva et al. 2024a"
+      - "Silva et al. 2024b"
+      - "Vansteensel et al. 2016"
+      - "Vansteensel et al. 2024"
+      - "Willett et al. 2023"
+    focus: "Speech BCI, ECoG, sEEG"
+
+  batch_2:
+    date: "2026-02-17"
+    papers:
+      - "Cheng et al. 2024 — Hydrogels for neural interfaces"
+      - "Boufidis & Garg et al. 2025 — Bio-inspired / biohybrid electronics"
+      - "NYBCI 2024 Program"
+      - "Verwoert et al. 2022 — sEEG speech dataset"
+      - "Verwoert et al. 2025 — Whole-brain articulatory/acoustic/semantic"
+      - "Wairagkar et al. 2025 — Instantaneous voice synthesis"
+      - "Wyse-Sookoo et al. 2024 — ECoG HG stability, ALS, 1-year"
+      - "Hochberg et al. 2006 — BrainGate, first neuromotor prosthesis"
+      - "Barrese et al. 2016 — Utah array failure modes"
+      - "Duraivel et al. 2023 — High-res μECoG speech decoding"
+      - "Hettick et al. 2025 — Precision Neuroscience Layer 7"
+      - "Jarosiewicz et al. 2013 — Closed-loop calibration, BrainGate2"
+      - "Driscoll et al. 2022 — Representational drift"
+    focus: "Motor BCI, materials, electrode failure, μECoG, drift"
+
+  batch_3:
+    date: "2026-02-17"
+    papers:
+      - "Jung et al. 2025 — BISC 65,536-electrode wireless μECoG"
+    focus: "Monolithic CMOS, wireless, subdural, high channel count"
+    new_terms_added:
+      - "titanium nitride"
+      - parylene
+      - BISC
+      - subdural
+      - "cortical traveling wave"

@@ -54,8 +54,13 @@ the output in 5 minutes and know what mattered this week.
 12. **Source health monitoring**: Track per-source yield (items fetched,
     in-scope count, last hit date). Flag cold sources that haven't produced
     in-scope items in 30+ days.
+13. **Vocabulary maintenance**: Extract domain terminology from high-scoring
+    papers and propose additions to `vocabulary.yaml`. The PubMed query and
+    regex pre-filter are constructed dynamically from this vocabulary. Term
+    counts self-stabilize as domain vocabulary is finite. A configurable
+    `max_terms_per_category` limit prevents unbounded growth.
 
-> **Honesty note**: Goals 10–12 are currently implemented as fixed code paths
+> **Honesty note**: Goals 10–13 are currently implemented as fixed code paths
 > in the pipeline — they always run in the same way. The agent does not yet
 > *reason* about whether or when to pursue these goals. This is a documented
 > design gap; see `docs/ADR-001-agent-specification.md`.
@@ -73,6 +78,7 @@ The skill has access to the following tools, implemented as Python modules:
 | Dedup history | `tools/dedup.py` | Hash-based history to skip confirmed low-value repeats |
 | LLM | `tools/llm.py` | Multi-model LLM factory (GPT-4o-mini, GPT-4o, Gemini, Claude) with usage tracking |
 | Config loader | `tools/config.py` | Reads config.yaml, prompts.yaml, watchlist, curated sources |
+| Vocabulary | `tools/vocabulary.py` | Domain vocabulary store; builds PubMed queries dynamically from vocabulary.yaml |
 | Source registry | `tools/sources.py` | JSON-persisted source stats (yield, last hit, health) |
 | HTML report | `tools/html_report.py` | Polished HTML intelligence briefing generator |
 | Dashboard | `tools/html_dashboard.py` | Operational dashboard (source health, config, run metrics) |
@@ -148,6 +154,13 @@ for what the agent monitors and how.
 **`prompts.yaml`** — All LLM prompts as templates with `{variable}`
 placeholders. Edit here to iterate on analysis quality. Prompt text is logged
 to MLflow for A/B tracking.
+
+**`vocabulary.yaml`** — Domain vocabulary organized into primary terms
+(domain-defining) and qualifier terms (relevance-filtering). The PubMed query
+is constructed dynamically at runtime. Terms are extracted from representative
+papers; provenance is tracked. A `max_terms_per_category` setting (default: 0 =
+no limit) provides a configurable ceiling, though term counts naturally
+self-stabilize as domain vocabulary is finite.
 
 ### Company Watchlist (config.yaml)
 
