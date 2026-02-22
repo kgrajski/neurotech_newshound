@@ -23,6 +23,8 @@ If you're new to agentic AI or just want a refresher, here's a cheat sheet for t
 | **State** | A typed Python dict (`HoundState`) that flows through the graph. Each node reads from it and writes to it. | A clipboard passed from station to station. |
 | **[LangGraph](https://github.com/langchain-ai/langgraph)** | The framework that wires nodes into a directed graph with conditional edges (e.g., "skip LLM if nothing passed regex"). | The conveyor belt connecting the stations. |
 | **Reflection Pattern** | A second LLM call that _critiques_ the first LLM's output — checking calibration, spotting missed connections, flagging vaporware. | A senior reviewer reading a junior analyst's draft. |
+| **ReAct Pattern** | A multi-turn loop where the LLM _reasons_ (Thought), _acts_ (calls a tool), and _observes_ the result — then decides what to do next. The agent, not the code, chooses which tools to use. | A researcher who checks their work, notices a gap, looks something up, and decides whether to keep going. |
+| **Meta-Tools** | Functions the ReAct meta-agent can call — check vocabulary gaps, assess source health, discover companies, evaluate coverage. Defined in `tools/meta_tools.py`. | The reference books and checklists the researcher reaches for. |
 | **[MLflow](https://mlflow.org/)** | Experiment tracker that logs every run — parameters, token costs, artifacts. Lets you compare runs over time. | A lab notebook that records every experiment. |
 
 > **Why so many files?** Each layer has one job: SOUL.md says _who_, SKILL.md says _how_, config.yaml says _what to monitor_, prompts.yaml says _what to ask the LLM_, and vocabulary.yaml says _what terms to search for_. This separation means you can change the search vocabulary without editing code, or swap the LLM model without touching prompts. See [ADR-001](docs/ADR-001-agent-specification.md) for the full rationale.
@@ -40,8 +42,8 @@ Each week, the agent:
 5. **Clusters** scored items into 2–5 themes with significance ratings
 6. **Writes** an executive brief (TL;DR, themes, alerts, what-to-watch)
 7. **Reviews** the brief via a Reflection Pattern — a reviewer LLM critiques the analysis and adjusts scores
-8. **Discovers** new companies from high-scoring results and writes candidates to `discoveries.yaml` for human review and promotion to the watchlist
-9. **Produces** a polished HTML report, operational dashboard, markdown report, alerts JSON, and full results JSON
+8. **Meta-reflects** using a ReAct agent that reasons about the pipeline's output and decides which self-improvement actions to take — checking vocabulary gaps, source health, coverage blind spots, and discovering new companies. The LLM chooses which tools to call (or none, on a quiet week).
+9. **Produces** a polished HTML report, operational dashboard, markdown report, alerts JSON, meta-agent trace, and full results JSON
 10. **Logs** to MLflow — parameters, token/cost metrics, per-source yield, and report artifacts
 
 All sources, models, and behavior are configured via YAML files (`config.yaml`, `prompts.yaml`, `vocabulary.yaml`) — no code edits needed to add sources, change models, update prompts, or expand search vocabulary.
@@ -81,17 +83,25 @@ flowchart TD
     subgraph llm ["LLM Pipeline"]
         F["score_items<br>(LLM × N items)"] --> G["summarize_themes<br>(cluster + significance)"]
         G --> H["write_brief<br>(executive briefing)"]
-        H --> I["review<br>(Reflection Pattern<br>+ company discovery)"]
+        H --> I["review<br>(Reflection Pattern)"]
     end
 
-    I --> J["HTML Report · Dashboard<br>Markdown · Alerts JSON · MLflow"]
+    I --> M
 
-    I -->|"new companies"| K["discoveries.yaml<br>(human review)"]
+    subgraph react ["ReAct Meta-Agent (Phase 9)"]
+        M["meta_reflect<br>(Thought → Action → Observe)"]
+        M -.->|"tool calls"| MT["check_vocabulary_gaps<br>check_source_health<br>discover_companies<br>assess_coverage<br>add_vocabulary_terms<br>propose_source"]
+    end
+
+    M --> J["HTML Report · Dashboard<br>Markdown · Alerts JSON · MLflow"]
+    M -->|"new companies"| K["discoveries.yaml<br>(human review)"]
+    M -->|"trace log"| MA["meta_actions.yaml"]
     K -->|"promote"| W
 
     style config fill:#e8f5e9,stroke:#43a047
     style fetch fill:#f0f4f8,stroke:#4a90d9
     style llm fill:#fff3e0,stroke:#e67e22
+    style react fill:#e3f2fd,stroke:#1565c0
 ```
 
 ### Backfill Mode (Phase 8)
@@ -119,11 +129,12 @@ flowchart LR
 ### Design Patterns
 
 - **Config-Driven Sources**: All 23+ sources defined in `config.yaml`. Add a journal by adding 4 lines of YAML — no code changes needed.
-- **Adaptive Source Management**: The company watchlist auto-generates Tavily queries from aliases and injects Substack RSS feeds. After each run, company discovery extracts new entities from high-scoring results and writes them to `discoveries.yaml` for human review and promotion.
+- **Adaptive Source Management**: The company watchlist auto-generates Tavily queries from aliases and injects Substack RSS feeds. The ReAct meta-agent can discover new companies, flag cold sources, and propose new feeds.
+- **ReAct Meta-Reflection**: After the pipeline completes, a genuine ReAct agent receives the output and decides which self-improvement tools to invoke — vocabulary gap detection, source health checks, company discovery, coverage assessment. The LLM reasons about *whether* to act (not a fixed code path). Trace logged to `meta_actions.yaml`.
 - **Dynamic Query Construction**: PubMed queries are built at runtime from `vocabulary.yaml` (126+ domain terms extracted from representative papers). The vocabulary grows as new papers are processed and self-stabilizes as domain terminology is finite.
 - **Two-Stage Scoring**: Regex pre-filter (free, ~485 → ~56 items) followed by LLM assessment with domain-aware judgment. Keeps costs near-zero while leveraging LLM reasoning where it matters.
 - **Deduplication**: Hash-based history tracks every scored item. Items scored < 7 in prior runs are skipped (confirmed low-value). Items ≥ 7 are re-evaluated (things evolve — a preprint becomes a publication, a trial advances).
-- **Reflection Pattern**: The reviewer node critiques the executive brief, checks calibration of significance ratings, flags missed connections, and calls out vaporware — mimicking a PI reviewing a research associate's work.
+- **Reflection Pattern**: The reviewer node critiques the executive brief, checks calibration of significance ratings, flags missed connections, and calls out vaporware — mimicking a PI reviewing a research associate's work. (Company discovery has moved to the ReAct meta-agent.)
 - **Source Registry**: JSON-persisted registry tracks per-source yield stats (items fetched, in-scope count, last hit date). Supports auto-discovery of new sources via Tavily and cold-source pruning.
 - **Historical Backfill**: Separate entry point (`backfill.py`) fetches 5 years of archival data from PubMed, bioRxiv, medRxiv, and arXiv using their APIs (RSS feeds are current-only). Regex-scored and stored in the dedup history for future runs.
 - **Conditional Edge**: If nothing passes the regex pre-filter (quiet week), the LLM pipeline is skipped entirely. No API cost on empty weeks.
@@ -184,12 +195,15 @@ retain both for OpenClaw compatibility, but keep SOUL.md slim (identity only)
 and SKILL.md comprehensive (the complete operational spec). See
 [ADR-001](docs/ADR-001-agent-specification.md) for the full rationale.
 
-**An honest note on agency:** The current pipeline is an LLM-augmented
-workflow — a fixed sequence of fetch/score/synthesize/review steps. Meta-
-capabilities like company discovery and source health monitoring are
-implemented as procedural code, not agent-driven reasoning. SKILL.md documents
-this gap and the roadmap toward genuine agency. We believe honesty about the
-current level of automation is more valuable than overstating capabilities.
+**An honest note on agency:** The core pipeline (fetch/score/synthesize/review)
+is a fixed LLM-augmented workflow — deterministic, efficient, and predictable.
+Phase 9 added a genuine agentic layer: a ReAct meta-agent that _reasons_ about
+the pipeline's output and _decides_ which self-improvement tools to call
+(vocabulary updates, source health, company discovery, coverage assessment).
+The agent chooses its actions at runtime — this is not a fixed code path. The
+remaining gap: the agent does not yet read SOUL.md and SKILL.md itself to
+derive its goals. See [ADR-001](docs/ADR-001-agent-specification.md) for the
+full honesty analysis.
 
 ---
 
@@ -215,7 +229,8 @@ neurotech_newshound/
 │   │       │   ├── prefilter.py       #   Regex pre-filter + dedup
 │   │       │   ├── score.py           #   LLM per-item scoring
 │   │       │   ├── summarize.py       #   Theme clustering + executive brief
-│   │       │   └── review.py          #   Reflection + dedup + company discovery
+│   │       │   ├── review.py          #   Reflection + score adjustment
+│   │       │   └── meta_reflect.py    #   ReAct meta-agent (Phase 9)
 │   │       └── tools/                 # Shared utilities
 │   │           ├── config.py          #   Config + prompts + watchlist loader
 │   │           ├── vocabulary.py      #   Domain vocabulary manager + PubMed query builder
@@ -229,6 +244,7 @@ neurotech_newshound/
 │   │           ├── scoring.py         #   Regex scoring patterns
 │   │           ├── dedup.py           #   Deduplication history
 │   │           ├── llm.py             #   LLM factory + usage tracker
+│   │           ├── meta_tools.py       #   ReAct meta-agent tool registry
 │   │           ├── html_report.py     #   HTML report generator
 │   │           ├── html_dashboard.py  #   Operational dashboard generator
 │   │           └── mlflow_tracker.py  #   MLflow experiment logging
@@ -337,11 +353,16 @@ PubMed queries are built at runtime from this vocabulary — no hardcoded querie
 
 Websites without RSS feeds (e.g., [Neurofounders](https://www.neurofounders.co/), IEEE Spectrum) are searched via Tavily `site:` queries.
 
-### Auto-Discovery
+### Auto-Discovery (via ReAct Meta-Agent)
 
-After each run, the pipeline:
-1. **Domain discovery**: Tracks which web domains yield multiple high-scoring items from Tavily. Proposes new RSS sources.
-2. **Company discovery**: Uses an LLM call to extract new company names from high-scoring Tavily results. Writes candidates to `discoveries.yaml` with evidence and confidence scores for human review and promotion to the watchlist.
+After the main pipeline completes, the ReAct meta-agent reasons about the results and may:
+1. **Discover companies**: Extract new BCI company names from high-scoring items and write them to `discoveries.yaml` for human review and promotion to the watchlist.
+2. **Assess coverage**: Identify blind spots in topic coverage and suggest new search terms.
+3. **Check source health**: Flag cold or underperforming sources.
+4. **Expand vocabulary**: Detect domain terms from high-scoring items not yet in `vocabulary.yaml` and add them.
+5. **Propose sources**: Suggest new RSS feeds or Tavily queries based on patterns in the results.
+
+These are not fixed code paths — the LLM decides which tools to call (or none) based on the pipeline's output. The trace is logged to `meta_actions.yaml` and displayed on the operational dashboard.
 
 The source registry caps at 40 sources and prunes cold (30-day no-hit) discovered sources automatically.
 
@@ -410,10 +431,11 @@ python dev/test_run.py --days 7 --model gpt-4o
 
 Output goes to `dev/sample_output/`:
 - `YYYY-MM-DD.html` — Polished HTML intelligence briefing
-- `dashboard.html` — Operational dashboard (sources, config, run metrics)
+- `dashboard.html` — Operational dashboard (sources, config, run metrics, meta-agent trace)
 - `YYYY-MM-DD.md` — Markdown report with executive brief
 - `YYYY-MM-DD.alerts.json` — Priority items (score 9–10)
 - `YYYY-MM-DD.full.json` — Machine-readable results + usage metrics
+- `meta_actions.yaml` — ReAct meta-agent trace (tools called, reasoning, observations)
 
 ### Historical Backfill
 
@@ -470,7 +492,7 @@ The cron job runs the agent every Saturday and sends a notification via WhatsApp
 
 | Layer | Technologies |
 |-------|-------------|
-| **Agentic AI** | LangGraph, LangChain |
+| **Agentic AI** | LangGraph, LangChain, ReAct pattern (custom implementation) |
 | **LLMs** | GPT-4o-mini (default), GPT-4o, Gemini 2.0 Flash, Claude (multi-model routing) |
 | **Data Sources** | PubMed E-utilities, RSS/Atom (21+ feeds incl. Substacks), Tavily Search, bioRxiv/medRxiv API, arXiv API |
 | **NLP** | Regex pre-filter, LLM-based domain scoring, deduplication |
@@ -495,8 +517,8 @@ The cron job runs the agent every Saturday and sends a notification via WhatsApp
 | **6** | OpenClaw deployment, weekly cron, WhatsApp/Telegram notifications | Done |
 | **7** | Company watchlist, Substack RSS, externalized prompts, auto-discovery, agent spec refactor ([ADR-001](docs/ADR-001-agent-specification.md)) | **Done** |
 | **7b** | Domain vocabulary store (`vocabulary.yaml`), dynamic PubMed query construction, keyword bootstrapping from papers | **Done** |
-| 8 | Historical backfill mode (PubMed, bioRxiv/medRxiv, arXiv APIs — 5-year depth) | In progress |
-| 9 | Agentic meta-layer: ReAct-style reasoning about coverage gaps and source curation | Design goal |
+| **8** | Historical backfill mode (PubMed, bioRxiv/medRxiv, arXiv APIs — 5-year depth) | **Done** |
+| **9** | Agentic meta-layer: ReAct meta-agent with tool-calling for vocabulary, source health, company discovery, coverage assessment | **Done** |
 | 10 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
 
 This project shares design patterns with [trading_etf](https://github.com/kgrajski/trading_etf), an ETF trading system with an agentic AI analyst — same LangGraph architecture, Reflection Pattern, and multi-model routing approach applied to a different domain.
