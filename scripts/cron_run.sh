@@ -38,6 +38,15 @@ fi
 
 echo "$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Run ${STATUS}" >> "$LOG_FILE"
 
+# Publish reports to OpenClaw agent workspace so the chat agent can read them
+OPENCLAW_REPORTS="/home/openclaw/.openclaw/workspace/skills/neurotech_reports"
+mkdir -p "$OPENCLAW_REPORTS"
+cp -r "$ARCHIVE_DIR"/* "$OPENCLAW_REPORTS/" 2>/dev/null || true
+cp "$SKILL_DIR/vocabulary.yaml" "$OPENCLAW_REPORTS/" 2>/dev/null || true
+cp "$SKILL_DIR/config.yaml" "$OPENCLAW_REPORTS/" 2>/dev/null || true
+chown -R openclaw:openclaw "$OPENCLAW_REPORTS" 2>/dev/null || true
+echo "$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Published to OpenClaw workspace" >> "$LOG_FILE"
+
 # Send notifications via OpenClaw
 OPENCLAW="/opt/openclaw-cli.sh"
 

@@ -27,7 +27,7 @@ from tools.llm import create_llm, invoke_llm
 from tools.meta_tools import call_tool, get_tool_descriptions
 from tools.config import get_prompt, get_agent_domain
 
-MAX_ITERATIONS = 5
+MAX_ITERATIONS = 16
 
 FALLBACK_SYSTEM_PROMPT = """You are the NeuroTech NewsHound's meta-reflection agent. Your job is to
 review the pipeline's output and decide what self-improvement actions to take.

@@ -89,8 +89,20 @@ ssh "${DROPLET_USER}@${DROPLET_HOST}" \
     "cd ${REMOTE_SKILL} && python3 -u run.py $*"
 echo ""
 
-# ── Step 5: Fetch results ────────────────────────────────────────────
-echo "=== [5/5] Fetching results ==="
+# ── Step 5: Publish to OpenClaw workspace ─────────────────────────────
+echo "=== [5/6] Publishing reports to OpenClaw agent workspace ==="
+OPENCLAW_REPORTS="/home/openclaw/.openclaw/workspace/skills/neurotech_reports"
+ssh "${DROPLET_USER}@${DROPLET_HOST}" "\
+    mkdir -p ${OPENCLAW_REPORTS} && \
+    cp -r ${REMOTE_WORKSPACE}/archives/neurotech/* ${OPENCLAW_REPORTS}/ 2>/dev/null && \
+    cp ${REMOTE_WORKSPACE}/skills/neuro_hound/vocabulary.yaml ${OPENCLAW_REPORTS}/ 2>/dev/null && \
+    cp ${REMOTE_WORKSPACE}/skills/neuro_hound/config.yaml ${OPENCLAW_REPORTS}/ 2>/dev/null && \
+    chown -R openclaw:openclaw ${OPENCLAW_REPORTS} && \
+    echo '  Published to ${OPENCLAW_REPORTS}'"
+echo ""
+
+# ── Step 6: Fetch results ────────────────────────────────────────────
+echo "=== [6/6] Fetching results ==="
 LOCAL_ARCHIVES="${PROJECT_DIR}/workspace/archives/neurotech/"
 REMOTE_ARCHIVES="${REMOTE_WORKSPACE}/archives/neurotech/"
 
