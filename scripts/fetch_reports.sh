@@ -31,28 +31,45 @@ echo "  Remote: ${REMOTE_ARCHIVES}"
 echo "  Local:  ${LOCAL_ARCHIVES}"
 echo ""
 
+REMOTE_SKILL="${REMOTE_WORKSPACE}/skills/neuro_hound"
+LOCAL_SKILL="${PROJECT_DIR}/workspace/skills/neuro_hound"
+
 mkdir -p "$LOCAL_ARCHIVES"
 
+# Fetch reports and archives
 rsync -avz \
     "${DROPLET_USER}@${DROPLET_HOST}:${REMOTE_ARCHIVES}" \
     "${LOCAL_ARCHIVES}"
+
+# Pull back vocabulary.yaml (meta-agent may have added terms on the droplet)
+echo ""
+echo "=== Syncing vocabulary changes ==="
+rsync -avz \
+    "${DROPLET_USER}@${DROPLET_HOST}:${REMOTE_SKILL}/vocabulary.yaml" \
+    "${LOCAL_SKILL}/vocabulary.yaml"
 
 echo ""
 echo "=== Fetch complete ==="
 
 # Show what we got
-REPORT_COUNT=$(find "$LOCAL_ARCHIVES" -name "*.md" -not -name ".gitkeep" 2>/dev/null | wc -l | tr -d ' ')
+REPORT_COUNT=$(find "$LOCAL_ARCHIVES" -name "*.md" -not -name ".gitkeep" -not -path "*/backfill/*" 2>/dev/null | wc -l | tr -d ' ')
 HTML_COUNT=$(find "$LOCAL_ARCHIVES" -name "*.html" -not -name "dashboard.html" 2>/dev/null | wc -l | tr -d ' ')
 ALERT_COUNT=$(find "$LOCAL_ARCHIVES" -name "*.alerts.json" 2>/dev/null | wc -l | tr -d ' ')
 JSON_COUNT=$(find "$LOCAL_ARCHIVES" -name "*.full.json" 2>/dev/null | wc -l | tr -d ' ')
 HAS_DASHBOARD="no"
 [[ -f "${LOCAL_ARCHIVES}dashboard.html" ]] && HAS_DASHBOARD="yes"
+HAS_META="no"
+[[ -f "${LOCAL_ARCHIVES}meta_actions.yaml" ]] && HAS_META="yes"
+HAS_DISCO="no"
+[[ -f "${LOCAL_ARCHIVES}discoveries.yaml" ]] && HAS_DISCO="yes"
 
-echo "  Markdown reports: ${REPORT_COUNT}"
-echo "  HTML reports:     ${HTML_COUNT}"
-echo "  Alert files:      ${ALERT_COUNT}"
-echo "  Full JSON:        ${JSON_COUNT}"
-echo "  Dashboard:        ${HAS_DASHBOARD}"
+echo "  Markdown reports:  ${REPORT_COUNT}"
+echo "  HTML reports:      ${HTML_COUNT}"
+echo "  Alert files:       ${ALERT_COUNT}"
+echo "  Full JSON:         ${JSON_COUNT}"
+echo "  Dashboard:         ${HAS_DASHBOARD}"
+echo "  Meta-agent trace:  ${HAS_META}"
+echo "  Discoveries:       ${HAS_DISCO}"
 
 # Show most recent and offer to open
 LATEST=$(find "$LOCAL_ARCHIVES" -name "*.html" -not -name "dashboard.html" 2>/dev/null | sort -r | head -1)

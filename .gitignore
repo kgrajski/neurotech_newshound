@@ -19,6 +19,8 @@ workspace/BOOTSTRAP.md
 workspace/archives/neurotech/*.md
 workspace/archives/neurotech/*.html
 workspace/archives/neurotech/*.json
+workspace/archives/neurotech/*.yaml
+workspace/archives/neurotech/backfill/
 !workspace/archives/neurotech/.gitkeep
 
 # Local test output
@@ -27,6 +29,10 @@ dev/sample_output/
 # Runtime data (regenerated each run)
 workspace/skills/neuro_hound/sources.json
 workspace/skills/neuro_hound/seen_items.json
+
+# Log files
+*.log
+workspace/skills/neuro_hound/backfill_log.txt
 
 # OS
 .DS_Store

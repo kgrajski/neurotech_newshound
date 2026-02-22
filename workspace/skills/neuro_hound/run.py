@@ -209,6 +209,21 @@ def run_phase2(args, out_dir: str):
             lines.append(f"- Link: {x['url']}")
         lines.append("")
 
+    # Near-miss / Watchlist (scored 3-4, potential false negatives)
+    near_miss = [x for x in scored if x.get("llm_score", 0) in (3, 4)]
+    if near_miss:
+        lines.append("## Watchlist / Near-Miss")
+        lines.append("")
+        lines.append("_Items scored 3-4 — borderline scope. Review for false negatives._")
+        lines.append("")
+        for x in near_miss:
+            rescued = " **[RESCUED]**" if x.get("rescued") else ""
+            lines.append(f"- [{x.get('llm_score', '?')}] {x.get('title', '')[:100]} ({x.get('category', '?')}){rescued}")
+            lines.append(f"  {x.get('assessment', '')[:200]}")
+            if x.get("url"):
+                lines.append(f"  [{x.get('source', 'link')}]({x['url']})")
+            lines.append("")
+
     # Meta-agent actions
     meta_actions = final_state.get("meta_actions", [])
     if meta_actions:

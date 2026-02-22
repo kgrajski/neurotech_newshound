@@ -23,6 +23,7 @@ Your domain: {domain}.
 3. Did the analyst miss any themes or connections between items?
 4. Any items that look like vaporware, marketing, or press-release science?
 5. Which 1-3 items are the most genuinely important this week?
+6. FALSE NEGATIVE SWEEP: Review ALL items scored 1-4 (especially out_of_scope). Are any actually about BCI companies, funded startups, novel non-invasive BCIs, or competitive intelligence? Propose score adjustments for any false negatives.
 
 Respond in JSON:
 {{"assessment": "APPROVE/NEEDS_REVISION",
@@ -31,6 +32,7 @@ Respond in JSON:
      {{"title_snippet": "...", "original_score": N, "adjusted_score": M, "reason": "..."}}
  ],
  "missed_signals": ["anything the analyst should have caught"],
+ "rescued_items": [{{"title_snippet": "...", "original_score": N, "adjusted_score": M, "reason": "why this was a false negative"}}],
  "top_picks": ["1-3 most important items this week"],
  "vaporware_flags": ["items that seem like marketing/hype"],
  "reviewer_notes": "2-3 sentence summary of review"}}"""
@@ -62,9 +64,9 @@ def review(state: HoundState) -> HoundState:
     print(f"  Reviewing brief (Reflection Pattern) with {reviewer_model}...")
     llm = create_llm(reviewer_model)
 
-    # Build scored items summary for reviewer context
+    # Build scored items summary — include ALL items so reviewer can sweep for false negatives
     items_text = ""
-    for x in scored[:20]:
+    for x in scored:
         items_text += (
             f"- [{x.get('llm_score', '?')}] {x.get('category', '?')}: "
             f"{x.get('title', '')[:70]} — {x.get('assessment', '')[:100]}\n"
@@ -104,6 +106,25 @@ def review(state: HoundState) -> HoundState:
                             item["adjusted_by_reviewer"] = True
                             item["adjustment_reason"] = adj.get("reason", "")
                             print(f"    Adjusted: {snippet[:40]}... {old} → {new_score}")
+                            break
+
+        # Apply rescued_items (false negatives caught by the reviewer)
+        rescued = result.get("rescued_items", [])
+        if rescued:
+            print(f"  Rescued {len(rescued)} false negatives:")
+            for res in rescued:
+                snippet = res.get("title_snippet", "")
+                new_score = res.get("adjusted_score")
+                if snippet and new_score is not None:
+                    for item in state["scored_items"]:
+                        if snippet.lower() in item.get("title", "").lower():
+                            old = item.get("llm_score", "?")
+                            item["llm_score_original"] = old
+                            item["llm_score"] = new_score
+                            item["adjusted_by_reviewer"] = True
+                            item["rescued"] = True
+                            item["adjustment_reason"] = res.get("reason", "")
+                            print(f"    Rescued: {snippet[:40]}... {old} → {new_score}")
                             break
 
         # Re-sort and re-generate alerts after adjustments

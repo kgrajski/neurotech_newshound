@@ -55,6 +55,16 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
 .queries-list { list-style: none; padding: 0; }
 .queries-list li { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; font-family: monospace; font-size: 0.82rem; color: var(--muted); }
 
+.meta-trace { margin-top: 10px; }
+.meta-step { border-left: 3px solid var(--border); padding: 6px 12px; margin-bottom: 8px; }
+.meta-step.meta-tool { border-left-color: var(--accent-blue); }
+.meta-step.meta-finish { border-left-color: var(--accent-gold); }
+.meta-label { font-size: 0.8rem; color: var(--accent-blue); margin-bottom: 2px; }
+.meta-finish .meta-label { color: var(--accent-gold); }
+.meta-thought { font-size: 0.78rem; color: var(--text); font-style: italic; }
+.meta-obs { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.meta-summary { color: var(--accent-gold); font-size: 0.85rem; margin-top: 4px; }
+
 .footer { text-align: center; padding: 16px 0; margin-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; }
 .footer a { color: var(--accent-blue); text-decoration: none; }
 </style>
@@ -71,22 +81,64 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
 </div>
 
 <div class="nav">
-    <a href="2026-02-16.html">Latest Report</a>
+    <a href="2026-02-22.html">Latest Report</a>
     <a href="dashboard.html" class="active">Dashboard</a>
 </div>
 
 
         <div class="run-card">
-            <h3>Latest Run — 2026-02-16</h3>
+            <h3>Latest Run — 2026-02-22</h3>
             <div class="run-stats">
-                <div class="rs"><span class="rv">461</span><span class="rl">Fetched</span></div>
+                <div class="rs"><span class="rv">502</span><span class="rl">Fetched</span></div>
                 <div class="rs"><span class="rv">57</span><span class="rl">In-Scope</span></div>
                 <div class="rs"><span class="rv">57</span><span class="rl">Scored</span></div>
-                <div class="rs"><span class="rv" style="color:#e74c3c">3</span><span class="rl">Alerts</span></div>
-                <div class="rs"><span class="rv">39,085</span><span class="rl">Tokens</span></div>
-                <div class="rs"><span class="rv">$0.0091</span><span class="rl">Cost</span></div>
-                <div class="rs"><span class="rv">190s</span><span class="rl">Duration</span></div>
+                <div class="rs"><span class="rv" style="color:#e74c3c">8</span><span class="rl">Alerts</span></div>
+                <div class="rs"><span class="rv">51,349</span><span class="rl">Tokens</span></div>
+                <div class="rs"><span class="rv">$0.0116</span><span class="rl">Cost</span></div>
+                <div class="rs"><span class="rv">234s</span><span class="rl">Duration</span></div>
             </div>
+        </div>
+
+
+        <div class="info-card">
+            <h3>Meta-Agent (ReAct) — 5 tool calls</h3>
+            <p class="meta-summary">Stopped after maximum iterations.</p>
+            <div class="meta-trace">
+                <div class="meta-step meta-tool">
+                    <div class="meta-label">Step 1 — <strong>check_vocabulary_gaps</strong></div>
+                    <div class="meta-thought">I will first check for vocabulary gaps by analyzing high-scoring items for domain terms that are not already in our vocabulary. This will help ensure that our vocabulary is comprehensive and up-to-dat</div>
+                    <div class="meta-obs">Analyzed 35 high-scoring items. Potential gaps:
+  - &quot;utah electrode&quot; (found in: explant analysis of utah electrode arrays implanted in human...)
+  - &quot;graphene electrodes&quot; (found in: ovascular implants</div>
+                </div>
+                <div class="meta-step meta-tool">
+                    <div class="meta-label">Step 2 — <strong>add_vocabulary_terms</strong></div>
+                    <div class="meta-thought">The analysis revealed several potential vocabulary gaps related to specific terms and technologies in the field of neurotechnology. I will add the most relevant terms to our vocabulary to ensure compr</div>
+                    <div class="meta-obs">Added 5 terms: utah electrode, graphene electrodes, brain implant, endovascular implants, interface implant</div>
+                </div>
+                <div class="meta-step meta-tool">
+                    <div class="meta-label">Step 3 — <strong>check_source_health</strong></div>
+                    <div class="meta-thought">Next, I will assess the health of the sources used in this week&#x27;s pipeline output. This will help identify any cold or underperforming sources that may need to be flagged or replaced to ensure a stead</div>
+                    <div class="meta-obs">Source health (24 total, 23 enabled):
+  HIGH YIELD: PubMed (47% yield), Tavily Wideband Search (75% yield), Neurotechnology (Substack) (35% yield), Paradromics (Substack) (67% yield)
+  All sources pro</div>
+                </div>
+                <div class="meta-step meta-tool">
+                    <div class="meta-label">Step 4 — <strong>assess_coverage</strong></div>
+                    <div class="meta-thought">The source health assessment indicates that all sources are producing relevant content, so no action is needed in this area. Next, I will assess the coverage of the topics represented in this week&#x27;s p</div>
+                    <div class="meta-obs">Coverage: 57 items scored, 8 alerts, 4 themes
+  Categories: funding=14, ecog_seeg=11, implantable_bci=10, methods=9, regulatory=6, out_of_scope=3, materials=2, stimulation=1, BCI industry/market news=</div>
+                </div>
+                <div class="meta-step meta-tool">
+                    <div class="meta-label">Step 5 — <strong>discover_companies</strong></div>
+                    <div class="meta-thought">The coverage assessment shows that all expected topic areas are represented in this week&#x27;s pipeline output, indicating a well-rounded selection of items. Therefore, no further action is needed in term</div>
+                    <div class="meta-obs">Discovered 3 new companies: Precision Neuroscience, Synchron, Neuralink. Added to discoveries list for human review.</div>
+                </div>
+                <div class="meta-step meta-finish">
+                    <div class="meta-label">Step 5 — <strong>FINISH</strong></div>
+                    <div class="meta-thought">Max iterations reached.</div>
+                    <div class="meta-obs">Stopped after maximum iterations.</div>
+                </div></div>
         </div>
 
 <h2>Configuration</h2>
@@ -96,7 +148,7 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
     <div class="config-item"><div class="label">Lookback</div><div class="value">7 days</div></div>
     <div class="config-item"><div class="label">Max Items/Source</div><div class="value">40</div></div>
     <div class="config-item"><div class="label">Source Cap</div><div class="value">40</div></div>
-    <div class="config-item"><div class="label">Active Sources</div><div class="value">21</div></div>
+    <div class="config-item"><div class="label">Active Sources</div><div class="value">23</div></div>
     <div class="config-item"><div class="label">MLflow</div><div class="value">Enabled</div></div>
     <div class="config-item"><div class="label">Domain Focus</div><div class="value" style="font-size:0.8rem">Implantable BCIs, ECoG/sEEG, microstimulation, enabling materials</div></div>
 </div>
@@ -104,12 +156,12 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
 
         <div class="info-card">
             <h3>Deduplication History</h3>
-            <p>57 items tracked &middot;
-               22 high-value &middot;
-               35 low-value (will be skipped)</p>
+            <p>5,351 items tracked &middot;
+               5232 high-value &middot;
+               119 low-value (will be skipped)</p>
         </div>
 
-<h2>Source Registry (21 active)</h2>
+<h2>Source Registry (23 active)</h2>
 <table>
     <thead><tr>
         <th>Source</th><th>Category</th><th>Origin</th><th>Health</th>
@@ -121,11 +173,11 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-database">database</span></td>
                 <td>Curated</td>
                 <td><span style="color:#2ecc71">HIGH YIELD</span></td>
-                <td class="num">1</td>
-                <td class="num">40</td>
-                <td class="num">27</td>
+                <td class="num">5</td>
+                <td class="num">152</td>
+                <td class="num">71</td>
                 <td class="num">0</td>
-                <td>2026-02-16</td>
+                <td>2026-02-22</td>
                 <td class="url-cell">API</td>
             </tr>
             <tr>
@@ -133,8 +185,8 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">1</td>
-                <td class="num">40</td>
+                <td class="num">5</td>
+                <td class="num">200</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -144,10 +196,10 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><strong>Nature Neuroscience</strong></td>
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
-                <td><span style="color:#f39c12">MODERATE</span></td>
-                <td class="num">1</td>
-                <td class="num">8</td>
-                <td class="num">1</td>
+                <td><span style="color:#e67e22">LOW</span></td>
+                <td class="num">5</td>
+                <td class="num">40</td>
+                <td class="num">2</td>
                 <td class="num">0</td>
                 <td>2026-02-16</td>
                 <td class="url-cell"><a href="https://www.nature.com/neuro.rss" target="_blank" class="src-link">https://www.nature.com/neuro.rss</a></td>
@@ -157,8 +209,8 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">1</td>
-                <td class="num">8</td>
+                <td class="num">5</td>
+                <td class="num">40</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -169,8 +221,8 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">1</td>
-                <td class="num">40</td>
+                <td class="num">5</td>
+                <td class="num">200</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -181,8 +233,8 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">1</td>
-                <td class="num">7</td>
+                <td class="num">5</td>
+                <td class="num">32</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -193,11 +245,11 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#f39c12">MODERATE</span></td>
-                <td class="num">1</td>
-                <td class="num">10</td>
-                <td class="num">2</td>
+                <td class="num">5</td>
+                <td class="num">50</td>
+                <td class="num">13</td>
                 <td class="num">0</td>
-                <td>2026-02-16</td>
+                <td>2026-02-22</td>
                 <td class="url-cell"><a href="https://iopscience.iop.org/journal/rss/1741-2552" target="_blank" class="src-link">https://iopscience.iop.org/journal/rss/1741-2552</a></td>
             </tr>
             <tr>
@@ -205,11 +257,11 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e67e22">LOW</span></td>
-                <td class="num">1</td>
-                <td class="num">40</td>
-                <td class="num">1</td>
+                <td class="num">5</td>
+                <td class="num">200</td>
+                <td class="num">5</td>
                 <td class="num">0</td>
-                <td>2026-02-16</td>
+                <td>2026-02-22</td>
                 <td class="url-cell"><a href="https://www.cell.com/neuron/inpress.rss" target="_blank" class="src-link">https://www.cell.com/neuron/inpress.rss</a></td>
             </tr>
             <tr>
@@ -217,8 +269,8 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">1</td>
-                <td class="num">26</td>
+                <td class="num">5</td>
+                <td class="num">139</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -229,11 +281,11 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#f39c12">MODERATE</span></td>
-                <td class="num">1</td>
-                <td class="num">40</td>
                 <td class="num">5</td>
+                <td class="num">200</td>
+                <td class="num">25</td>
                 <td class="num">0</td>
-                <td>2026-02-16</td>
+                <td>2026-02-22</td>
                 <td class="url-cell"><a href="https://ieeexplore.ieee.org/rss/TOC7333.XML" target="_blank" class="src-link">https://ieeexplore.ieee.org/rss/TOC7333.XML</a></td>
             </tr>
             <tr>
@@ -241,8 +293,8 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">1</td>
-                <td class="num">40</td>
+                <td class="num">5</td>
+                <td class="num">200</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -253,8 +305,8 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">1</td>
-                <td class="num">2</td>
+                <td class="num">5</td>
+                <td class="num">19</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -264,12 +316,12 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><strong>bioRxiv (neuroscience)</strong></td>
                 <td><span class="cat-chip cat-preprint">preprint</span></td>
                 <td>Curated</td>
-                <td><span style="color:#e67e22">LOW</span></td>
-                <td class="num">1</td>
-                <td class="num">30</td>
-                <td class="num">1</td>
+                <td><span style="color:#f39c12">MODERATE</span></td>
+                <td class="num">5</td>
+                <td class="num">150</td>
+                <td class="num">8</td>
                 <td class="num">0</td>
-                <td>2026-02-16</td>
+                <td>2026-02-22</td>
                 <td class="url-cell"><a href="https://connect.biorxiv.org/biorxiv_xml.php?subject=neuroscience" target="_blank" class="src-link">https://connect.biorxiv.org/biorxiv_xml.php?subjec...</a></td>
             </tr>
             <tr>
@@ -289,9 +341,9 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-preprint">preprint</span></td>
                 <td>Curated</td>
                 <td><span style="color:#f39c12">MODERATE</span></td>
-                <td class="num">1</td>
-                <td class="num">7</td>
-                <td class="num">1</td>
+                <td class="num">2</td>
+                <td class="num">14</td>
+                <td class="num">2</td>
                 <td class="num">0</td>
                 <td>2026-02-16</td>
                 <td class="url-cell"><a href="https://rss.arxiv.org/rss/q-bio.NC" target="_blank" class="src-link">https://rss.arxiv.org/rss/q-bio.NC</a></td>
@@ -301,8 +353,8 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-press">press</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">1</td>
-                <td class="num">38</td>
+                <td class="num">5</td>
+                <td class="num">137</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -313,8 +365,8 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-press">press</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">1</td>
-                <td class="num">20</td>
+                <td class="num">5</td>
+                <td class="num">100</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -324,9 +376,9 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><strong>FT Technology</strong></td>
                 <td><span class="cat-chip cat-press">press</span></td>
                 <td>Curated</td>
-                <td><span style="color:#7f8c8d">NEW</span></td>
-                <td class="num">0</td>
-                <td class="num">0</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">5</td>
+                <td class="num">125</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -337,20 +389,44 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-press">press</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">1</td>
-                <td class="num">20</td>
+                <td class="num">5</td>
+                <td class="num">100</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
                 <td class="url-cell"><a href="https://www.statnews.com/feed/" target="_blank" class="src-link">https://www.statnews.com/feed/</a></td>
             </tr>
             <tr>
+                <td><strong>Neurotechnology (Substack)</strong></td>
+                <td><span class="cat-chip cat-press">press</span></td>
+                <td>Curated</td>
+                <td><span style="color:#2ecc71">HIGH YIELD</span></td>
+                <td class="num">3</td>
+                <td class="num">60</td>
+                <td class="num">21</td>
+                <td class="num">0</td>
+                <td>2026-02-22</td>
+                <td class="url-cell"><a href="https://neurotechnology.substack.com/feed" target="_blank" class="src-link">https://neurotechnology.substack.com/feed</a></td>
+            </tr>
+            <tr>
+                <td><strong>Paradromics (Substack)</strong></td>
+                <td><span class="cat-chip cat-press">press</span></td>
+                <td>Curated</td>
+                <td><span style="color:#2ecc71">HIGH YIELD</span></td>
+                <td class="num">3</td>
+                <td class="num">18</td>
+                <td class="num">12</td>
+                <td class="num">0</td>
+                <td>2026-02-22</td>
+                <td class="url-cell"><a href="https://paradromics.substack.com/feed" target="_blank" class="src-link">https://paradromics.substack.com/feed</a></td>
+            </tr>
+            <tr>
                 <td><strong>FDA MedWatch Safety</strong></td>
                 <td><span class="cat-chip cat-regulatory">regulatory</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">1</td>
-                <td class="num">20</td>
+                <td class="num">5</td>
+                <td class="num">100</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -361,18 +437,18 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
                 <td><span class="cat-chip cat-search">search</span></td>
                 <td>Curated</td>
                 <td><span style="color:#2ecc71">HIGH YIELD</span></td>
-                <td class="num">1</td>
-                <td class="num">25</td>
-                <td class="num">19</td>
+                <td class="num">5</td>
+                <td class="num">189</td>
+                <td class="num">142</td>
                 <td class="num">0</td>
-                <td>2026-02-16</td>
+                <td>2026-02-22</td>
                 <td class="url-cell">API</td>
             </tr></tbody>
 </table>
 
-<h2>Tavily Search Queries (5)</h2>
+<h2>Tavily Search Queries (4)</h2>
 <ul class="queries-list">
-    <li>&quot;brain-computer interface&quot; OR &quot;neural implant&quot; clinical trial</li><li>neuralink OR synchron OR paradromics OR &quot;blackrock neurotech&quot; OR &quot;precision neuroscience&quot;</li><li>&quot;intracranial EEG&quot; OR ECoG OR sEEG neural recording human</li><li>FDA &quot;neural device&quot; OR &quot;brain implant&quot; approval OR clearance</li><li>BCI funding OR investment &quot;neural interface&quot;</li>
+    <li>&quot;brain-computer interface&quot; OR &quot;neural implant&quot; clinical trial</li><li>&quot;intracranial EEG&quot; OR ECoG OR sEEG neural recording human</li><li>FDA &quot;neural device&quot; OR &quot;brain implant&quot; approval OR clearance</li><li>BCI funding OR investment &quot;neural interface&quot;</li>
 </ul>
 
 <div class="footer">

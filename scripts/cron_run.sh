@@ -14,10 +14,23 @@ echo "$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Starting NeuroTech NewsHound" >> "
 
 # Run the agent
 cd "$SKILL_DIR"
+ARCHIVE_DIR="/root/.openclaw/workspace/archives/neurotech"
+TODAY=$(date -u '+%Y-%m-%d')
+
 if python3 -u run.py --days 7 >> "$LOG_FILE" 2>&1; then
     STATUS="done"
-    TODAY=$(date -u '+%Y-%m-%d')
-    MSG="NeuroTech NewsHound briefing for ${TODAY} is ready. 6 alerts, 4 themes. Fetch with: bash scripts/fetch_reports.sh"
+    # Parse actual counts from the alerts and full JSON
+    ALERT_COUNT=0
+    THEME_COUNT=0
+    ALERT_FILE="${ARCHIVE_DIR}/${TODAY}.alerts.json"
+    FULL_FILE="${ARCHIVE_DIR}/${TODAY}.full.json"
+    if [[ -f "$ALERT_FILE" ]]; then
+        ALERT_COUNT=$(python3 -c "import json; d=json.load(open('${ALERT_FILE}')); print(len(d) if isinstance(d,list) else 0)" 2>/dev/null || echo 0)
+    fi
+    if [[ -f "$FULL_FILE" ]]; then
+        THEME_COUNT=$(python3 -c "import json; d=json.load(open('${FULL_FILE}')); print(len(d.get('themes',[])) if isinstance(d,dict) else 0)" 2>/dev/null || echo 0)
+    fi
+    MSG="NeuroTech NewsHound briefing for ${TODAY} is ready. ${ALERT_COUNT} alerts, ${THEME_COUNT} themes. Fetch with: bash scripts/fetch_reports.sh"
 else
     STATUS="failed"
     MSG="NeuroTech NewsHound run failed. Check cron.log on the droplet."

@@ -64,7 +64,7 @@ def regex_score(title: str, summary: str, source: str = "") -> int:
         (6,  r"\bhermetic\b|\bencapsulation\b|\bcoating\b|\bmaterials?\b|\bbiocompatib"),
     ]
     LOW_PATTERNS = [
-        (2, r"\bwearable\b|\bEEG headset\b|\bheadband\b"),
+        (2, r"\bEEG headset\b|\bheadband\b"),
         (2, r"\bmarketing\b|\bpress release\b|\bannounces\b"),
     ]
 
@@ -78,8 +78,15 @@ def regex_score(title: str, summary: str, source: str = "") -> int:
         if re.search(pat, text, flags=re.IGNORECASE):
             score = min(score, val)
 
+    # "wearable" alone suppresses, but not when combined with BCI terms
+    if re.search(r"\bwearable\b", text, flags=re.IGNORECASE):
+        if not re.search(r"\bBCI\b|\bbrain[- ]computer\b|\bneural interface\b", text, flags=re.IGNORECASE):
+            score = min(score, 2)
+
+    # TMS/tDCS/tACS cap at 6, unless the item is also about implantable BCI
     if is_out_of_scope(title, summary) and score >= 7:
-        score = min(score, 6)
+        if not is_strictly_in_scope(title, summary, source):
+            score = min(score, 6)
     if score >= 9 and not is_strictly_in_scope(title, summary, source):
         score = 6
 

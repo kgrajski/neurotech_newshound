@@ -17,8 +17,10 @@ Implantable brain-computer interfaces, ECoG/sEEG, intracranial microstimulation,
 and the enabling technologies (materials, coatings, packaging, hermetics) that
 make chronic neural recording and stimulation possible.
 
-De-emphasize purely external/scalp EEG wearables. Recording is common; stay
-alert to stimulation advances.
+De-emphasize purely external/scalp EEG consumer wearables. However, non-invasive
+BCI companies with significant funding, novel technology, or competitive
+relevance are valid signals — track them as competitive intelligence.
+Recording is common; stay alert to stimulation advances.
 
 ## Core Values
 

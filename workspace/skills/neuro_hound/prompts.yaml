@@ -27,11 +27,12 @@ score_item: |
   - 9-10: Human implant/first-in-human, FDA milestone (IDE/PMA/De Novo), pivotal clinical trial
   - 7-8: ECoG/sEEG/iEEG recording, single-unit/spiking data, microstimulation, closed-loop BCI
   - 5-6: Materials/biocompatibility, animal BCI studies, neural decoding methods
-  - 3-4: Tangentially related neuroscience (not BCI/implant focused)
-  - 1-2: Out of scope (scalp EEG wearables, marketing, unrelated clinical)
+  - 3-4: Non-invasive BCI companies (competitive intelligence), BCI industry/market news, funding rounds for BCI companies, tangentially related neuroscience
+  - 1-2: Truly out of scope (consumer EEG headbands, scalp-only wearables with no BCI application, oncology, unrelated clinical, pure marketing fluff)
 
   IMPORTANT:
-  - If this is NOT about implantable neural interfaces, intracranial recording, or BCI, score it LOW (1-3) regardless of regex matches
+  - If it's about a BCI company — even a non-invasive one — score it AT LEAST 3-4 for competitive intelligence. Non-invasive BCIs with significant funding, novel technology, or a credible team are industry-relevant signals.
+  - Reserve 1-2 ONLY for items genuinely unrelated to brain-computer interfaces.
   - Prefer peer-reviewed work over press releases
   - If it smells like vaporware or marketing, say so
 
@@ -111,6 +112,7 @@ review: |
   3. Did the analyst miss any themes or connections between items?
   4. Any items that look like vaporware, marketing, or press-release science?
   5. Which 1-3 items are the most genuinely important this week?
+  6. FALSE NEGATIVE SWEEP: Review ALL items scored 1-4 (especially those labeled out_of_scope). Are any of them actually about BCI companies, funded startups, novel non-invasive BCIs, or competitive intelligence that should score higher? Non-invasive BCI companies with real funding or novel approaches are NOT out_of_scope — they are competitive signals (score 3-5). Propose score adjustments for any false negatives.
 
   Respond in JSON:
   {{"assessment": "APPROVE/NEEDS_REVISION",
@@ -119,6 +121,7 @@ review: |
        {{"title_snippet": "...", "original_score": N, "adjusted_score": M, "reason": "..."}}
    ],
    "missed_signals": ["anything the analyst should have caught"],
+   "rescued_items": [{{"title_snippet": "...", "original_score": N, "adjusted_score": M, "reason": "why this was a false negative"}}],
    "top_picks": ["1-3 most important items this week"],
    "vaporware_flags": ["items that seem like marketing/hype"],
    "reviewer_notes": "2-3 sentence summary of review"}}
@@ -171,9 +174,10 @@ discover_companies: |
   {existing_companies}
 
   RULES:
-  - Only include companies building or testing IMPLANTABLE neural devices
+  - Prioritize companies building or testing IMPLANTABLE neural devices
+  - Also include non-invasive BCI companies with significant funding, novel technology, or competitive relevance — label them as "non-invasive" in the evidence field
   - Exclude universities unless they have a clear spin-out / commercial entity
-  - Exclude companies focused solely on non-invasive (scalp EEG, TMS, tDCS)
+  - Exclude consumer-only scalp EEG headband companies (e.g., meditation apps)
   - If a company is already in the tracked list, do NOT include it
 
   Respond in JSON:
