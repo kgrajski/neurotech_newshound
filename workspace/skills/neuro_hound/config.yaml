@@ -37,6 +37,12 @@ sources:
     type: api
     enabled: true
 
+  - id: clinicaltrials
+    name: ClinicalTrials.gov
+    category: regulatory
+    type: api
+    enabled: true
+
   # --- Preprint servers ---
   - id: biorxiv_neuro
     name: bioRxiv (neuroscience)

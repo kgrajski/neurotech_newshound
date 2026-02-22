@@ -6,6 +6,7 @@ a category of sources and updates per-source stats after fetching.
 """
 from state import HoundState
 from tools.pubmed import fetch_pubmed_items
+from tools.clinicaltrials import fetch_clinicaltrials_items
 from tools.rss import fetch_rss_sources
 from tools.sources import (
     load_sources, save_sources, get_enabled_sources,
@@ -30,6 +31,26 @@ def fetch_pubmed(state: HoundState) -> HoundState:
     except Exception as e:
         state["errors"].append(f"PubMed: {e}")
         print(f"  [warn] PubMed: {e}")
+    state["_registry"] = registry
+    return state
+
+
+def fetch_clinicaltrials(state: HoundState) -> HoundState:
+    """Fetch recently-updated clinical trials from ClinicalTrials.gov."""
+    print("  Fetching ClinicalTrials.gov...")
+    registry = state.get("_registry") or load_sources()
+    try:
+        items = fetch_clinicaltrials_items(state["days"], state["max_items"])
+        for it in items:
+            it["source_id"] = "clinicaltrials"
+            it["source_category"] = "regulatory"
+        state["raw_items"].extend(items)
+        in_scope = sum(1 for it in items if is_in_scope(it.get("title", ""), it.get("summary", "")))
+        update_source_stats(registry, "clinicaltrials", fetched=len(items), in_scope=in_scope)
+        print(f"  [ok] ClinicalTrials.gov: {len(items)} items ({in_scope} in-scope)")
+    except Exception as e:
+        state["errors"].append(f"ClinicalTrials.gov: {e}")
+        print(f"  [warn] ClinicalTrials.gov: {e}")
     state["_registry"] = registry
     return state
 

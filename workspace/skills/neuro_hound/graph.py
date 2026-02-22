@@ -2,12 +2,12 @@
 LangGraph workflow for the NeuroTech NewsHound agent.
 
 Architecture:
-    fetch_pubmed → fetch_rss → fetch_tavily → save_registry
+    fetch_pubmed → fetch_clinicaltrials → fetch_rss → fetch_tavily → save_registry
         → prefilter → [conditional] → score_items
         → summarize_themes → write_brief → review → meta_reflect → END
 
 Sources are registry-driven (sources.json):
-    - PubMed (API), RSS feeds (journals, preprints, press, regulatory), Tavily (wideband)
+    - PubMed (API), ClinicalTrials.gov (API), RSS feeds (journals, preprints, press, regulatory), Tavily (wideband)
     - Source stats updated per run for yield tracking and pruning
 
 Design Patterns:
@@ -20,7 +20,7 @@ Design Patterns:
 from langgraph.graph import StateGraph, END
 
 from state import HoundState
-from nodes.fetch import fetch_pubmed, fetch_rss, fetch_tavily, save_registry
+from nodes.fetch import fetch_pubmed, fetch_clinicaltrials, fetch_rss, fetch_tavily, save_registry
 from nodes.prefilter import prefilter
 from nodes.score import score_items
 from nodes.summarize import summarize_themes, write_brief
@@ -45,6 +45,7 @@ def build_hound_graph():
 
     # Fetch nodes (no LLM cost, except Tavily which is ~$0.001/search)
     wf.add_node("fetch_pubmed", fetch_pubmed)
+    wf.add_node("fetch_clinicaltrials", fetch_clinicaltrials)
     wf.add_node("fetch_rss", fetch_rss)
     wf.add_node("fetch_tavily", fetch_tavily)
     wf.add_node("save_registry", save_registry)
@@ -59,7 +60,8 @@ def build_hound_graph():
 
     # Define flow: fetch cascade → prefilter → conditional → LLM pipeline
     wf.set_entry_point("fetch_pubmed")
-    wf.add_edge("fetch_pubmed", "fetch_rss")
+    wf.add_edge("fetch_pubmed", "fetch_clinicaltrials")
+    wf.add_edge("fetch_clinicaltrials", "fetch_rss")
     wf.add_edge("fetch_rss", "fetch_tavily")
     wf.add_edge("fetch_tavily", "save_registry")
     wf.add_edge("save_registry", "prefilter")
