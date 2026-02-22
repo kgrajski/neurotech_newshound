@@ -46,6 +46,7 @@ def generate_dashboard(
     agent_name = config.get("agent", {}).get("name", "NeuroTech NewsHound")
     agent_tagline = config.get("agent", {}).get("tagline", "")
     agent_domain = config.get("agent", {}).get("domain", "")
+    dashboard_date = (run_metadata or {}).get("date", dt.date.today().isoformat())
     defaults = config.get("defaults", {})
 
     sources = registry.get("sources", [])
@@ -161,6 +162,9 @@ def generate_dashboard(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>{_esc(agent_name)} — Dashboard</title>
 <style>
 :root {{
@@ -175,6 +179,7 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
 .header {{ display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }}
 .header h1 {{ font-size: 1.6rem; font-weight: 700; background: linear-gradient(135deg, var(--accent-gold), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }}
 .header .subtitle {{ color: var(--muted); font-size: 0.9rem; }}
+.header .date {{ color: var(--muted); font-size: 0.95rem; }}
 
 .nav {{ display: flex; gap: 16px; margin-bottom: 24px; }}
 .nav a {{ color: var(--accent-blue); text-decoration: none; font-size: 0.9rem; padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px; }}
@@ -235,7 +240,7 @@ tr:hover {{ background: rgba(88, 166, 255, 0.04); }}
         <h1>{_esc(agent_name)}</h1>
         <div class="subtitle">{_esc(agent_tagline)}</div>
     </div>
-    <div class="subtitle">Dashboard</div>
+    <div class="date">Operational Dashboard — {dashboard_date}</div>
 </div>
 
 <div class="nav">
