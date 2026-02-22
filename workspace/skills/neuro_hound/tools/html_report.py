@@ -179,7 +179,8 @@ def generate_html_report(
         title = _esc(item.get("title", "")[:90])
         cat = item.get("category", "?")
         source = _esc(item.get("source", ""))
-        assessment = _esc(item.get("assessment", "")[:150])
+        assessment_full = _esc(item.get("assessment", ""))
+        assessment_short = assessment_full[:120] + ("..." if len(assessment_full) > 120 else "")
         url = item.get("url", "")
         adjusted = " *" if item.get("adjusted_by_reviewer") else ""
         vap = ' <span class="vaporware">VAPORWARE</span>' if item.get("vaporware") else ""
@@ -191,7 +192,7 @@ def generate_html_report(
                 <td><span class="score-pill" style="background:{_score_color(sc)}">{score}{adjusted}</span></td>
                 <td><span class="cat-badge" style="background:{cat_color}">{_esc(cat)}</span></td>
                 <td>{title_link}{vap}</td>
-                <td class="assessment-cell">{assessment}</td>
+                <td class="assessment-cell"><span class="assess-text">{assessment_short}<span class="assess-tip">{assessment_full}</span></span></td>
                 <td class="source-cell">{source}</td>
             </tr>"""
 
@@ -205,7 +206,8 @@ def generate_html_report(
             title = _esc(item.get("title", "")[:100])
             cat = item.get("category", "?")
             source = _esc(item.get("source", ""))
-            assessment = _esc(item.get("assessment", "")[:200])
+            assessment_full = _esc(item.get("assessment", ""))
+            assessment_short = assessment_full[:120] + ("..." if len(assessment_full) > 120 else "")
             url = item.get("url", "")
             cat_color = CATEGORY_COLORS.get(cat, "#95a5a6")
             rescued = ' <span class="badge" style="background:#27ae60">RESCUED</span>' if item.get("rescued") else ""
@@ -215,7 +217,7 @@ def generate_html_report(
                     <td><span class="score-pill" style="background:{_score_color(int(score))}">{score}</span></td>
                     <td><span class="cat-badge" style="background:{cat_color}">{_esc(cat)}</span></td>
                     <td>{title_link}{rescued}</td>
-                    <td class="assessment-cell">{assessment}</td>
+                    <td class="assessment-cell"><span class="assess-text">{assessment_short}<span class="assess-tip">{assessment_full}</span></span></td>
                     <td class="source-cell">{source}</td>
                 </tr>"""
         near_miss_html = f"""
@@ -370,6 +372,15 @@ body {{
     text-align: center; color: #fff; font-weight: 700; font-size: 0.8rem;
 }}
 .assessment-cell {{ color: var(--muted); max-width: 300px; }}
+.assess-text {{ position: relative; cursor: default; }}
+.assess-tip {{
+    display: none; position: absolute; left: 0; top: 100%; z-index: 10;
+    background: var(--surface); border: 1px solid var(--accent-blue); border-radius: 8px;
+    padding: 10px 14px; min-width: 320px; max-width: 480px; white-space: normal;
+    color: var(--text); font-size: 0.84rem; line-height: 1.5;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}}
+.assess-text:hover .assess-tip {{ display: block; }}
 .source-cell {{ color: var(--muted); white-space: nowrap; }}
 .vaporware {{
     background: var(--accent-red); color: #fff; font-size: 0.6rem;
