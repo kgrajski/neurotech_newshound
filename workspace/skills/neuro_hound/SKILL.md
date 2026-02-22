@@ -60,10 +60,10 @@ the output in 5 minutes and know what mattered this week.
     counts self-stabilize as domain vocabulary is finite. A configurable
     `max_terms_per_category` limit prevents unbounded growth.
 
-> **Honesty note**: Goals 10–13 are currently implemented as fixed code paths
-> in the pipeline — they always run in the same way. The agent does not yet
-> *reason* about whether or when to pursue these goals. This is a documented
-> design gap; see `docs/ADR-001-agent-specification.md`.
+> **Status**: Goals 10–13 are now handled by the `meta_reflect` ReAct agent
+> (Phase 9). The LLM reasons about whether and when to pursue these goals
+> based on the pipeline's output. See `nodes/meta_reflect.py` and
+> `docs/ADR-001-agent-specification.md`.
 
 ## Tools Available
 
@@ -82,6 +82,7 @@ The skill has access to the following tools, implemented as Python modules:
 | Source registry | `tools/sources.py` | JSON-persisted source stats (yield, last hit, health) |
 | HTML report | `tools/html_report.py` | Polished HTML intelligence briefing generator |
 | Dashboard | `tools/html_dashboard.py` | Operational dashboard (source health, config, run metrics) |
+| Meta-tools | `tools/meta_tools.py` | Tool registry for the ReAct meta-agent (vocab gaps, source health, coverage, company discovery) |
 | MLflow logger | `tools/mlflow_tracker.py` | Experiment tracking (params, metrics, artifacts per run) |
 
 ## Workflow
@@ -93,13 +94,20 @@ fetch_pubmed → fetch_rss → fetch_tavily → save_registry
     → score_items (LLM × N items)
     → summarize_themes (cluster + significance)
     → write_brief (executive briefing)
-    → review (Reflection Pattern + dedup update + company discovery)
+    → review (Reflection Pattern + dedup update)
+    → meta_reflect (ReAct agent — vocabulary, sources, companies, coverage)
     → outputs (HTML, dashboard, markdown, JSON, MLflow)
 ```
 
 Implemented as a LangGraph `StateGraph` with a conditional edge after
 pre-filtering: if nothing passes regex, the LLM pipeline is skipped entirely
 (no API cost on quiet weeks).
+
+The `meta_reflect` node is a genuine ReAct agent: a multi-turn
+Thought → Action → Observation loop where the LLM reasons about the
+pipeline's output and decides which self-improvement tools to invoke.
+It may call zero tools (quiet week) or several (vocabulary gaps, cold
+sources, new companies). Max 5 iterations per run.
 
 ## Scoring Criteria
 
@@ -199,6 +207,7 @@ python3 skills/neuro_hound/run.py --days 7 --model gpt-4o --reviewer gpt-4o
 | `YYYY-MM-DD.alerts.json` | Priority items (score 9–10) |
 | `YYYY-MM-DD.full.json` | Full results + usage metrics |
 | `discoveries.yaml` | Candidate companies for watchlist promotion |
+| `meta_actions.yaml` | ReAct meta-agent trace (thought/action/observation per step) |
 
 ## Environment Variables
 
@@ -213,9 +222,9 @@ python3 skills/neuro_hound/run.py --days 7 --model gpt-4o --reviewer gpt-4o
 
 | Level | Description | Status |
 |-------|-------------|--------|
-| Procedural pipeline | Fixed workflow, LLM calls at certain steps | **Current** |
+| Procedural pipeline | Fixed workflow, LLM calls at certain steps | Base layer |
 | Workflow with agency | LLM decides within nodes (conditional paths, tool selection) | Partial (conditional edge) |
-| Agentic meta-layer | Agent reasons about its own coverage, decides when to discover/prune | Design goal |
+| Agentic meta-layer | ReAct agent reasons about coverage, decides when to discover/prune/update | **Current** |
 | Self-modifying | Agent reads SOUL.md/SKILL.md, reasons about goals, updates config | Future |
 
 See `docs/ADR-001-agent-specification.md` for the full architecture rationale.

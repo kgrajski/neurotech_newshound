@@ -1,4 +1,4 @@
-"""Review node — Reflection Pattern (LLM critiques the brief) + dedup + discovery."""
+"""Review node — Reflection Pattern (LLM critiques the brief) + dedup."""
 from state import HoundState
 from tools.llm import create_llm, invoke_llm, parse_json
 from tools.dedup import update_history, save_history
@@ -127,45 +127,4 @@ def review(state: HoundState) -> HoundState:
         save_history(history)
         print(f"  Dedup history updated: {len(history)} items tracked")
 
-    # Company discovery — extract new companies from high-scoring Tavily items
-    _run_company_discovery(state, reviewer_model)
-
     return state
-
-
-def _run_company_discovery(state: HoundState, model_name: str) -> None:
-    """Extract new company names from scored Tavily results via LLM."""
-    scored = state.get("scored_items", [])
-    tavily_scored = [
-        it for it in scored
-        if it.get("source_id") == "tavily_wideband"
-        and it.get("llm_score", 0) >= 6
-    ]
-    if not tavily_scored:
-        state["company_discoveries"] = []
-        return
-
-    print("  Running company discovery...")
-    try:
-        from tools.config import get_watchlist_company_names
-        from tools.tavily import discover_companies
-
-        existing = get_watchlist_company_names()
-        llm = create_llm(model_name)
-
-        def llm_call(prompt: str) -> str:
-            return invoke_llm(llm, prompt, node="discover_companies", model_name=model_name)
-
-        discoveries = discover_companies(scored, existing, llm_func=llm_call)
-        state["company_discoveries"] = discoveries
-
-        if discoveries:
-            print(f"  Discovered {len(discoveries)} new companies:")
-            for d in discoveries:
-                print(f"    - {d.get('name', '?')} ({d.get('confidence', '?')}): {d.get('evidence', '')[:60]}")
-        else:
-            print("  No new companies discovered")
-    except Exception as e:
-        state["company_discoveries"] = []
-        state["errors"].append(f"Company discovery: {e}")
-        print(f"  [warn] Company discovery failed: {e}")

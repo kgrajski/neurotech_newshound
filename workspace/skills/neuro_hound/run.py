@@ -129,6 +129,7 @@ def run_phase2(args, out_dir: str):
         "source_discoveries": [],
         "company_discoveries": [],
         "_dedup_history": None,
+        "meta_actions": [],
         "errors": [],
         "usage": {},
     }
@@ -207,6 +208,24 @@ def run_phase2(args, out_dir: str):
         if x.get("url"):
             lines.append(f"- Link: {x['url']}")
         lines.append("")
+
+    # Meta-agent actions
+    meta_actions = final_state.get("meta_actions", [])
+    if meta_actions:
+        lines.append("## Meta-Agent Actions (ReAct)")
+        lines.append("")
+        for ma in meta_actions:
+            action = ma.get("action", "?")
+            thought = ma.get("thought", "")
+            obs = ma.get("observation", "")
+            lines.append(f"**Step {ma.get('iteration', '?')}** — {action}")
+            if thought:
+                lines.append(f"- Thought: {thought[:200]}")
+            if obs and action != "FINISH":
+                lines.append(f"- Result: {obs[:200]}")
+            elif action == "FINISH":
+                lines.append(f"- Summary: {obs}")
+            lines.append("")
 
     # Errors
     errors = final_state.get("errors", [])
@@ -291,6 +310,7 @@ def run_phase2(args, out_dir: str):
                 "high_value": high_val,
                 "low_value": len(dedup_history) - high_val,
             },
+            meta_actions=final_state.get("meta_actions", []),
         )
         out_dashboard = os.path.join(out_dir, "dashboard.html")
         with open(out_dashboard, "w") as f:
@@ -303,6 +323,11 @@ def run_phase2(args, out_dir: str):
     company_discoveries = final_state.get("company_discoveries", [])
     if company_discoveries:
         _write_discoveries(out_dir, today, company_discoveries)
+
+    # Write meta-agent actions log
+    meta_actions = final_state.get("meta_actions", [])
+    if meta_actions:
+        _write_meta_actions(out_dir, today, meta_actions)
 
     # Full results JSON (for MLflow artifacts in Phase 3)
     full_results = {
@@ -321,6 +346,7 @@ def run_phase2(args, out_dir: str):
         "alerts": alerts,
         "themes": final_state.get("themes", []),
         "review": review_data,
+        "meta_actions": meta_actions,
         "company_discoveries": company_discoveries,
         "tokens": tracker.input_tokens + tracker.output_tokens,
         "cost": tracker.estimate_cost(model),
@@ -345,6 +371,13 @@ def run_phase2(args, out_dir: str):
     if company_discoveries:
         print(f"New companies discovered: {', '.join(d.get('name', '?') for d in company_discoveries)}")
         print(f"  → Review in: {os.path.join(out_dir, 'discoveries.yaml')}")
+    if meta_actions:
+        tool_calls = [a for a in meta_actions if a.get("action") not in ("FINISH",)]
+        finish = next((a for a in meta_actions if a.get("action") == "FINISH"), None)
+        print(f"Meta-agent: {len(tool_calls)} tool calls")
+        if finish:
+            summary = finish.get("observation", finish.get("action_input", {}).get("summary", ""))
+            print(f"  Summary: {summary}")
     print(f"{'='*60}")
     # Log to MLflow
     try:
@@ -369,6 +402,40 @@ def run_phase2(args, out_dir: str):
     print(f"[done] HTML:   {out_html}")
     print(f"[done] Alerts: {out_alerts}")
     print(f"[done] Full JSON: {out_json}")
+
+
+def _write_meta_actions(out_dir: str, run_date: str, meta_actions: list):
+    """Write the meta-agent's ReAct trace to a YAML log for review."""
+    import yaml
+
+    meta_path = os.path.join(out_dir, "meta_actions.yaml")
+    existing = []
+    if os.path.exists(meta_path):
+        with open(meta_path) as f:
+            existing = yaml.safe_load(f) or []
+
+    entry = {
+        "run_date": run_date,
+        "steps": len(meta_actions),
+        "tool_calls": [a.get("action") for a in meta_actions if a.get("action") != "FINISH"],
+        "summary": "",
+        "trace": [],
+    }
+    for a in meta_actions:
+        step = {
+            "iteration": a.get("iteration"),
+            "action": a.get("action"),
+            "thought": a.get("thought", "")[:300],
+            "observation": a.get("observation", "")[:300],
+        }
+        if a.get("action") == "FINISH":
+            entry["summary"] = a.get("observation", a.get("action_input", {}).get("summary", ""))
+        entry["trace"].append(step)
+
+    existing.append(entry)
+    with open(meta_path, "w") as f:
+        yaml.dump(existing, f, default_flow_style=False, sort_keys=False)
+    print(f"  [ok] Meta-agent trace written to meta_actions.yaml")
 
 
 def _write_discoveries(out_dir: str, run_date: str, discoveries: list):

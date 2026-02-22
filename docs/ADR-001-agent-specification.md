@@ -58,23 +58,24 @@ separation risks duplication and drift. We mitigate this by:
 SOUL.md describes meta-goals ("discover new companies," "curate sources,"
 "self-assess coverage"). SKILL.md documents these as explicit goals.
 
-The current implementation of these meta-capabilities is **procedural, not
-agentic**:
+**Phase 9 (February 2026)** closed the primary honesty gap by introducing a
+`meta_reflect` node — a genuine ReAct agent that receives the pipeline's
+output and *decides* which tools to invoke based on observed gaps:
 
-- Company discovery is a fixed function that always runs after the review node
-- Source health monitoring is a counter-based mechanism, not LLM reasoning
-- The agent does not read SOUL.md or SKILL.md at runtime
-- The agent does not reason about *whether* to pursue its meta-goals
+- `check_vocabulary_gaps` / `add_vocabulary_terms` — self-updating vocabulary
+- `check_source_health` / `flag_cold_source` — source curation
+- `discover_companies` — company watchlist proposals
+- `assess_coverage` — blind spot detection
+- `propose_source` — new source recommendations
 
-This is documented in SKILL.md's Evolution table. The path to genuine agency
-would involve a ReAct-style meta-reflection node that receives the pipeline's
-output and *decides* which tools to invoke based on observed gaps — rather than
-following a fixed code path.
+The LLM reasons about *whether* and *when* to take each action (the definition
+of agency), rather than following a fixed code path. See
+`nodes/meta_reflect.py` and `tools/meta_tools.py`.
 
-We are honest about this gap because:
-- Most production "AI agents" operate at this level (LLM-augmented pipelines)
-- Claiming agentic behavior we don't have would not withstand critical review
-- Documenting the roadmap shows architectural intent and invites contribution
+**Remaining gap**: The agent still does not read SOUL.md or SKILL.md at
+runtime. It operates according to these specifications via hardcoded prompts,
+not by interpreting the spec files themselves. This is the "self-modifying"
+level in the Evolution table — a future goal.
 
 ## Consequences
 

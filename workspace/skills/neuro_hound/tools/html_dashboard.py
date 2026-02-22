@@ -39,6 +39,7 @@ def generate_dashboard(
     config: Dict[str, Any],
     run_metadata: Optional[Dict[str, Any]] = None,
     history_summary: Optional[Dict[str, Any]] = None,
+    meta_actions: Optional[List[Dict[str, Any]]] = None,
 ) -> str:
     """Generate the operational dashboard HTML."""
 
@@ -115,6 +116,35 @@ def generate_dashboard(
             </div>
         </div>"""
 
+    # Meta-agent actions
+    meta_html = ""
+    if meta_actions:
+        tool_calls = [a for a in meta_actions if a.get("action") not in ("FINISH",)]
+        finish = next((a for a in meta_actions if a.get("action") == "FINISH"), None)
+        summary = ""
+        if finish:
+            summary = _esc(finish.get("observation", finish.get("action_input", {}).get("summary", "")))
+
+        step_rows = ""
+        for a in meta_actions:
+            action = _esc(a.get("action", "?"))
+            thought = _esc(a.get("thought", "")[:200])
+            obs = _esc(a.get("observation", "")[:200])
+            step_class = "meta-finish" if action == "FINISH" else "meta-tool"
+            step_rows += f"""
+                <div class="meta-step {step_class}">
+                    <div class="meta-label">Step {a.get('iteration', '?')} — <strong>{action}</strong></div>
+                    <div class="meta-thought">{thought}</div>
+                    <div class="meta-obs">{obs}</div>
+                </div>"""
+
+        meta_html = f"""
+        <div class="info-card">
+            <h3>Meta-Agent (ReAct) — {len(tool_calls)} tool call{'s' if len(tool_calls) != 1 else ''}</h3>
+            {f'<p class="meta-summary">{summary}</p>' if summary else ''}
+            <div class="meta-trace">{step_rows}</div>
+        </div>"""
+
     # Dedup summary
     dedup_html = ""
     if history_summary:
@@ -183,6 +213,16 @@ tr:hover {{ background: rgba(88, 166, 255, 0.04); }}
 .queries-list {{ list-style: none; padding: 0; }}
 .queries-list li {{ background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; font-family: monospace; font-size: 0.82rem; color: var(--muted); }}
 
+.meta-trace {{ margin-top: 10px; }}
+.meta-step {{ border-left: 3px solid var(--border); padding: 6px 12px; margin-bottom: 8px; }}
+.meta-step.meta-tool {{ border-left-color: var(--accent-blue); }}
+.meta-step.meta-finish {{ border-left-color: var(--accent-gold); }}
+.meta-label {{ font-size: 0.8rem; color: var(--accent-blue); margin-bottom: 2px; }}
+.meta-finish .meta-label {{ color: var(--accent-gold); }}
+.meta-thought {{ font-size: 0.78rem; color: var(--text); font-style: italic; }}
+.meta-obs {{ font-size: 0.75rem; color: var(--muted); margin-top: 2px; }}
+.meta-summary {{ color: var(--accent-gold); font-size: 0.85rem; margin-top: 4px; }}
+
 .footer {{ text-align: center; padding: 16px 0; margin-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; }}
 .footer a {{ color: var(--accent-blue); text-decoration: none; }}
 </style>
@@ -204,6 +244,8 @@ tr:hover {{ background: rgba(88, 166, 255, 0.04); }}
 </div>
 
 {run_html}
+
+{meta_html}
 
 <h2>Configuration</h2>
 <div class="config-grid">

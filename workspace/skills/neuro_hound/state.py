@@ -34,6 +34,9 @@ class HoundState(TypedDict):
     company_discoveries: List[Dict[str, Any]] # Companies discovered via LLM analysis
     _dedup_history: Optional[Dict[str, Any]]  # Dedup history (transient, not serialized)
 
+    # --- Meta-reflection (ReAct agent) ---
+    meta_actions: List[Dict[str, Any]]        # ReAct loop trace: thought/action/observation per step
+
     # --- Metadata ---
     errors: List[str]
     usage: Dict[str, Any]                     # Token/cost tracking
