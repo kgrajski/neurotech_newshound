@@ -35,7 +35,7 @@ If you're new to agentic AI or just want a refresher, here's a cheat sheet for t
 
 Each week, the agent:
 
-1. **Fetches** from 23+ sources — PubMed, journal RSS feeds (Nature, Nature Neuroscience, Science, Lancet Neurology, Neuron, NEJM, IEEE TNSRE, ...), preprint servers (bioRxiv, medRxiv, arXiv), company Substacks (auto-injected from watchlist), general press (NYT, FT, STAT News), FDA MedWatch, and Tavily wideband search (with auto-generated queries from a company watchlist of 11 BCI companies)
+1. **Fetches** from 24+ sources — PubMed, ClinicalTrials.gov, journal RSS feeds (Nature, Nature Neuroscience, Science, Lancet Neurology, Neuron, NEJM, IEEE TNSRE, ...), preprint servers (bioRxiv, medRxiv, arXiv), company Substacks (auto-injected from watchlist), general press (NYT, FT, STAT News), FDA MedWatch, and Tavily wideband search (with auto-generated queries from a company watchlist of 11 BCI companies)
 2. **Pre-filters** with domain-specific regex patterns built from a 126-term domain vocabulary (fast, free, deterministic)
 3. **Deduplicates** against a history of previously-scored items — skips confirmed low-value repeats, re-evaluates high-value items
 4. **Scores** each candidate with an LLM that understands neuroscience — assessing relevance, categorizing, and flagging vaporware
@@ -54,7 +54,7 @@ The weekly pipeline runs in ~2.5 minutes and costs ~$0.009 per run with `gpt-4o-
 
 ## Architecture
 
-The system has two operating modes: a **weekly pipeline** that monitors current activity across 23+ sources, and a **backfill mode** that builds historical depth from archival APIs (PubMed, bioRxiv, medRxiv, arXiv). Both modes feed the same dedup history and source registry.
+The system has two operating modes: a **weekly pipeline** that monitors current activity across 24+ sources, and a **backfill mode** that builds historical depth from archival APIs (PubMed, bioRxiv, medRxiv, arXiv). Both modes feed the same dedup history and source registry.
 
 ### Weekly Pipeline
 
@@ -71,7 +71,8 @@ flowchart TD
     W -->|"watchlist aliases<br>→ Tavily queries"| C
 
     subgraph fetch ["Fetch (no LLM cost)"]
-        A["fetch_pubmed<br>(NCBI E-utilities)"] --> D["save_registry<br>(per-source stats)"]
+        A["fetch_pubmed<br>(NCBI E-utilities)"] --> CT["fetch_clinicaltrials<br>(ClinicalTrials.gov API v2)"]
+        CT --> D["save_registry<br>(per-source stats)"]
         B["fetch_rss<br>(19+ feeds: journals,<br>preprints, Substacks,<br>press, FDA)"] --> D
         C["fetch_tavily<br>(wideband + watchlist<br>+ curated sources)"] --> D
     end
@@ -128,7 +129,7 @@ flowchart LR
 
 ### Design Patterns
 
-- **Config-Driven Sources**: All 23+ sources defined in `config.yaml`. Add a journal by adding 4 lines of YAML — no code changes needed.
+- **Config-Driven Sources**: All 24+ sources defined in `config.yaml`. Add a journal by adding 4 lines of YAML — no code changes needed.
 - **Adaptive Source Management**: The company watchlist auto-generates Tavily queries from aliases and injects Substack RSS feeds. The ReAct meta-agent can discover new companies, flag cold sources, and propose new feeds.
 - **ReAct Meta-Reflection**: After the pipeline completes, a genuine ReAct agent receives the output and decides which self-improvement tools to invoke — vocabulary gap detection, source health checks, company discovery, coverage assessment. The LLM reasons about *whether* to act (not a fixed code path). Trace logged to `meta_actions.yaml`.
 - **Dynamic Query Construction**: PubMed queries are built at runtime from `vocabulary.yaml` (126+ domain terms extracted from representative papers). The vocabulary grows as new papers are processed and self-stabilizes as domain terminology is finite.
@@ -236,6 +237,7 @@ neurotech_newshound/
 │   │           ├── vocabulary.py      #   Domain vocabulary manager + PubMed query builder
 │   │           ├── http.py            #   HTTP + SSL helper
 │   │           ├── pubmed.py          #   PubMed E-utilities client (weekly + backfill)
+│   │           ├── clinicaltrials.py  #   ClinicalTrials.gov API v2 client
 │   │           ├── biorxiv.py         #   bioRxiv/medRxiv API client (backfill)
 │   │           ├── arxiv.py           #   arXiv API client (backfill)
 │   │           ├── rss.py             #   Registry-driven RSS/Atom parser (weekly)
@@ -337,7 +339,7 @@ PubMed queries are built at runtime from this vocabulary — no hardcoded querie
 
 | Category | Sources |
 |----------|---------|
-| **Database** | [PubMed](https://pubmed.ncbi.nlm.nih.gov/) (NCBI E-utilities) |
+| **Database** | [PubMed](https://pubmed.ncbi.nlm.nih.gov/) (NCBI E-utilities), [ClinicalTrials.gov](https://clinicaltrials.gov/) (REST API v2) |
 | **Journals** | Nature, Nature Neuroscience, Nature BME, Science, Science TM, Science Robotics, J Neural Engineering, Neuron, Lancet Neurology, IEEE TNSRE, NEJM |
 | **Preprints** | [bioRxiv](https://www.biorxiv.org/) (neuroscience), [medRxiv](https://www.medrxiv.org/), [arXiv](https://arxiv.org/) q-bio.NC |
 | **Press** | NYT Science, NYT Health, FT Technology, [STAT News](https://www.statnews.com/) |
@@ -494,7 +496,7 @@ The cron job runs the agent every Saturday and sends a notification via WhatsApp
 |-------|-------------|
 | **Agentic AI** | LangGraph, LangChain, ReAct pattern (custom implementation) |
 | **LLMs** | GPT-4o-mini (default), GPT-4o, Gemini 2.0 Flash, Claude (multi-model routing) |
-| **Data Sources** | PubMed E-utilities, RSS/Atom (21+ feeds incl. Substacks), Tavily Search, bioRxiv/medRxiv API, arXiv API |
+| **Data Sources** | PubMed E-utilities, ClinicalTrials.gov API v2, RSS/Atom (21+ feeds incl. Substacks), Tavily Search, bioRxiv/medRxiv API, arXiv API |
 | **NLP** | Regex pre-filter, LLM-based domain scoring, deduplication |
 | **Observability** | MLflow (params, metrics, artifacts per run) |
 | **Output** | HTML report, operational dashboard, Markdown, JSON, MLflow artifacts |
@@ -522,6 +524,33 @@ The cron job runs the agent every Saturday and sends a notification via WhatsApp
 | 10 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
 
 This project shares design patterns with [trading_etf](https://github.com/kgrajski/trading_etf), an ETF trading system with an agentic AI analyst — same LangGraph architecture, Reflection Pattern, and multi-model routing approach applied to a different domain.
+
+---
+
+## Current Development Focus
+
+**The memory problem — a cautionary tale from the field.**
+
+During a routine weekly run, our reviewer flagged a false negative: a non-invasive BCI company (Synaptrix Labs) had been incorrectly classified as out-of-scope. We fixed the scoring — broadened vocabulary, added a false-negative sweep to the reflection step, softened the regex pre-filter. Good engineering, problem solved. Then we re-ran the pipeline. Synaptrix didn't appear at all. Not misclassified — *absent*. The Tavily web search API, our wideband discovery source, is non-deterministic: the same query returns different results across runs. The world hadn't changed in the past hour, but our report had.
+
+This is not a bug — it's a fundamental property of agentic systems that rely on external tool-calling for retrieval. The literature calls it **retrieval stochasticity** ([Stochasticity in Agentic Evaluations](https://arxiv.org/abs/2512.06710), [ReproRAG](https://arxiv.org/abs/2509.18869)), and the research shows that agentic retrieval tasks require 8–16 repeated trials to converge to stable results. Our experience confirms this viscerally: an item discovered on Tuesday can vanish on Wednesday, not because it's gone from the web, but because the retrieval sample shifted. The solutions involve **ensemble retrieval** (multiple query variations, take the union — validated by [Generative Query Reformulation](https://arxiv.org/abs/2405.17658) showing up to 18% recall improvement), **persistent structured memory** so discoveries are never forgotten between runs ([Hindsight](https://arxiv.org/abs/2512.12818) — retain/recall/reflect across sessions), and **auto-promotion** of discovered entities to the tracking watchlist. We are currently designing these layers.
+
+The broader lesson: we are at a stage of agentic AI development akin to programming in the era of assembly language. Memory management, retrieval consistency, and state persistence across sessions are problems that today's developers must solve explicitly — with careful architecture and explicit data structures. Eventually these concerns will be abstracted into frameworks and handled implicitly, the way garbage collection and memory safety are handled by modern languages. But not yet. If you're building agentic systems and everything seems to work on the first run, run it again.
+
+---
+
+## References & Reading
+
+Key papers and resources that have informed this project's design:
+
+| Paper | Why It Matters |
+|-------|---------------|
+| [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) (Yao et al., 2023) | The Thought → Action → Observation pattern used by our meta-agent. Foundational paper for tool-calling LLM agents. |
+| [Hindsight is 20/20: Building Agent Memory that Retains, Recalls, and Reflects](https://arxiv.org/abs/2512.12818) | Structured memory architecture (world facts, experiences, entity summaries, evolving beliefs) for agents that learn across sessions. Directly relevant to our discovery persistence problem. |
+| [Agentic Retrieval-Augmented Generation: A Survey](https://arxiv.org/abs/2501.09136) | Comprehensive 2025 survey covering agentic RAG architectures, memory persistence, tool-use patterns, and multi-agent collaboration. |
+| [Stochasticity in Agentic Evaluations](https://arxiv.org/abs/2512.06710) | Quantifies non-determinism in agentic systems using ICC. Shows retrieval tasks need 8–16 trials to converge. |
+| [On The Reproducibility Limitations of RAG Systems](https://arxiv.org/abs/2509.18869) | ReproRAG benchmark measuring RAG reproducibility across configurations. Documents the sources of non-determinism we encountered empirically. |
+| [Generative Query Reformulation Using Ensemble Prompting](https://arxiv.org/abs/2405.17658) | Ensemble query strategies improve recall by up to 18%. Supports our planned multi-pass retrieval approach. |
 
 ---
 
