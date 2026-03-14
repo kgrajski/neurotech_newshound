@@ -262,6 +262,11 @@ provenance:
     - robotically implant
     - human implant
     - has implant
+    - uses electrodes
+    - and electrode
+    - implanting electrodes
+    - penetrating electrodes
+    - robotically implant
 materials_terms:
   materials:
   - graphene electrodes
@@ -295,6 +300,11 @@ implantable_bci_terms:
   - each electrode
   - an implant
   - has implant
+  - uses electrodes
+  - and electrode
+  - implanting electrodes
+  - penetrating electrodes
+  - robotically implant
   regulatory:
   - developing implant
 neurotechnology_terms:
