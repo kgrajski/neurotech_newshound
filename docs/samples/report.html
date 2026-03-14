@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>NeuroTech NewsHound — 2026-02-22</title>
+<title>NeuroTech NewsHound — 2026-03-14</title>
 <style>
 :root {
     --bg: #0d1117;
@@ -91,6 +91,10 @@ body {
 .alert-assessment { color: var(--muted); font-size: 0.85rem; margin: 6px 0; }
 .alert-link { color: var(--accent-blue); text-decoration: none; font-size: 0.85rem; }
 .alert-link:hover { text-decoration: underline; }
+.also-reported { font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
+.also-link { color: var(--muted); text-decoration: none; }
+.also-link:hover { color: var(--accent-blue); text-decoration: underline; }
+.cluster-badge { background: var(--accent-blue); color: #fff; font-size: 0.6rem; padding: 1px 6px; border-radius: 4px; font-weight: 700; vertical-align: middle; margin-left: 6px; }
 
 /* Category badges */
 .cat-badge {
@@ -131,6 +135,11 @@ body {
 }
 .muted { color: var(--muted); font-style: italic; }
 
+/* Errors */
+.errors-section { margin-bottom: 24px; }
+.error-list { list-style: none; padding: 0; }
+.error-list li { background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.2); border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; font-size: 0.85rem; color: var(--text); }
+
 /* Review */
 .review-box {
     background: var(--surface); border-radius: 8px; padding: 16px;
@@ -168,54 +177,50 @@ body {
 
 <div class="header">
     <h1>NeuroTech NewsHound</h1>
-    <div class="date">Intelligence Briefing — 2026-02-22</div>
+    <div class="date">Intelligence Briefing — 2026-03-14</div>
 </div>
 
 <div class="stat-bar">
-    <div class="stat"><div class="val">507</div><div class="label">Fetched</div></div>
-    <div class="stat"><div class="val">53</div><div class="label">In-Scope</div></div>
-    <div class="stat"><div class="val">53</div><div class="label">Scored</div></div>
-    <div class="stat"><div class="val" style="color:var(--accent-red)">8</div><div class="label">Alerts</div></div>
+    <div class="stat"><div class="val">629</div><div class="label">Fetched</div></div>
+    <div class="stat"><div class="val">101</div><div class="label">In-Scope</div></div>
+    <div class="stat"><div class="val">101</div><div class="label">Scored</div></div>
+    <div class="stat"><div class="val" style="color:var(--accent-red)">11</div><div class="label">Alerts</div></div>
     <div class="stat"><div class="val">4</div><div class="label">Themes</div></div>
-    <div class="stat"><div class="val">49,382</div><div class="label">Tokens</div></div>
-    <div class="stat"><div class="val">$0.0110</div><div class="label">Cost</div></div>
-    <div class="stat"><div class="val">206s</div><div class="label">Duration</div></div>
+    <div class="stat"><div class="val">94,131</div><div class="label">Tokens</div></div>
+    <div class="stat"><div class="val">$0.0201</div><div class="label">Cost</div></div>
+    <div class="stat"><div class="val">567s</div><div class="label">Duration</div></div>
 </div>
 
 <div class="brief-box">
     <h2>Executive Brief</h2>
     <h2>NeuroTech Intelligence Briefing</h2>
 <h3>TL;DR</h3>
-<p>This week marked significant advancements in implantable brain-computer interfaces (BCIs), highlighted by Paradromics&#x27; first-in-human recordings and FDA approvals. Additionally, Precision Neuroscience secured FDA clearance for its brain implant technologies, enhancing competition and innovation in the neurotechnology landscape.</p>
+<p>This week saw substantial advancements in implantable brain-computer interfaces (BCIs), highlighted by Paradromics achieving its first human implant and receiving FDA approval for its Connexus BCI. The competitive landscape is intensifying, with multiple regulatory milestones indicating a shift towards practical clinical applications in neurotechnology.</p>
 <h3>Themes</h3>
 <h4>Implantable BCI Milestones</h4>
-<p><strong>What&#x27;s new:</strong> Paradromics achieved its first-in-human recordings with the Connexus BCI and received FDA approval for clinical trials, indicating a leap forward in BCI technology.</p>
-<p><strong>Why it matters:</strong> These milestones not only validate the technology but also enhance prospects for improved communication and autonomy for individuals with neurological conditions.</p>
+<p><strong>What&#x27;s new:</strong> Paradromics completed its first human implant of the Connexus BCI, marking a significant breakthrough in the field. Additionally, Neuralink&#x27;s ongoing trials and China&#x27;s commercial approval of a brain implant underscore the rapid evolution of BCI technologies.</p>
+<p><strong>Why it matters:</strong> These milestones indicate a critical transition from experimental to practical applications, enhancing the potential for BCIs to address neurological disorders effectively.</p>
 <h4>Regulatory Approvals</h4>
-<p><strong>What&#x27;s new:</strong> Precision Neuroscience received FDA clearance for its minimally invasive brain implant technologies, marking a notable regulatory achievement.</p>
-<p><strong>Why it matters:</strong> Such approvals are critical for establishing the safety and efficacy of new neurotechnologies, fostering a competitive environment that can accelerate innovation.</p>
-<h4>ECoG and sEEG Innovations</h4>
-<p><strong>What&#x27;s new:</strong> Research in ECoG and sEEG technologies has shown promising results in enhancing motor recovery and improving data classification.</p>
-<p><strong>Why it matters:</strong> These innovations are essential for advancing our understanding of brain activity and developing effective neuroprosthetic solutions.</p>
-<h4>Funding and Investment Trends</h4>
-<p><strong>What&#x27;s new:</strong> Synchron raised $200 million to advance its BCI platform, reflecting strong investor confidence in neurotechnology.</p>
-<p><strong>Why it matters:</strong> Increased funding is vital for driving innovation in the rapidly evolving field of neurotechnology, enabling companies to push the boundaries of what&#x27;s possible.</p>
+<p><strong>What&#x27;s new:</strong> Multiple BCIs received FDA approvals this week, including Paradromics&#x27; Connexus BCI and the Layer 7-T Cortical Interface. These approvals validate the safety and efficacy of these devices for clinical use.</p>
+<p><strong>Why it matters:</strong> Regulatory milestones are essential for facilitating the integration of innovative neurotechnologies into clinical practice, ultimately improving treatment options for patients.</p>
+<h4>ECoG and Electrophysiological Advances</h4>
+<p><strong>What&#x27;s new:</strong> Research on ECoG has progressed, particularly in developing silent speech interfaces for ALS patients, showcasing innovative applications of electrophysiological recordings.</p>
+<p><strong>Why it matters:</strong> These advancements contribute to a deeper understanding of brain dynamics and enhance the development of effective brain-machine interfaces, which could revolutionize rehabilitation strategies.</p>
+<h4>Neuroprosthetic Innovations</h4>
+<p><strong>What&#x27;s new:</strong> New implantable devices designed to engage with epilepsy patients were introduced, emphasizing personalized treatment options.</p>
+<p><strong>Why it matters:</strong> Innovations in neuroprosthetics signify a shift towards more interactive and adaptive therapies, improving patient autonomy and quality of life.</p>
 <h3>Priority Alerts</h3>
 <ul>
-<li><strong>[9] Paradromics Completes First-In-Human Recording with the ...</strong>: This milestone represents a significant step towards advanced BCI applications, potentially transforming neuroprosthetic capabilities.</li>
-<li><strong>[9] Paradromics Receives FDA Approval for the Connect-One Clinical ...</strong>: This FDA approval is crucial for validating the safety and efficacy of new BCI technologies in human subjects.</li>
-<li><strong>[9] Brain-Computer Interface Clinical Trials - Johns Hopkins Medicine</strong>: The focus on stable decoding without recalibration for extended periods indicates significant advancements in BCI technology.</li>
-<li><strong>[9] Development of Optimal Sensory Feedback Strategies to Maximize Function After Tetraplegia</strong>: This study integrates brain and nerve stimulation techniques, representing a notable advancement in rehabilitation for spinal cord injuries.</li>
-<li><strong>[9] Precision Neuroscience Receives FDA Clearance for ... - BioSpace</strong>: This clearance is pivotal for advancing high-resolution cortical electrode arrays, which could facilitate further clinical applications.</li>
-<li><strong>[9] WVU Rockefeller Neuroscience Institute, Precision ... - WVU Medicine</strong>: The extended in-human clinical study of the Layer 7 Cortical Interface is critical for the development of next-generation BCIs.</li>
-<li><strong>[9] This Implant Turns Brain Waves Into Words - IEEE Spectrum</strong>: This advancement in communication for paralyzed individuals underscores the practical implications of BCI technology.</li>
-<li><strong>[8] Intracranial electrophysiological recordings from the human brain ...</strong>: Important for understanding brain activity and improving neuroprosthetic solutions.</li>
-<li><strong>[8] Attention-Adaptive BCI-AOT System Enhances Motor Recovery and Neural Engagement</strong>: This system&#x27;s focus on motor recovery is crucial for advancing rehabilitation techniques.</li>
+<li><strong>[9] Paradromics Completes First-In-Human Recording with the ...</strong>: This significant milestone in BCI technology demonstrates the ability to record neural activity at an individual neuron level, enhancing the potential for actionable outputs.</li>
+<li><strong>[9] Paradromics Receives FDA Approval for the Connect-One Clinical ...</strong>: This approval is crucial for advancing clinical studies, marking a significant regulatory achievement in the neurotechnology field.</li>
+<li><strong>[9] Neuralink competitor Paradromics completes first human implant</strong>: This successful human implant showcases safety and efficacy, indicating progress in the BCI landscape.</li>
+<li><strong>[9] Self-paced silent speech brain-computer interface for device control</strong>: This advancement in ECoG-based BCIs for ALS patients highlights the potential for self-paced control, critical for user autonomy.</li>
+<li><strong>[9] The state of clinical trials of implantable brain–computer interfaces</strong>: This comprehensive review underscores global collaboration and significant advancements in restoring motor, sensory, and speech functions.</li>
 </ul>
 <h3>What to Watch</h3>
-<p>1. Monitor the outcomes of Paradromics&#x27; clinical trials as they progress, particularly for insights into the efficacy of their BCI technology.</p>
-<p>2. Keep an eye on further regulatory developments from Precision Neuroscience and other companies seeking FDA clearance, as these will shape the competitive landscape.</p>
-<p>3. Watch for updates on funding trends in neurotechnology, especially any new investments that could signal shifts in research focus or emerging technologies.</p>
+<p>1. Monitor the outcomes of Paradromics&#x27; ongoing clinical trials, particularly regarding user experiences and efficacy in real-world applications.</p>
+<p>2. Keep an eye on Neuralink&#x27;s developments as they progress with their human trials, especially any insights from initial users.</p>
+<p>3. Watch for further regulatory updates from the FDA regarding new BCI devices, as these will shape the landscape for clinical applications and market entry.</p>
 </div>
 
 <h2 style="font-size:1.1rem; margin-bottom:12px;">Themes</h2>
@@ -225,31 +230,31 @@ body {
                 <span class="theme-name">Implantable BCI Milestones</span>
                 <span class="badge" style="background:#e74c3c">BREAKTHROUGH</span>
             </div>
-            <p class="theme-narrative">This week saw significant advancements in implantable brain-computer interfaces (BCIs), including Paradromics&#x27; first-in-human recordings and FDA approvals for clinical studies. These developments pave the way for improved communication and autonomy for individuals with neurological conditions, marking a crucial step forward in neurotechnology.</p>
-            <span class="theme-items">11 items</span>
+            <p class="theme-narrative">This week marked significant advancements in implantable brain-computer interfaces (BCIs), with Paradromics achieving its first human implant and receiving FDA approval for its Connexus BCI. Additionally, Neuralink&#x27;s ongoing trials and China&#x27;s commercial approval of a brain implant highlight the rapid progression and competitive landscape of neurotechnology, indicating a shift towards practical applications in clinical settings.</p>
+            <span class="theme-items">12 items</span>
         </div>
         <div class="theme-card">
             <div class="theme-header">
                 <span class="theme-name">Regulatory Approvals</span>
                 <span class="badge" style="background:#f39c12">NOTABLE</span>
             </div>
-            <p class="theme-narrative">This week, several regulatory milestones were achieved, particularly with Precision Neuroscience receiving FDA clearance for its brain implant technologies. These approvals not only validate the safety and efficacy of these devices but also enhance competition in the neurotechnology landscape, potentially accelerating innovation.</p>
+            <p class="theme-narrative">Several regulatory milestones were achieved this week, with multiple brain-computer interface devices receiving FDA approvals. These approvals not only validate the safety and efficacy of these technologies but also pave the way for their integration into clinical practice, enhancing treatment options for patients with neurological conditions.</p>
             <span class="theme-items">4 items</span>
         </div>
         <div class="theme-card">
             <div class="theme-header">
-                <span class="theme-name">ECoG and sEEG Innovations</span>
+                <span class="theme-name">ECoG and Electrophysiological Advances</span>
                 <span class="badge" style="background:#f39c12">NOTABLE</span>
             </div>
-            <p class="theme-narrative">Research focused on ECoG and sEEG technologies has yielded promising results, particularly in enhancing motor recovery and improving data classification. These innovations are crucial for advancing our understanding of brain activity and developing effective neuroprosthetic solutions.</p>
-            <span class="theme-items">6 items</span>
+            <p class="theme-narrative">Research focused on electrocorticography (ECoG) and electrophysiological recordings has progressed, showcasing innovative applications such as silent speech interfaces for ALS patients. These studies contribute to a deeper understanding of brain dynamics and the development of more effective brain-machine interfaces, potentially transforming rehabilitation strategies for individuals with motor impairments.</p>
+            <span class="theme-items">7 items</span>
         </div>
         <div class="theme-card">
             <div class="theme-header">
-                <span class="theme-name">Funding and Investment Trends</span>
+                <span class="theme-name">Neuroprosthetic Innovations</span>
                 <span class="badge" style="background:#f39c12">NOTABLE</span>
             </div>
-            <p class="theme-narrative">The week highlighted significant funding activity, with Synchron raising $200 million to advance its BCI platform. This influx of capital reflects growing investor confidence in neurotechnology and underscores the importance of financial backing for innovation in this rapidly evolving field.</p>
+            <p class="theme-narrative">Innovations in neuroprosthetics were highlighted this week, with the introduction of an implantable device designed to engage with epilepsy patients and adapt to their needs. These advancements signify a shift towards more personalized and interactive treatment options, enhancing patient autonomy and quality of life.</p>
             <span class="theme-items">2 items</span>
         </div></div>
 
@@ -259,73 +264,111 @@ body {
             <div class="alert-card">
                 <div class="alert-score" style="background:#e74c3c">9</div>
                 <div class="alert-body">
-                    <div class="alert-title">Paradromics Completes First-In-Human Recording with the ...</div>
+                    <div class="alert-title">Paradromics Completes First-In-Human Recording with the ... <span class="cluster-badge">6 sources</span></div>
                     <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
-                    <p class="alert-assessment">This research item reports a significant milestone in the neurotechnology field, highlighting the first-in-human recording with the Connexus® Brain-Computer Interface by Paradromics. This achievement is crucial as it represents a step towards advanced BCI applications that can record neural activity at the individual neuron level, which could have profound implications for neuroprosthetics and brain-computer interaction.</p>
+                    <p class="alert-assessment">This research item reports a significant milestone in the neurotechnology field, highlighting Paradromics&#x27; first-in-human recording with their Connexus® Brain-Computer Interface. The ability to record neural activity at the level of individual neurons and translate brain signals into actionable outputs using AI is a major advancement in BCI technology, making it highly relevant.</p>
                     <a href="https://www.paradromics.com/news/paradromics-completes-first-in-human-recording-with-the-connexus-brain-computer-interface" target="_blank" class="alert-link">Tavily (www.paradromics.com) &rarr;</a>
+                    <div class="also-reported">Also reported by: <a href="https://www.paradromics.com/news/paradromics-receives-fda-approval-for-the-connect-one-clinical-study-with-the-connexus-brain-computer-interface" target="_blank" class="also-link">Tavily (www.paradromics.com)</a> &middot; <a href="https://www.cnbc.com/2025/06/02/neuralink-paradromics-human-implant.html" target="_blank" class="also-link">Tavily (www.cnbc.com)</a> &middot; <a href="https://www.bioworld.com/articles/720649-paradromics-joins-bci-in-human-race" target="_blank" class="also-link">Tavily (www.bioworld.com)</a> &middot; <a href="http://www.msn.com/en-us/health/medical/neuralink-competitor-paradromics-completes-its-first-human-implant/ar-AA1FX19H?apiversion=v2&amp;domshim=1&amp;noservercache=1&amp;noservertelemetry=1&amp;batchservertelemetry=1&amp;renderwebcomponents=1&amp;wcseo=1" target="_blank" class="also-link">Tavily (www.msn.com)</a> &middot; <a href="https://www.wired.com/story/paradromics-gets-fda-approval-to-trial-its-brain-implant-in-people/" target="_blank" class="also-link">Tavily (www.wired.com)</a></div>
                 </div>
             </div>
             <div class="alert-card">
                 <div class="alert-score" style="background:#e74c3c">9</div>
                 <div class="alert-body">
-                    <div class="alert-title">Paradromics Receives FDA Approval for the Connect-One Clinical ...</div>
+                    <div class="alert-title">Precise Robotically IMplanted Brain-Computer InterfacE <span class="cluster-badge">3 sources</span></div>
+                    <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
+                    <p class="alert-assessment">This research item pertains to a clinical trial involving a robotically implanted brain-computer interface, indicating a significant advancement in the field of neurotechnology. Its relevance is heightened by the potential implications for human applications and regulatory milestones.</p>
+                    <a href="https://clinicaltrials.gov/study/NCT06429735" target="_blank" class="alert-link">Tavily (clinicaltrials.gov) &rarr;</a>
+                    <div class="also-reported">Also reported by: <a href="https://www.hopkinsmedicine.org/neurology-neurosurgery/clinical-trials/brain-computer-interface" target="_blank" class="also-link">Tavily (www.hopkinsmedicine.org)</a> &middot; <a href="https://blackrockneurotech.com/insights/the-state-of-clinical-trials-of-implantable-brain-computer-interfaces/" target="_blank" class="also-link">Tavily (blackrockneurotech.com)</a></div>
+                </div>
+            </div>
+            <div class="alert-card">
+                <div class="alert-score" style="background:#e74c3c">9</div>
+                <div class="alert-body">
+                    <div class="alert-title">[PDF] Self-paced silent speech brain-computer interface for device control</div>
+                    <span class="cat-badge" style="background:#3498db">ecog_seeg</span>
+                    <p class="alert-assessment">This research presents a significant advancement in the application of ECoG-based BCIs for individuals with ALS, demonstrating the potential for self-paced silent speech commands to control devices. The clinical trial aspect and the use of a chronically implanted BCI highlight its relevance and importance in the NeuroTech field.</p>
+                    <a href="https://www.medrxiv.org/content/medrxiv/early/2025/04/10/2025.04.09.25325542.full.pdf" target="_blank" class="alert-link">Tavily (www.medrxiv.org) &rarr;</a>
+                    
+                </div>
+            </div>
+            <div class="alert-card">
+                <div class="alert-score" style="background:#e74c3c">9</div>
+                <div class="alert-body">
+                    <div class="alert-title">5-year follow-up of a fully implanted brain–computer interface in a ... <span class="cluster-badge">3 sources</span></div>
+                    <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
+                    <p class="alert-assessment">This study provides valuable insights into the long-term feasibility and viability of an ECoG-based brain-computer interface in a real-world setting, which is critical for advancing implantable BCI technologies. The focus on a fully implanted system in a patient with spinal cord injury highlights its potential clinical relevance and impact.</p>
+                    <a href="https://www.medrxiv.org/lookup/external-ref?access_num=10.1088/1741-2552/adc48c&amp;link_type=DOI" target="_blank" class="alert-link">Tavily (www.medrxiv.org) &rarr;</a>
+                    <div class="also-reported">Also reported by: <a href="https://www.fieldtriptoolbox.org/tutorial/intracranial/human_ecog/" target="_blank" class="also-link">Tavily (www.fieldtriptoolbox.org)</a> &middot; <a href="https://med.nyu.edu/thesenlab/research-0/intracranial-eeg/" target="_blank" class="also-link">Tavily (med.nyu.edu)</a></div>
+                </div>
+            </div>
+            <div class="alert-card">
+                <div class="alert-score" style="background:#e74c3c">9</div>
+                <div class="alert-body">
+                    <div class="alert-title">FDA Clears Brain–Computer Interface Device for the Measurement ... <span class="cluster-badge">2 sources</span></div>
                     <span class="cat-badge" style="background:#e67e22">regulatory</span>
-                    <p class="alert-assessment">This research item reports on Paradromics receiving FDA approval for a clinical study involving their Connexus BCI, marking a significant milestone in the development of implantable BCIs. Such FDA milestones are critical for advancing neurotechnology and validating the safety and efficacy of new devices in human subjects.</p>
-                    <a href="https://www.paradromics.com/news/paradromics-receives-fda-approval-for-the-connect-one-clinical-study-with-the-connexus-brain-computer-interface" target="_blank" class="alert-link">Tavily (www.paradromics.com) &rarr;</a>
+                    <p class="alert-assessment">This item reports on the FDA clearance of the Layer 7 Cortical Interface, a significant milestone for implantable BCIs as it is the first wireless device of its kind to receive such approval. This advancement could pave the way for further developments in the field of neurotechnology and clinical applications.</p>
+                    <a href="https://practicalneurology.com/news/fda-clears-braincomputer-interface-device-for-the-measurement-and-stimulation-of-cortical-brain-activity/2474229/" target="_blank" class="alert-link">Tavily (practicalneurology.com) &rarr;</a>
+                    <div class="also-reported">Also reported by: <a href="https://bla-regulatory.com/fda-approves-layer-7t-bci/" target="_blank" class="also-link">Tavily (bla-regulatory.com)</a></div>
                 </div>
             </div>
             <div class="alert-card">
                 <div class="alert-score" style="background:#e74c3c">9</div>
                 <div class="alert-body">
-                    <div class="alert-title">Brain-Computer Interface Clinical Trials - Johns Hopkins Medicine</div>
+                    <div class="alert-title">Neuralink&#x27;s First User Describes Life with Elon Musk&#x27;s Brain Chip</div>
                     <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
-                    <p class="alert-assessment">This research item describes a clinical trial for an implantable brain-computer interface (BCI) aimed at improving communication for patients with ALS and other conditions, which is highly relevant to the NeuroTech field. The trial&#x27;s focus on stable decoding without recalibration for an extended period indicates significant advancements in BCI technology.</p>
-                    <a href="https://www.hopkinsmedicine.org/neurology-neurosurgery/clinical-trials/brain-computer-interface" target="_blank" class="alert-link">Tavily (www.hopkinsmedicine.org) &rarr;</a>
+                    <p class="alert-assessment">This article discusses the first human trial of Neuralink&#x27;s brain-computer interface, highlighting the significant milestone of human implantation and its impact on the user&#x27;s life. This is highly relevant to the NeuroTech field as it represents a pivotal moment in the development and acceptance of implantable BCIs.</p>
+                    <a href="https://www.scientificamerican.com/article/neuralinks-first-user-describes-life-with-elon-musks-brain-chip/" target="_blank" class="alert-link">Tavily (www.scientificamerican.com) &rarr;</a>
+                    
                 </div>
             </div>
             <div class="alert-card">
                 <div class="alert-score" style="background:#e74c3c">9</div>
                 <div class="alert-body">
-                    <div class="alert-title">Development of Optimal Sensory Feedback Strategies to Maximize Function After Tetraplegia</div>
+                    <div class="alert-title">Meet the Stentrode: A Bluetooth Implant to Give You Mind Control ...</div>
                     <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
-                    <p class="alert-assessment">This clinical trial focuses on the development of sensory feedback strategies through neural stimulation, which is directly relevant to implantable brain-computer interfaces (BCIs) aimed at restoring function in individuals with tetraplegia. The study&#x27;s integration of brain and nerve stimulation techniques represents a significant advancement in neurotechnology for spinal cord injury rehabilitation.</p>
-                    <a href="https://clinicaltrials.gov/study/NCT07225582" target="_blank" class="alert-link">ClinicalTrials.gov &rarr;</a>
+                    <p class="alert-assessment">The Stentrode represents a significant advancement in implantable brain-computer interfaces, particularly as it is positioned as a first-in-human device with IDE backing. This milestone could pave the way for future developments in BCI technology and its applications for individuals with paralysis.</p>
+                    <a href="https://beingpatient.com/stentrode-synchron-bci/" target="_blank" class="alert-link">Tavily (beingpatient.com) &rarr;</a>
+                    
                 </div>
             </div>
             <div class="alert-card">
                 <div class="alert-score" style="background:#e74c3c">9</div>
                 <div class="alert-body">
-                    <div class="alert-title">Brain-computer interface study wins 2025 Top Ten Clinical ...</div>
-                    <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
-                    <p class="alert-assessment">This research item highlights a significant clinical achievement in the field of brain-computer interfaces, specifically aimed at restoring speech in ALS patients. The recognition of Dr. Brandman and his team&#x27;s work indicates a pivotal advancement in the application of implantable BCIs in clinical settings, which is critical for the future of neuroprosthetics.</p>
-                    <a href="https://health.ucdavis.edu/news/headlines/brain-computer-interface-study-wins-2025-top-ten-clinical-research-achievement-award-/2025/02" target="_blank" class="alert-link">Tavily (health.ucdavis.edu) &rarr;</a>
-                </div>
-            </div>
-            <div class="alert-card">
-                <div class="alert-score" style="background:#e74c3c">9</div>
-                <div class="alert-body">
-                    <div class="alert-title">Precision Neuroscience Receives FDA Clearance for ... - BioSpace</div>
+                    <div class="alert-title">China approves world&#x27;s first brain implant for commercialisation <span class="cluster-badge">2 sources</span></div>
                     <span class="cat-badge" style="background:#e67e22">regulatory</span>
-                    <p class="alert-assessment">This research item highlights Precision Neuroscience&#x27;s FDA clearance for a high-resolution cortical electrode array, which is significant for the advancement of implantable BCIs. The clearance represents an important regulatory milestone that could facilitate further clinical applications and research in neurotechnology.</p>
-                    <a href="https://www.biospace.com/press-releases/precision-neuroscience-receives-fda-clearance-for-high-resolution-cortical-electrode-array" target="_blank" class="alert-link">Tavily (www.biospace.com) &rarr;</a>
+                    <p class="alert-assessment">This research item highlights a significant milestone in the NeuroTech field, as it reports the first commercial approval of a brain implant designed to assist individuals with paralysis. The approval by China represents a critical step in the development and commercialization of brain-computer interfaces (BCIs), which could pave the way for further advancements in neurotechnology.</p>
+                    <a href="https://www.euronews.com/next/2026/03/14/china-approves-worlds-first-brain-implant-for-commercialisation" target="_blank" class="alert-link">Tavily (www.euronews.com) &rarr;</a>
+                    <div class="also-reported">Also reported by: <a href="https://www.reuters.com/business/healthcare-pharmaceuticals/china-approves-market-launch-brain-computer-interface-medical-device-world-first-2026-03-13/" target="_blank" class="also-link">Tavily (www.reuters.com)</a></div>
                 </div>
             </div>
             <div class="alert-card">
                 <div class="alert-score" style="background:#e74c3c">9</div>
                 <div class="alert-body">
-                    <div class="alert-title">WVU Rockefeller Neuroscience Institute, Precision ... - WVU Medicine</div>
-                    <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
-                    <p class="alert-assessment">This research item highlights a significant advancement in brain-computer interface technology with the successful extended in-human clinical study of the Layer 7 Cortical Interface. Such milestones are critical for the development and potential FDA approval of next-generation BCIs, making it highly relevant to the NeuroTech field.</p>
-                    <a href="https://wvumedicine.org/news-feed/news-article/WVU-Medicine/Front-Page/wvu-rockefeller-neuroscience-institute-precision-neuroscience-expand-partnership-on-next-generation-brain-computer-interface-technology/" target="_blank" class="alert-link">Tavily (wvumedicine.org) &rarr;</a>
+                    <div class="alert-title">Blackrock Neurotech – MoveAgain Brain-Computer Interface System <span class="cluster-badge">6 sources</span></div>
+                    <span class="cat-badge" style="background:#e67e22">regulatory</span>
+                    <p class="alert-assessment">The MoveAgain Brain-Computer Interface System has received FDA Breakthrough Device designation, indicating significant potential for clinical impact and innovation in neurotechnology. This milestone highlights Blackrock Neurotech&#x27;s leadership in the BCI space and the importance of their technology in advancing human implantable systems.</p>
+                    <a href="https://blackrockneurotech.com/insights/blackrock-neurotech-moveagain-brain-computer-interface-system/" target="_blank" class="alert-link">Tavily (blackrockneurotech.com) &rarr;</a>
+                    <div class="also-reported">Also reported by: <a href="https://www.mobihealthnews.com/news/elon-musks-neuralink-announces-study-connect-brain-implant-robotic-arm" target="_blank" class="also-link">Tavily (www.mobihealthnews.com)</a> &middot; <a href="https://neuralink.com/trials/device-control/" target="_blank" class="also-link">Tavily (neuralink.com)</a> &middot; <a href="https://www.paradromics.com/product" target="_blank" class="also-link">Tavily (www.paradromics.com)</a> &middot; <a href="https://www.paradromics.com/about" target="_blank" class="also-link">Tavily (www.paradromics.com)</a> &middot; <a href="https://blackrockneurotech.com/our-tech/" target="_blank" class="also-link">Tavily (blackrockneurotech.com)</a></div>
                 </div>
             </div>
             <div class="alert-card">
                 <div class="alert-score" style="background:#e74c3c">9</div>
                 <div class="alert-body">
-                    <div class="alert-title">This Implant Turns Brain Waves Into Words - IEEE Spectrum</div>
+                    <div class="alert-title">Implantable brain–computer interface for neuroprosthetic-enabled ...</div>
                     <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
-                    <p class="alert-assessment">This research item describes a significant advancement in brain-computer interface technology, specifically an implant that enables a paralyzed individual to communicate through decoded brain signals. The implications for individuals with speech impairments are profound, marking a critical milestone in the development of BCIs for practical human use.</p>
-                    <a href="https://spectrum.ieee.org/brain-computer-interface-speech" target="_blank" class="alert-link">Tavily (spectrum.ieee.org) &rarr;</a>
+                    <p class="alert-assessment">This research item presents a fully implanted brain-computer interface capable of decoding movement intent from the motor cortex, indicating significant advancements in neuroprosthetic applications. Its focus on reliable volitional control is crucial for the development of effective neuroprosthetic devices, making it highly relevant to the NeuroTech field.</p>
+                    <a href="https://www.biorxiv.org/lookup/external-ref?access_num=10.1093/braincomms/fcab248&amp;link_type=DOI" target="_blank" class="alert-link">Tavily (www.biorxiv.org) &rarr;</a>
+                    
+                </div>
+            </div>
+            <div class="alert-card">
+                <div class="alert-score" style="background:#e74c3c">9</div>
+                <div class="alert-body">
+                    <div class="alert-title">Long-term independent use of an intracortical brain-computer ...</div>
+                    <span class="cat-badge" style="background:#e74c3c">implantable_bci</span>
+                    <p class="alert-assessment">This research demonstrates the long-term independent use of an intracortical brain-computer interface (BCI) in a human subject with paralysis, showcasing significant advancements in brain-to-text communication and cursor control. Its implications for clinical applications and user autonomy in neurotechnology are substantial, marking a pivotal milestone in BCI development.</p>
+                    <a href="https://www.biorxiv.org/content/10.1101/2025.06.26.661591v1.full-text" target="_blank" class="alert-link">Tavily (www.biorxiv.org) &rarr;</a>
+                    
                 </div>
             </div>
 </div>
@@ -336,17 +379,23 @@ body {
                 <span>Reviewer: NEEDS_REVISION</span>
                 <span class="review-quality">Quality: 7/10</span>
             </div>
-            <p>The briefing effectively highlights key advancements in BCI technology, but it could benefit from a more nuanced assessment of the implications of funding and regulatory approvals. Additionally, some items may be overhyped or lack immediate relevance, which should be addressed.</p>
-            <p class="review-picks"><strong>Top picks:</strong> Paradromics Completes First-In-Human Recording wit, Precision Neuroscience Receives FDA Clearance for , Synchron raises $200 million to prepare for brain </p>
+            <p>The briefing provides a solid overview of recent advancements in BCIs, but it could better highlight the competitive landscape, particularly regarding funding and developments in non-invasive BCIs. Some items were underappreciated and should be scored higher due to their relevance in the current market dynamics.</p>
+            <p class="review-picks"><strong>Top picks:</strong> Paradromics Completes First-In-Human Recording wit, Paradromics Receives FDA Approval for the Connect-, Neuralink competitor Paradromics completes first h</p>
         </div>
 
 <div class="sources-bar">
-    <h3>Sources (21 active)</h3>
-    <span class="source-chip">tavily_wideband <b>49</b></span><span class="source-chip">nature <b>40</b></span><span class="source-chip">science <b>40</b></span><span class="source-chip">neuron <b>40</b></span><span class="source-chip">ieee_tnsre <b>40</b></span><span class="source-chip">nejm <b>40</b></span><span class="source-chip">biorxiv_neuro <b>30</b></span><span class="source-chip">clinicaltrials <b>29</b></span><span class="source-chip">lancet_neuro <b>29</b></span><span class="source-chip">pubmed <b>26</b></span><span class="source-chip">nyt_science <b>21</b></span><span class="source-chip">nyt_health <b>20</b></span><span class="source-chip">stat_news <b>20</b></span><span class="source-chip">neurotechnology_substack <b>20</b></span><span class="source-chip">fda_medwatch <b>20</b></span><span class="source-chip">jne <b>10</b></span><span class="source-chip">nature_neuro <b>8</b></span><span class="source-chip">nature_bme <b>8</b></span><span class="source-chip">sci_transl_med <b>6</b></span><span class="source-chip">paradromics_substack <b>6</b></span><span class="source-chip">sci_robotics <b>5</b></span>
+    <h3>Sources (23 active)</h3>
+    <span class="source-chip">tavily_wideband <b>153</b></span><span class="source-chip">nature <b>40</b></span><span class="source-chip">neuron <b>40</b></span><span class="source-chip">ieee_tnsre <b>40</b></span><span class="source-chip">science <b>39</b></span><span class="source-chip">nejm <b>38</b></span><span class="source-chip">nyt_science <b>31</b></span><span class="source-chip">biorxiv_neuro <b>30</b></span><span class="source-chip">lancet_neuro <b>29</b></span><span class="source-chip">biorxiv_api <b>26</b></span><span class="source-chip">ft_tech <b>25</b></span><span class="source-chip">neurotechnology_substack <b>20</b></span><span class="source-chip">nyt_health <b>20</b></span><span class="source-chip">stat_news <b>20</b></span><span class="source-chip">fda_medwatch <b>20</b></span><span class="source-chip">pubmed <b>15</b></span><span class="source-chip">jne <b>10</b></span><span class="source-chip">nature_neuro <b>8</b></span><span class="source-chip">nature_bme <b>8</b></span><span class="source-chip">sci_transl_med <b>7</b></span><span class="source-chip">paradromics_substack <b>6</b></span><span class="source-chip">sci_robotics <b>3</b></span><span class="source-chip">medrxiv_api <b>1</b></span>
+</div>
+
+
+<div class="errors-section">
+    <h2 style="color:var(--accent-red);">Warnings (2)</h2>
+    <ul class="error-list"><li>ClinicalTrials.gov: ClinicalTrials.gov API error: HTTP Error 403: Forbidden</li><li>Date gate: 26 items outside 7+2d lookback (IEEE Trans Neural Systems &amp; Rehab Engineering=4, Neurotechnology (Substack)=4, Paradromics (Substack)=4, Tavily (www.neurofounders.co)=3, PubMed=2, Tavily (www.medtechdive.com)=1, Tavily (www.digitimes.com)=1, Tavily (www.biospace.com)=1, Tavily (www.thedailystar.net)=1, Tavily (www.reuters.com)=1, Tavily (axoft.us)=1, Tavily (synchron.com)=1, Tavily (bcisociety.org)=1, Tavily (www.cheninstitute.org)=1)</li></ul>
 </div>
 
 <div class="items-section">
-    <h2>All Scored Items (53)</h2>
+    <h2>All Scored Items (81 unique stories)</h2>
     <table class="items-table">
         <thead><tr>
             <th>Score</th><th>Category</th><th>Title</th><th>Assessment</th><th>Source</th>
@@ -356,288 +405,288 @@ body {
                 <td><span class="score-pill" style="background:#e74c3c">9</span></td>
                 <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
                 <td><a href="https://www.paradromics.com/news/paradromics-completes-first-in-human-recording-with-the-connexus-brain-computer-interface" target="_blank">Paradromics Completes First-In-Human Recording with the ...</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item reports a significant milestone in the neurotechnology field, highlighting the first-in-human recordi...<span class="assess-tip">This research item reports a significant milestone in the neurotechnology field, highlighting the first-in-human recording with the Connexus® Brain-Computer Interface by Paradromics. This achievement is crucial as it represents a step towards advanced BCI applications that can record neural activity at the individual neuron level, which could have profound implications for neuroprosthetics and brain-computer interaction.</span></span></td>
-                <td class="source-cell">Tavily (www.paradromics.com)</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#e74c3c">9</span></td>
-                <td><span class="cat-badge" style="background:#e67e22">regulatory</span></td>
-                <td><a href="https://www.paradromics.com/news/paradromics-receives-fda-approval-for-the-connect-one-clinical-study-with-the-connexus-brain-computer-interface" target="_blank">Paradromics Receives FDA Approval for the Connect-One Clinical ...</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item reports on Paradromics receiving FDA approval for a clinical study involving their Connexus BCI, mark...<span class="assess-tip">This research item reports on Paradromics receiving FDA approval for a clinical study involving their Connexus BCI, marking a significant milestone in the development of implantable BCIs. Such FDA milestones are critical for advancing neurotechnology and validating the safety and efficacy of new devices in human subjects.</span></span></td>
+                <td class="assessment-cell"><span class="assess-text">This research item reports a significant milestone in the neurotechnology field, highlighting Paradromics&#x27; first-in...<span class="assess-tip">This research item reports a significant milestone in the neurotechnology field, highlighting Paradromics&#x27; first-in-human recording with their Connexus® Brain-Computer Interface. The ability to record neural activity at the level of individual neurons and translate brain signals into actionable outputs using AI is a major advancement in BCI technology, making it highly relevant.</span></span></td>
                 <td class="source-cell">Tavily (www.paradromics.com)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#e74c3c">9</span></td>
                 <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
-                <td><a href="https://www.hopkinsmedicine.org/neurology-neurosurgery/clinical-trials/brain-computer-interface" target="_blank">Brain-Computer Interface Clinical Trials - Johns Hopkins Medicine</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item describes a clinical trial for an implantable brain-computer interface (BCI) aimed at improving commu...<span class="assess-tip">This research item describes a clinical trial for an implantable brain-computer interface (BCI) aimed at improving communication for patients with ALS and other conditions, which is highly relevant to the NeuroTech field. The trial&#x27;s focus on stable decoding without recalibration for an extended period indicates significant advancements in BCI technology.</span></span></td>
-                <td class="source-cell">Tavily (www.hopkinsmedicine.org)</td>
+                <td><a href="https://clinicaltrials.gov/study/NCT06429735" target="_blank">Precise Robotically IMplanted Brain-Computer InterfacE</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item pertains to a clinical trial involving a robotically implanted brain-computer interface, indicating a...<span class="assess-tip">This research item pertains to a clinical trial involving a robotically implanted brain-computer interface, indicating a significant advancement in the field of neurotechnology. Its relevance is heightened by the potential implications for human applications and regulatory milestones.</span></span></td>
+                <td class="source-cell">Tavily (clinicaltrials.gov)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#e74c3c">9</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://www.medrxiv.org/content/medrxiv/early/2025/04/10/2025.04.09.25325542.full.pdf" target="_blank">[PDF] Self-paced silent speech brain-computer interface for device control</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research presents a significant advancement in the application of ECoG-based BCIs for individuals with ALS, demonst...<span class="assess-tip">This research presents a significant advancement in the application of ECoG-based BCIs for individuals with ALS, demonstrating the potential for self-paced silent speech commands to control devices. The clinical trial aspect and the use of a chronically implanted BCI highlight its relevance and importance in the NeuroTech field.</span></span></td>
+                <td class="source-cell">Tavily (www.medrxiv.org)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#e74c3c">9</span></td>
                 <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
-                <td><a href="https://clinicaltrials.gov/study/NCT07225582" target="_blank">Development of Optimal Sensory Feedback Strategies to Maximize Function After Tetraplegia</a></td>
-                <td class="assessment-cell"><span class="assess-text">This clinical trial focuses on the development of sensory feedback strategies through neural stimulation, which is direc...<span class="assess-tip">This clinical trial focuses on the development of sensory feedback strategies through neural stimulation, which is directly relevant to implantable brain-computer interfaces (BCIs) aimed at restoring function in individuals with tetraplegia. The study&#x27;s integration of brain and nerve stimulation techniques represents a significant advancement in neurotechnology for spinal cord injury rehabilitation.</span></span></td>
-                <td class="source-cell">ClinicalTrials.gov</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#e74c3c">9</span></td>
-                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
-                <td><a href="https://health.ucdavis.edu/news/headlines/brain-computer-interface-study-wins-2025-top-ten-clinical-research-achievement-award-/2025/02" target="_blank">Brain-computer interface study wins 2025 Top Ten Clinical ...</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item highlights a significant clinical achievement in the field of brain-computer interfaces, specifically...<span class="assess-tip">This research item highlights a significant clinical achievement in the field of brain-computer interfaces, specifically aimed at restoring speech in ALS patients. The recognition of Dr. Brandman and his team&#x27;s work indicates a pivotal advancement in the application of implantable BCIs in clinical settings, which is critical for the future of neuroprosthetics.</span></span></td>
-                <td class="source-cell">Tavily (health.ucdavis.edu)</td>
+                <td><a href="https://www.medrxiv.org/lookup/external-ref?access_num=10.1088/1741-2552/adc48c&amp;link_type=DOI" target="_blank">5-year follow-up of a fully implanted brain–computer interface in a ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This study provides valuable insights into the long-term feasibility and viability of an ECoG-based brain-computer inter...<span class="assess-tip">This study provides valuable insights into the long-term feasibility and viability of an ECoG-based brain-computer interface in a real-world setting, which is critical for advancing implantable BCI technologies. The focus on a fully implanted system in a patient with spinal cord injury highlights its potential clinical relevance and impact.</span></span></td>
+                <td class="source-cell">Tavily (www.medrxiv.org)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#e74c3c">9</span></td>
                 <td><span class="cat-badge" style="background:#e67e22">regulatory</span></td>
-                <td><a href="https://www.biospace.com/press-releases/precision-neuroscience-receives-fda-clearance-for-high-resolution-cortical-electrode-array" target="_blank">Precision Neuroscience Receives FDA Clearance for ... - BioSpace</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item highlights Precision Neuroscience&#x27;s FDA clearance for a high-resolution cortical electrode array...<span class="assess-tip">This research item highlights Precision Neuroscience&#x27;s FDA clearance for a high-resolution cortical electrode array, which is significant for the advancement of implantable BCIs. The clearance represents an important regulatory milestone that could facilitate further clinical applications and research in neurotechnology.</span></span></td>
-                <td class="source-cell">Tavily (www.biospace.com)</td>
+                <td><a href="https://practicalneurology.com/news/fda-clears-braincomputer-interface-device-for-the-measurement-and-stimulation-of-cortical-brain-activity/2474229/" target="_blank">FDA Clears Brain–Computer Interface Device for the Measurement ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This item reports on the FDA clearance of the Layer 7 Cortical Interface, a significant milestone for implantable BCIs a...<span class="assess-tip">This item reports on the FDA clearance of the Layer 7 Cortical Interface, a significant milestone for implantable BCIs as it is the first wireless device of its kind to receive such approval. This advancement could pave the way for further developments in the field of neurotechnology and clinical applications.</span></span></td>
+                <td class="source-cell">Tavily (practicalneurology.com)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#e74c3c">9</span></td>
                 <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
-                <td><a href="https://wvumedicine.org/news-feed/news-article/WVU-Medicine/Front-Page/wvu-rockefeller-neuroscience-institute-precision-neuroscience-expand-partnership-on-next-generation-brain-computer-interface-technology/" target="_blank">WVU Rockefeller Neuroscience Institute, Precision ... - WVU Medicine</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item highlights a significant advancement in brain-computer interface technology with the successful exten...<span class="assess-tip">This research item highlights a significant advancement in brain-computer interface technology with the successful extended in-human clinical study of the Layer 7 Cortical Interface. Such milestones are critical for the development and potential FDA approval of next-generation BCIs, making it highly relevant to the NeuroTech field.</span></span></td>
-                <td class="source-cell">Tavily (wvumedicine.org)</td>
+                <td><a href="https://www.scientificamerican.com/article/neuralinks-first-user-describes-life-with-elon-musks-brain-chip/" target="_blank">Neuralink&#x27;s First User Describes Life with Elon Musk&#x27;s Brain Chip</a></td>
+                <td class="assessment-cell"><span class="assess-text">This article discusses the first human trial of Neuralink&#x27;s brain-computer interface, highlighting the significant ...<span class="assess-tip">This article discusses the first human trial of Neuralink&#x27;s brain-computer interface, highlighting the significant milestone of human implantation and its impact on the user&#x27;s life. This is highly relevant to the NeuroTech field as it represents a pivotal moment in the development and acceptance of implantable BCIs.</span></span></td>
+                <td class="source-cell">Tavily (www.scientificamerican.com)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#e74c3c">9</span></td>
                 <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
-                <td><a href="https://spectrum.ieee.org/brain-computer-interface-speech" target="_blank">This Implant Turns Brain Waves Into Words - IEEE Spectrum</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item describes a significant advancement in brain-computer interface technology, specifically an implant t...<span class="assess-tip">This research item describes a significant advancement in brain-computer interface technology, specifically an implant that enables a paralyzed individual to communicate through decoded brain signals. The implications for individuals with speech impairments are profound, marking a critical milestone in the development of BCIs for practical human use.</span></span></td>
-                <td class="source-cell">Tavily (spectrum.ieee.org)</td>
+                <td><a href="https://beingpatient.com/stentrode-synchron-bci/" target="_blank">Meet the Stentrode: A Bluetooth Implant to Give You Mind Control ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">The Stentrode represents a significant advancement in implantable brain-computer interfaces, particularly as it is posit...<span class="assess-tip">The Stentrode represents a significant advancement in implantable brain-computer interfaces, particularly as it is positioned as a first-in-human device with IDE backing. This milestone could pave the way for future developments in BCI technology and its applications for individuals with paralysis.</span></span></td>
+                <td class="source-cell">Tavily (beingpatient.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#e74c3c">9</span></td>
+                <td><span class="cat-badge" style="background:#e67e22">regulatory</span></td>
+                <td><a href="https://www.euronews.com/next/2026/03/14/china-approves-worlds-first-brain-implant-for-commercialisation" target="_blank">China approves world&#x27;s first brain implant for commercialisation</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item highlights a significant milestone in the NeuroTech field, as it reports the first commercial approva...<span class="assess-tip">This research item highlights a significant milestone in the NeuroTech field, as it reports the first commercial approval of a brain implant designed to assist individuals with paralysis. The approval by China represents a critical step in the development and commercialization of brain-computer interfaces (BCIs), which could pave the way for further advancements in neurotechnology.</span></span></td>
+                <td class="source-cell">Tavily (www.euronews.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#e74c3c">9</span></td>
+                <td><span class="cat-badge" style="background:#e67e22">regulatory</span></td>
+                <td><a href="https://blackrockneurotech.com/insights/blackrock-neurotech-moveagain-brain-computer-interface-system/" target="_blank">Blackrock Neurotech – MoveAgain Brain-Computer Interface System</a></td>
+                <td class="assessment-cell"><span class="assess-text">The MoveAgain Brain-Computer Interface System has received FDA Breakthrough Device designation, indicating significant p...<span class="assess-tip">The MoveAgain Brain-Computer Interface System has received FDA Breakthrough Device designation, indicating significant potential for clinical impact and innovation in neurotechnology. This milestone highlights Blackrock Neurotech&#x27;s leadership in the BCI space and the importance of their technology in advancing human implantable systems.</span></span></td>
+                <td class="source-cell">Tavily (blackrockneurotech.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#e74c3c">9</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://www.biorxiv.org/lookup/external-ref?access_num=10.1093/braincomms/fcab248&amp;link_type=DOI" target="_blank">Implantable brain–computer interface for neuroprosthetic-enabled ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item presents a fully implanted brain-computer interface capable of decoding movement intent from the moto...<span class="assess-tip">This research item presents a fully implanted brain-computer interface capable of decoding movement intent from the motor cortex, indicating significant advancements in neuroprosthetic applications. Its focus on reliable volitional control is crucial for the development of effective neuroprosthetic devices, making it highly relevant to the NeuroTech field.</span></span></td>
+                <td class="source-cell">Tavily (www.biorxiv.org)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#e74c3c">9</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://www.biorxiv.org/content/10.1101/2025.06.26.661591v1.full-text" target="_blank">Long-term independent use of an intracortical brain-computer ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research demonstrates the long-term independent use of an intracortical brain-computer interface (BCI) in a human s...<span class="assess-tip">This research demonstrates the long-term independent use of an intracortical brain-computer interface (BCI) in a human subject with paralysis, showcasing significant advancements in brain-to-text communication and cursor control. Its implications for clinical applications and user autonomy in neurotechnology are substantial, marking a pivotal milestone in BCI development.</span></span></td>
+                <td class="source-cell">Tavily (www.biorxiv.org)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://www.biorxiv.org/lookup/external-ref?access_num=10.1088/1741-2560/10/2/026010&amp;link_type=DOI" target="_blank">An implantable wireless neural interface for recording cortical circuit ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research presents an implantable wireless broadband neural recording device, which is significant for advancing the...<span class="assess-tip">This research presents an implantable wireless broadband neural recording device, which is significant for advancing the capabilities of brain-computer interfaces (BCIs) in both clinical and research settings. The evaluation in non-human primates and swine indicates a strong potential for future applications in human subjects.</span></span></td>
+                <td class="source-cell">Tavily (www.biorxiv.org)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://doi.org/10.64898/2026.01.26.26344234" target="_blank">An Implantable Device that Converses with Patients and Learns to Co-Manage Epilepsy</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item presents an innovative implantable device designed to engage with patients and adapt to their needs i...<span class="assess-tip">This research item presents an innovative implantable device designed to engage with patients and adapt to their needs in managing epilepsy, which is highly relevant to the neurotechnology field. The focus on real-time communication and learning from patient behavior represents a significant advancement in the functionality of implantable devices for epilepsy management.</span></span></td>
+                <td class="source-cell">Medrxiv</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://doi.org/10.64898/2026.03.05.709626" target="_blank">Thalamocortical network dynamics in focal epilepsy: SEEG investigation</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research investigates thalamocortical network dynamics in focal epilepsy using stereo-electroencephalography (sEEG)...<span class="assess-tip">This research investigates thalamocortical network dynamics in focal epilepsy using stereo-electroencephalography (sEEG), which is highly relevant for understanding seizure propagation and could inform future closed-loop BCI applications for epilepsy treatment. The findings may contribute to the development of more effective neuromodulation strategies in clinical settings.</span></span></td>
+                <td class="source-cell">Biorxiv</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">8</span></td>
                 <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
                 <td><a href="https://www.nature.com/articles/s41597-021-01099-z" target="_blank">Intracranial electrophysiological recordings from the human brain ...</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item presents valuable data on intracranial EEG recordings from human subjects, which is crucial for under...<span class="assess-tip">This research item presents valuable data on intracranial EEG recordings from human subjects, which is crucial for understanding brain activity in cognitive tasks. The focus on sEEG signals and the challenges in data management highlight important considerations for advancing BCI technology and its applications in clinical settings.</span></span></td>
+                <td class="assessment-cell"><span class="assess-text">This research item presents valuable data on intracranial EEG recordings from human subjects, which is critical for adva...<span class="assess-tip">This research item presents valuable data on intracranial EEG recordings from human subjects, which is critical for advancing our understanding of brain activity and its relationship to cognitive tasks. The focus on sEEG signals and the challenges related to data acquisition and storage highlight important considerations for future studies in neurotechnology.</span></span></td>
                 <td class="source-cell">Tavily (www.nature.com)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">8</span></td>
                 <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
-                <td><a href="http://ieeexplore.ieee.org/document/11358787" target="_blank">Attention-Adaptive BCI-AOT System Enhances Motor Recovery and Neural Engagement After Stro</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research presents a closed-loop BCI system that integrates attention monitoring with action observation therapy to ...<span class="assess-tip">This research presents a closed-loop BCI system that integrates attention monitoring with action observation therapy to enhance motor recovery post-stroke, which is highly relevant to the neurotechnology field. The use of SSVEP for real-time attention tracking represents a significant advancement in BCI applications for rehabilitation.</span></span></td>
-                <td class="source-cell">IEEE Trans Neural Systems &amp; Rehab Engineering</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#f39c12">8</span></td>
-                <td><span class="cat-badge" style="background:#9b59b6">stimulation</span></td>
-                <td><a href="https://www.cell.com/neuron/fulltext/S0896-6273(25)00928-6?rss=yes" target="_blank">A mesoscale optogenetics system for precise and robust stimulation of the primate cortex</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research presents a novel optogenetic system for precise cortical stimulation in primates, demonstrating potential ...<span class="assess-tip">This research presents a novel optogenetic system for precise cortical stimulation in primates, demonstrating potential applications in advanced brain-computer interfaces and visual prostheses. Its focus on durable neuromodulation and retinotopic organization is highly relevant to the development of next-generation neurotechnologies.</span></span></td>
-                <td class="source-cell">Neuron</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#f39c12">8</span></td>
-                <td><span class="cat-badge" style="background:#e67e22">regulatory</span></td>
-                <td><a href="https://www.medtechdive.com/news/precision-neuroscience-brain-implant-fda-cleared/745913/" target="_blank">Precision Neuroscience receives FDA clearance for brain implant</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item reports on Precision Neuroscience receiving FDA clearance for a brain implant electrode array, which ...<span class="assess-tip">This research item reports on Precision Neuroscience receiving FDA clearance for a brain implant electrode array, which is significant as it indicates progress in the development of implantable brain-computer interfaces. The clearance represents an important regulatory milestone that could facilitate further advancements in neurotechnology.</span></span></td>
-                <td class="source-cell">Tavily (www.medtechdive.com)</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#f39c12">8</span></td>
-                <td><span class="cat-badge" style="background:#e67e22">regulatory</span></td>
-                <td><a href="https://www.cnbc.com/2025/04/17/brain-implant-cleared-fda-musk-neuralink-rival-precision-neuroscience.html" target="_blank">Brain implant cleared by FDA for Musk Neuralink rival Precision</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item highlights the FDA clearance of a brain implant by Precision Neuroscience, a competitor to Neuralink....<span class="assess-tip">This research item highlights the FDA clearance of a brain implant by Precision Neuroscience, a competitor to Neuralink. This milestone is significant as it represents progress in the development of brain-computer interfaces aimed at restoring functionality for paralyzed patients, which is crucial for the neurotechnology field.</span></span></td>
-                <td class="source-cell">Tavily (www.cnbc.com)</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#f39c12">8</span></td>
-                <td><span class="cat-badge" style="background:#e67e22">regulatory</span></td>
-                <td><a href="https://www.fiercebiotech.com/medtech/fda-clears-precision-neurosciences-minimally-invasive-brain-computer-interface-implant" target="_blank">FDA clears Precision Neuroscience&#x27;s minimally invasive brain ...</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item reports on the FDA clearance of Precision Neuroscience&#x27;s minimally invasive brain-computer inter...<span class="assess-tip">This research item reports on the FDA clearance of Precision Neuroscience&#x27;s minimally invasive brain-computer interface implant, which is significant as it marks a regulatory milestone for the development of implantable BCIs. The approval allows for medical applications such as brain mapping, highlighting advancements in neurotechnology and potential clinical applications.</span></span></td>
-                <td class="source-cell">Tavily (www.fiercebiotech.com)</td>
+                <td><a href="https://www.medrxiv.org/lookup/external-ref?link_type=CLINTRIALGOV&amp;access_num=NCT03698149&amp;atom=%2Fmedrxiv%2Fearly%2F2024%2F10%2F16%2F2024.10.15.24315534.atom" target="_blank">Study Details | NCT03698149 | ECoG BMI for Motor and Speech ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item focuses on ECoG (electrocorticography) as a brain-machine interface (BMI) for motor and speech applic...<span class="assess-tip">This research item focuses on ECoG (electrocorticography) as a brain-machine interface (BMI) for motor and speech applications, which is highly relevant to the neurotechnology field. The use of ECoG for direct brain recording and potential applications in communication and movement restoration makes it significant for advancing implantable BCI technologies.</span></span></td>
+                <td class="source-cell">Tavily (www.medrxiv.org)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">8</span></td>
                 <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
                 <td><a href="https://www.paradromics.com/" target="_blank">Paradromics: Brain-Computer Interface (BCI) for Neurological ...</a></td>
-                <td class="assessment-cell"><span class="assess-text">Paradromics&#x27; BCI platform focuses on high-resolution recordings at the individual neuron level, which is significan...<span class="assess-tip">Paradromics&#x27; BCI platform focuses on high-resolution recordings at the individual neuron level, which is significant for advancing brain-computer interface technology. The emphasis on AI algorithms for decoding brain data suggests potential for innovative healthcare applications, making it relevant to the NeuroTech field.</span></span></td>
+                <td class="assessment-cell"><span class="assess-text">Paradromics&#x27; BCI platform focuses on recording brain activity at the individual neuron level, which is highly relev...<span class="assess-tip">Paradromics&#x27; BCI platform focuses on recording brain activity at the individual neuron level, which is highly relevant for advancing implantable BCIs. Their use of AI for decoding brain data indicates a significant step towards practical applications in neurological treatments.</span></span></td>
                 <td class="source-cell">Tavily (www.paradromics.com)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">8</span></td>
                 <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
-                <td><a href="https://www.researchgate.net/publication/395698050_Precision_Neuroscience&#x27;s_Layer_7_Cortical_Interface_Technical_Design_Surgical_Integration_and_Clinical_Outcomes" target="_blank">Precision Neuroscience&#x27;s Layer 7 Cortical Interface - ResearchGate</a></td>
-                <td class="assessment-cell"><span class="assess-text">The Layer 7 Cortical Interface represents a significant advancement in brain-computer interface technology, particularly...<span class="assess-tip">The Layer 7 Cortical Interface represents a significant advancement in brain-computer interface technology, particularly with its focus on high-resolution capabilities. This relevance is underscored by its potential applications in clinical settings, making it a noteworthy development in the neurotechnology field.</span></span></td>
-                <td class="source-cell">Tavily (www.researchgate.net)</td>
+                <td><a href="https://www.neurofounders.co/startups/ability-neurotech" target="_blank">ABILITY Neurotech | Neurofounders</a></td>
+                <td class="assessment-cell"><span class="assess-text">ABILITY Neurotech is developing an implantable BCI aimed at restoring autonomy for individuals with paralysis, focusing ...<span class="assess-tip">ABILITY Neurotech is developing an implantable BCI aimed at restoring autonomy for individuals with paralysis, focusing on direct neural interfacing with the motor cortex. This technology is significant as it combines high-resolution neural recording and stimulation, which is crucial for advancing BCI applications in clinical settings.</span></span></td>
+                <td class="source-cell">Tavily (www.neurofounders.co)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">8</span></td>
                 <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
-                <td><a href="https://www.neurofounders.co/startups/ability-neurotech" target="_blank">ABILITY Neurotech | Neurofounders</a></td>
-                <td class="assessment-cell"><span class="assess-text">ABILITY Neurotech is focused on developing an implantable brain-computer interface aimed at restoring autonomy for indiv...<span class="assess-tip">ABILITY Neurotech is focused on developing an implantable brain-computer interface aimed at restoring autonomy for individuals with paralysis, which is highly relevant to the NeuroTech field. The emphasis on direct neural interfacing with the motor cortex and high-resolution neural signal processing indicates significant technological advancement and potential clinical impact.</span></span></td>
-                <td class="source-cell">Tavily (www.neurofounders.co)</td>
+                <td><a href="https://spectrum.ieee.org/brain-computer-interface-speech" target="_blank">This Implant Turns Brain Waves Into Words - IEEE Spectrum</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item highlights a significant advancement in brain-computer interface technology, specifically an implant ...<span class="assess-tip">This research item highlights a significant advancement in brain-computer interface technology, specifically an implant that enables a paralyzed individual to communicate by decoding brain signals into words. This is relevant to the NeuroTech field as it demonstrates the practical application of ECoG/sEEG technologies in restoring communication, which is a critical milestone in BCI development.</span></span></td>
+                <td class="source-cell">Tavily (spectrum.ieee.org)</td>
             </tr>
             <tr>
-                <td><span class="score-pill" style="background:#f39c12">7</span></td>
-                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
-                <td><a href="https://pubmed.ncbi.nlm.nih.gov/41697466/" target="_blank">WaveNet&#x27;s Precision in iEEG Classification.</a></td>
-                <td class="assessment-cell"><span class="assess-text">The research item focuses on the precision of WaveNet in classifying iEEG data, which is directly relevant to the field ...<span class="assess-tip">The research item focuses on the precision of WaveNet in classifying iEEG data, which is directly relevant to the field of ECoG/sEEG/iEEG recordings and neural decoding methods. This work could enhance the understanding and application of advanced neural decoding techniques in clinical settings.</span></span></td>
-                <td class="source-cell">PubMed</td>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://spectrum.ieee.org/brain-computer-interface-2671662991" target="_blank">Two-Way Brain-Computer Interface Restores Touch - IEEE Spectrum</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item discusses a two-way brain-computer interface that restores touch, indicating significant advancements...<span class="assess-tip">This research item discusses a two-way brain-computer interface that restores touch, indicating significant advancements in BCI technology with potential clinical applications. The focus on restoring sensory feedback is particularly relevant for improving the functionality of implantable BCIs in therapeutic settings.</span></span></td>
+                <td class="source-cell">Tavily (spectrum.ieee.org)</td>
             </tr>
             <tr>
-                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
                 <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
-                <td><a href="https://pubmed.ncbi.nlm.nih.gov/41623459/" target="_blank">A general model based on Riemannian manifold for stable decoding movement trajectory from </a></td>
-                <td class="assessment-cell"><span class="assess-text">This research presents a novel approach to decoding movement trajectories from ECoG signals using Riemannian manifold te...<span class="assess-tip">This research presents a novel approach to decoding movement trajectories from ECoG signals using Riemannian manifold techniques and LSTM networks, addressing the challenge of inter-session variability. Its implications for improving BCI performance make it highly relevant to the neurotechnology field.</span></span></td>
-                <td class="source-cell">PubMed</td>
+                <td><a href="https://www.medrxiv.org/lookup/external-ref?access_num=10.1109/RBME.2011.2172408&amp;link_type=DOI" target="_blank">Brain-Computer Interfaces Using Electrocorticographic Signals</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item focuses on brain-computer interfaces utilizing electrocorticographic signals, which are highly releva...<span class="assess-tip">This research item focuses on brain-computer interfaces utilizing electrocorticographic signals, which are highly relevant to the NeuroTech field due to their potential for high-resolution neural data acquisition. The emphasis on ECoG/sEEG indicates a significant advancement in BCI technology, making it pertinent for both clinical applications and research.</span></span></td>
+                <td class="source-cell">Tavily (www.medrxiv.org)</td>
             </tr>
             <tr>
-                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
                 <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
-                <td><a href="https://www.fieldtriptoolbox.org/tutorial/intracranial/human_ecog/" target="_blank">Analysis of human ECoG and sEEG recordings - FieldTrip toolbox</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item focuses on the analysis of human ECoG and sEEG recordings, highlighting the integration of anatomical...<span class="assess-tip">This research item focuses on the analysis of human ECoG and sEEG recordings, highlighting the integration of anatomical data with neural recordings. It is relevant to the NeuroTech field as it enhances data exploration tools for understanding neural activity, which is crucial for developing advanced neurotechnologies.</span></span></td>
-                <td class="source-cell">Tavily (www.fieldtriptoolbox.org)</td>
+                <td><a href="https://www.biorxiv.org/content/10.1101/2025.06.26.661591v1.full.pdf" target="_blank">[PDF] Long-term independent use of an intracortical brain-computer ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research focuses on the long-term independent use of an intracortical brain-computer interface (BCI), utilizing ECo...<span class="assess-tip">This research focuses on the long-term independent use of an intracortical brain-computer interface (BCI), utilizing ECoG/sEEG techniques to record neural activity from individual neurons. Its relevance lies in advancing our understanding of closed-loop BCI systems and their potential for practical applications in neuroprosthetics.</span></span></td>
+                <td class="source-cell">Tavily (www.biorxiv.org)</td>
             </tr>
             <tr>
-                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
                 <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
-                <td><a href="https://med.nyu.edu/thesenlab/research-0/intracranial-eeg/" target="_blank">Electrocorticography (ECoG) | Thesen Lab</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item focuses on intracranial ECoG recordings, specifically examining auditory speech stimulus responses, w...<span class="assess-tip">This research item focuses on intracranial ECoG recordings, specifically examining auditory speech stimulus responses, which is highly relevant for understanding brain processes with high temporal and spatial resolution. The use of ECoG in neurological patients provides valuable insights into brain activity and has implications for developing advanced neurotechnologies, including BCIs.</span></span></td>
-                <td class="source-cell">Tavily (med.nyu.edu)</td>
+                <td><a href="https://www.biorxiv.org/content/10.1101/2024.02.29.582733v1.full-text" target="_blank">Measuring instability in chronic human intracortical neural ... - bioRxiv</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research focuses on the measurement of instability in chronic human intracortical neural recordings, which is criti...<span class="assess-tip">This research focuses on the measurement of instability in chronic human intracortical neural recordings, which is critical for the development of stable, long-term brain-computer interfaces. The findings could have significant implications for improving the reliability and functionality of implantable BCIs.</span></span></td>
+                <td class="source-cell">Tavily (www.biorxiv.org)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://www.biorxiv.org/content/10.64898/2026.02.23.707488v1.full-text" target="_blank">A modular, high-bandwidth, bidirectional implantable device for ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item presents a modular, high-bandwidth, bidirectional implantable device, which is highly relevant to the...<span class="assess-tip">This research item presents a modular, high-bandwidth, bidirectional implantable device, which is highly relevant to the NeuroTech field as it addresses the need for advanced neural interfaces with increased recording and stimulation capabilities. Such innovations could significantly enhance the performance of BCIs in clinical and research applications.</span></span></td>
+                <td class="source-cell">Tavily (www.biorxiv.org)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://www.biorxiv.org/lookup/external-ref?access_num=10.1088/1741-2552/acef95&amp;link_type=DOI" target="_blank">Error detection and correction in intracortical brain–machine ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research focuses on error detection and correction in intracortical brain-machine interfaces, which is highly relev...<span class="assess-tip">This research focuses on error detection and correction in intracortical brain-machine interfaces, which is highly relevant to the development of closed-loop BCIs. The ability to improve the reliability and accuracy of BMIs directly impacts their effectiveness in controlling robotic limbs, making this work significant in the neurotechnology field.</span></span></td>
+                <td class="source-cell">Tavily (www.biorxiv.org)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://www.biorxiv.org/content/10.1101/2025.06.11.659174v1.full-text" target="_blank">An intracortical brain-machine interface based on macaque ventral ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This study presents a significant advancement in the development of an intracortical brain-machine interface utilizing n...<span class="assess-tip">This study presents a significant advancement in the development of an intracortical brain-machine interface utilizing neural activity from the ventral premotor cortex in macaques for real-time control of a cursor and robot avatar. Its relevance lies in the exploration of closed-loop BCI systems, which are crucial for future applications in neuroprosthetics and rehabilitation.</span></span></td>
+                <td class="source-cell">Tavily (www.biorxiv.org)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">8 *</span></td>
+                <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
+                <td><a href="https://www.mobihealthnews.com/news/brain-computer-interface-company-synchron-raises-200m" target="_blank">Brain-computer interface company Synchron raises $200M</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item highlights Synchron&#x27;s significant funding round, which is crucial for advancing their brain-comp...<span class="assess-tip">This research item highlights Synchron&#x27;s significant funding round, which is crucial for advancing their brain-computer interface technology. The ability to control digital devices hands-free in clinical trials is a relevant development in the BCI field, indicating progress towards practical applications for individuals with paralysis.</span></span></td>
+                <td class="source-cell">Tavily (www.mobihealthnews.com)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">7</span></td>
                 <td><span class="cat-badge" style="background:#e67e22">regulatory</span></td>
-                <td><a href="https://neurotechnology.substack.com/p/signals2" target="_blank">Signals 02: December 2025</a></td>
-                <td class="assessment-cell"><span class="assess-text">The item discusses BCI strategy maturation and therapeutic neuromodulation expansion, which is relevant to the regulator...<span class="assess-tip">The item discusses BCI strategy maturation and therapeutic neuromodulation expansion, which is relevant to the regulatory landscape and development of implantable BCIs. Understanding these strategies is crucial for advancing clinical applications and regulatory approvals in the neurotechnology field.</span></span></td>
-                <td class="source-cell">Neurotechnology (Substack)</td>
+                <td><a href="https://bcisociety.org/wp-content/uploads/2025/05/DeArmond-BCI-2025-program-v106.pdf" target="_blank">[PDF] 11th International BCI Meeting</a></td>
+                <td class="assessment-cell"><span class="assess-text">This conference workshop focuses on BCI clinical trial considerations, which is highly relevant to the NeuroTech field a...<span class="assess-tip">This conference workshop focuses on BCI clinical trial considerations, which is highly relevant to the NeuroTech field as it addresses regulatory pathways and milestones necessary for advancing BCI technologies. Understanding these considerations is crucial for the successful translation of BCI research into clinical applications.</span></span></td>
+                <td class="source-cell">Tavily (bcisociety.org)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">7</span></td>
                 <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
-                <td><a href="https://paradromics.substack.com/p/paradromics-at-sfn-2025-part-2" target="_blank">Paradromics at SfN 2025 (Part 2)</a></td>
-                <td class="assessment-cell"><span class="assess-text">The research item discusses high BCI bandwidth at ultra-low latency, which is relevant to the development of ECoG/sEEG t...<span class="assess-tip">The research item discusses high BCI bandwidth at ultra-low latency, which is relevant to the development of ECoG/sEEG technologies and their applications in brain-computer interfaces. This indicates potential advancements in the field that could improve the performance of BCIs.</span></span></td>
-                <td class="source-cell">Paradromics (Substack)</td>
+                <td><a href="https://doi.org/10.64898/2026.03.06.710063" target="_blank">Machine-Learning-Based spike marking in signal and source space EEG from a patient with fo</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research focuses on the application of machine learning to enhance the detection of interictal epileptiform dischar...<span class="assess-tip">This research focuses on the application of machine learning to enhance the detection of interictal epileptiform discharges in EEG, which is crucial for epilepsy diagnosis. The use of advanced neural network techniques in analyzing ECoG/sEEG data is highly relevant to the NeuroTech field, particularly in improving clinical outcomes for patients with epilepsy.</span></span></td>
+                <td class="source-cell">Biorxiv</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">7</span></td>
                 <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
-                <td><a href="https://paradromics.substack.com/p/paradromics-at-sfn-2025" target="_blank">Paradromics at SfN 2025</a></td>
-                <td class="assessment-cell"><span class="assess-text">The research item presents findings from Paradromics regarding the stability of preclinical BCI recordings, which is rel...<span class="assess-tip">The research item presents findings from Paradromics regarding the stability of preclinical BCI recordings, which is relevant to the development of ECoG/sEEG technologies. This work contributes to understanding the reliability of neural interfaces, a critical aspect for future clinical applications.</span></span></td>
-                <td class="source-cell">Paradromics (Substack)</td>
+                <td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10190110/" target="_blank">Advances in human intracranial electroencephalography ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item discusses advances in intracranial electroencephalography (iEEG), specifically focusing on recording ...<span class="assess-tip">This research item discusses advances in intracranial electroencephalography (iEEG), specifically focusing on recording strategies like stereotactic EEG (sEEG). This is relevant to the NeuroTech field as it pertains to methods of obtaining high-resolution neural data, which is crucial for developing closed-loop BCIs and understanding brain activity in clinical settings.</span></span></td>
+                <td class="source-cell">Tavily (pmc.ncbi.nlm.nih.gov)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">7</span></td>
-                <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                <td><a href="https://www.medtechdive.com/news/synchron-funding-bci-200m/804977/" target="_blank">Synchron raises $200M to prepare for brain computer ...</a></td>
-                <td class="assessment-cell"><span class="assess-text">Synchron&#x27;s significant funding round of $200 million is a strong indicator of investor confidence in their brain-co...<span class="assess-tip">Synchron&#x27;s significant funding round of $200 million is a strong indicator of investor confidence in their brain-computer interface platform, which aims to translate brain activity into digital commands without the need for invasive surgery. This development is relevant to the NeuroTech field as it highlights advancements in BCI technology and potential market growth.</span></span></td>
-                <td class="source-cell">Tavily (www.medtechdive.com)</td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6476542/" target="_blank">Human Intracranial EEG: Promises and Limitations - PMC</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item discusses the localization and precision of high-frequency broadband (HFB) signals in human intracran...<span class="assess-tip">This research item discusses the localization and precision of high-frequency broadband (HFB) signals in human intracranial EEG, which is highly relevant for ECoG/iEEG applications in neurotechnology. Understanding the limitations and promises of iEEG can inform the development of more effective brain-computer interfaces and microstimulation techniques.</span></span></td>
+                <td class="source-cell">Tavily (pmc.ncbi.nlm.nih.gov)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">7</span></td>
-                <td><span class="cat-badge" style="background:#1abc9c">materials</span></td>
-                <td><a href="https://otd.harvard.edu/news/soft-safer-brain-implants/" target="_blank">Soft, Safer Brain Implants for Improved Treatment of Traumatic ...</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item discusses the development of a softer brain implant that could enhance the safety and efficacy of bra...<span class="assess-tip">This research item discusses the development of a softer brain implant that could enhance the safety and efficacy of brain-computer interfaces. Its focus on biocompatible materials and the potential for improved neural data acquisition makes it relevant to the neurotechnology field.</span></span></td>
-                <td class="source-cell">Tavily (otd.harvard.edu)</td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://www.medrxiv.org/lookup/external-ref?access_num=10.1016/j.clinph.2017.10.036&amp;link_type=DOI" target="_blank">Changes in the electrocorticogram after implantation of intracranial ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item focuses on the stability of ECoG spectral power and spike rates post-implantation, which is crucial f...<span class="assess-tip">This research item focuses on the stability of ECoG spectral power and spike rates post-implantation, which is crucial for understanding the electrode-tissue interface and optimizing BCI performance. The findings could have significant implications for the development and refinement of implantable BCIs.</span></span></td>
+                <td class="source-cell">Tavily (www.medrxiv.org)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">7</span></td>
-                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
-                <td><a href="https://en.wikipedia.org/wiki/Precision_Neuroscience" target="_blank">Precision Neuroscience - Wikipedia</a></td>
-                <td class="assessment-cell"><span class="assess-text">Precision Neuroscience is a relevant player in the BCI field, focusing on a novel minimally invasive surgical procedure ...<span class="assess-tip">Precision Neuroscience is a relevant player in the BCI field, focusing on a novel minimally invasive surgical procedure for implanting devices. Their innovative approach and the involvement of a credible team suggest potential significance in advancing implantable BCI technologies.</span></span></td>
-                <td class="source-cell">Tavily (en.wikipedia.org)</td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://www.medrxiv.org/lookup/external-ref?access_num=10.1088/1741-2552/aa7f40&amp;link_type=DOI" target="_blank">Intracranial EEG fluctuates over months after implanting electrodes ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item focuses on the long-term effects of intracranial EEG recordings following electrode implantation, whi...<span class="assess-tip">This research item focuses on the long-term effects of intracranial EEG recordings following electrode implantation, which is crucial for understanding the stability and reliability of ECoG/sEEG data over time. Such insights are significant for the development and optimization of implantable brain-computer interfaces.</span></span></td>
+                <td class="source-cell">Tavily (www.medrxiv.org)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">7</span></td>
-                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
-                <td><a href="https://blackrockneurotech.com/insights/nueralace-bci-interface/" target="_blank">Blackrock Neurotech unveils next-generation BCI interface</a></td>
-                <td class="assessment-cell"><span class="assess-text">Blackrock Neurotech&#x27;s unveiling of the Neuralace next-generation neural interface is significant as it pertains to ...<span class="assess-tip">Blackrock Neurotech&#x27;s unveiling of the Neuralace next-generation neural interface is significant as it pertains to advancements in brain-computer interface technology. This development could potentially enhance the capabilities of implantable BCIs, making it relevant to ongoing research and applications in the neurotechnology field.</span></span></td>
-                <td class="source-cell">Tavily (blackrockneurotech.com)</td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://www.biorxiv.org/lookup/ijlink/YTozOntzOjQ6InBhdGgiO3M6MTQ6Ii9sb29rdXAvaWpsaW5rIjtzOjU6InF1ZXJ5IjthOjQ6e3M6ODoibGlua1R5cGUiO3M6NDoiRlVMTCI7czoxMToiam91cm5hbENvZGUiO3M6Njoiam5ldXJvIjtzOjU6InJlc2lkIjtzOjExOiIyOC80Ni8xMTgzMCI7czo0OiJhdG9tIjtzOjM3OiIvYmlvcnhpdi9lYXJseS8yMDE5LzA3LzA5LzY5NzQwOS5hdG9tIjt9czo4OiJmcmFnbWVudCI7czowOiIiO30=" target="_blank">Advanced Neurotechnologies for Chronic Neural Interfaces</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item discusses ECoG recordings, which are relevant for developing chronic neural interfaces that bridge no...<span class="assess-tip">This research item discusses ECoG recordings, which are relevant for developing chronic neural interfaces that bridge noninvasive and invasive BCI technologies. The focus on ECoG suggests potential advancements in neural interfacing that could enhance the efficacy of BCIs.</span></span></td>
+                <td class="source-cell">Tavily (www.biorxiv.org)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">7</span></td>
-                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
-                <td><a href="https://www.thedailystar.net/tech-startup/news/neuralink-ramp-brain-implant-production-2026-4072746" target="_blank">Neuralink to ramp up brain implant production in 2026 | The Daily Star</a></td>
-                <td class="assessment-cell"><span class="assess-text">This article discusses Neuralink&#x27;s plans to ramp up production of brain implants and automate surgical procedures, ...<span class="assess-tip">This article discusses Neuralink&#x27;s plans to ramp up production of brain implants and automate surgical procedures, indicating significant advancements in the field of implantable BCIs. As a leading company in this space, their developments are crucial for understanding the future landscape of neurotechnology.</span></span></td>
-                <td class="source-cell">Tavily (www.thedailystar.net)</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#f39c12">7</span></td>
-                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
-                <td><a href="https://www.govtech.com/blogs/lohrmann-on-cybersecurity/will-2026-see-a-chatgpt-moment-for-microchip-implants" target="_blank">Will 2026 See a &#x27;ChatGPT Moment&#x27; for Microchip Implants? - GovTech</a></td>
-                <td class="assessment-cell"><span class="assess-text">The article discusses Neuralink&#x27;s plans for high-volume production of their BCI chip, The Link, which is significan...<span class="assess-tip">The article discusses Neuralink&#x27;s plans for high-volume production of their BCI chip, The Link, which is significant for the advancement of implantable BCIs. This indicates a potential shift in the market and competitive landscape for neurotechnology, making it relevant for industry stakeholders.</span></span></td>
-                <td class="source-cell">Tavily (www.govtech.com)</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#f39c12">7</span></td>
-                <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                <td><a href="https://www.neurofounders.co/articles/china-unveils-2030-brain-computer-interface-roadmap" target="_blank">China’s National Push to Build a Competitive Brain–Computer Interface Industry</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item discusses China&#x27;s strategic initiative to develop its BCI industry, highlighting significant sta...<span class="assess-tip">This research item discusses China&#x27;s strategic initiative to develop its BCI industry, highlighting significant state-backed funding and industrial policy. This is relevant as it indicates competitive dynamics in the global BCI landscape, particularly against established U.S. companies.</span></span></td>
-                <td class="source-cell">Tavily (www.neurofounders.co)</td>
+                <td><span class="cat-badge" style="background:#9b59b6">stimulation</span></td>
+                <td><a href="https://doi.org/10.1101/2025.04.29.651327" target="_blank">Spontaneous Dynamics Predict the Effects of Targeted Intervention in Hippocampal Neuronal </a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item explores the predictive capabilities of spontaneous dynamics in hippocampal neuronal cultures in resp...<span class="assess-tip">This research item explores the predictive capabilities of spontaneous dynamics in hippocampal neuronal cultures in response to microstimulation, which is directly relevant to the field of neurotechnology and therapeutic neuromodulation. The combination of experimental and computational approaches could enhance our understanding of network-level responses, potentially informing future BCI applications.</span></span></td>
+                <td class="source-cell">Biorxiv</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">7</span></td>
                 <td><span class="cat-badge" style="background:#1abc9c">materials</span></td>
-                <td><a href="https://spectrum.ieee.org/brain-computer-interface-graphene" target="_blank">New Brain-Computer Interface Uses Graphene - IEEE Spectrum</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item discusses a new brain-computer interface utilizing graphene, which is significant for its potential t...<span class="assess-tip">This research item discusses a new brain-computer interface utilizing graphene, which is significant for its potential to improve the performance and biocompatibility of neural interfaces. The focus on materials innovation is crucial for advancing implantable BCIs and enhancing their functionality.</span></span></td>
-                <td class="source-cell">Tavily (spectrum.ieee.org)</td>
+                <td><a href="https://www.biorxiv.org/lookup/external-ref?access_num=10.1142/9789813207158_0011&amp;link_type=DOI" target="_blank">The Biocompatibility of Intracortical Microelectrode Recording Arrays ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item focuses on the biocompatibility of intracortical microelectrode recording arrays, which is crucial fo...<span class="assess-tip">This research item focuses on the biocompatibility of intracortical microelectrode recording arrays, which is crucial for the development and longevity of implantable brain-computer interfaces. Understanding the materials&#x27; compatibility with neural tissue is essential for advancing neurotechnology applications.</span></span></td>
+                <td class="source-cell">Tavily (www.biorxiv.org)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#3498db">ecog_seeg</span></td>
+                <td><a href="https://doi.org/10.1101/2024.05.24.595772" target="_blank">Feedback control of recurrent circuits imposes dynamical constraints on learning</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research investigates the dynamics of neural activity in the primary motor cortex and its implications for learning...<span class="assess-tip">This research investigates the dynamics of neural activity in the primary motor cortex and its implications for learning in the context of brain-computer interfaces (BCIs). The focus on adaptive feedback controllers in recurrent neural networks is particularly relevant for developing closed-loop BCI systems that can enhance motor function.</span></span></td>
+                <td class="source-cell">Biorxiv</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://www.paradromics.com/news/paradromics-develops-precision-laser-surgical-tool-that-can-be-used-to-aid-bci-implantation" target="_blank">Paradromics Develops Precision Laser Surgical Tool that can be ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item discusses a precision laser surgical tool developed by Paradromics to aid in the implantation of high...<span class="assess-tip">This research item discusses a precision laser surgical tool developed by Paradromics to aid in the implantation of high-density microelectrode arrays for BCIs. This is significant as it directly relates to improving the safety and efficacy of BCI implantation, which is crucial for advancing the field.</span></span></td>
+                <td class="source-cell">Tavily (www.paradromics.com)</td>
+            </tr>
+            <tr>
+                <td><span class="score-pill" style="background:#f39c12">7</span></td>
+                <td><span class="cat-badge" style="background:#e74c3c">implantable_bci</span></td>
+                <td><a href="https://www.paradromics.com/tempo" target="_blank">Tempo™ | Brain-State Monitor for Mental Health - Paradromics</a></td>
+                <td class="assessment-cell"><span class="assess-text">Tempo™ is an implantable brain-computer interface that captures brain states in real-time to inform mental health treatm...<span class="assess-tip">Tempo™ is an implantable brain-computer interface that captures brain states in real-time to inform mental health treatment, representing a significant advancement in the field of neurotechnology. Its potential for closed-loop treatment recommendations based on brain activity makes it relevant for ongoing developments in implantable BCIs.</span></span></td>
+                <td class="source-cell">Tavily (www.paradromics.com)</td>
             </tr>
             <tr>
                 <td><span class="score-pill" style="background:#f39c12">7</span></td>
                 <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                <td><a href="https://spectrum.ieee.org/synchron-bci" target="_blank">The Brain-Implant Company Going for Neuralink&#x27;s Jugular</a></td>
-                <td class="assessment-cell"><span class="assess-text">This article discusses Synchron, a company that is commercializing brain-computer interface (BCI) technology, positionin...<span class="assess-tip">This article discusses Synchron, a company that is commercializing brain-computer interface (BCI) technology, positioning itself as a competitor to Neuralink. Its relevance lies in the competitive landscape of implantable BCIs and the potential implications for future advancements in the field.</span></span></td>
-                <td class="source-cell">Tavily (spectrum.ieee.org)</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#3498db">6</span></td>
-                <td><span class="cat-badge" style="background:#2ecc71">methods</span></td>
-                <td><a href="https://pubmed.ncbi.nlm.nih.gov/41698950/" target="_blank">ChatBCI, a P300 speller BCI with context-driven word prediction leveraging large language </a></td>
-                <td class="assessment-cell"><span class="assess-text">This research presents an innovative approach to enhancing P300 speller BCIs by integrating context-driven word predicti...<span class="assess-tip">This research presents an innovative approach to enhancing P300 speller BCIs by integrating context-driven word prediction using large language models, which could significantly reduce cognitive load and improve user experience. Its relevance lies in advancing neural decoding methods and improving the efficiency of non-invasive BCIs.</span></span></td>
-                <td class="source-cell">PubMed</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#3498db">5 *</span></td>
-                <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                <td><a href="https://www.reuters.com/business/healthcare-pharmaceuticals/musk-says-neuralink-start-high-volume-production-interface-devices-by-2026-2026-01-01/" target="_blank">Neuralink plans &#x27;high-volume&#x27; brain implant production by 2026 ...</a></td>
-                <td class="assessment-cell"><span class="assess-text">Neuralink&#x27;s announcement of plans for high-volume production of brain-computer interface devices indicates signific...<span class="assess-tip">Neuralink&#x27;s announcement of plans for high-volume production of brain-computer interface devices indicates significant progress in the BCI field and reflects ongoing investment and interest in implantable technologies. This development is relevant as it may influence market dynamics and competitive positioning within the neurotechnology sector.</span></span></td>
-                <td class="source-cell">Tavily (www.reuters.com)</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#3498db">5 *</span></td>
-                <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                <td><a href="https://www.neurofounders.co/post/china-unveils-2030-brain-computer-interface-roadmap" target="_blank">China Unveils 2030 Brain-Computer Interface Roadmap</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item highlights China&#x27;s strategic initiative to advance BCI technology, indicating significant govern...<span class="assess-tip">This research item highlights China&#x27;s strategic initiative to advance BCI technology, indicating significant government backing and potential competitive dynamics in the global BCI landscape. Such initiatives can influence funding and development trajectories, making it relevant for industry stakeholders.</span></span></td>
+                <td><a href="https://www.neurofounders.co/press-releases/science-corporation-closes-230-million-series-c-to-accelerate-commercialization-of-prima-bci-retinal-implant" target="_blank">Science Corporation Closes $230 Million Series C to Accelerate ...</a></td>
+                <td class="assessment-cell"><span class="assess-text">This research item discusses a significant funding round for Science Corporation aimed at accelerating the commercializa...<span class="assess-tip">This research item discusses a significant funding round for Science Corporation aimed at accelerating the commercialization of their PRIMA BCI retinal implant. The successful funding indicates strong investor confidence in the potential of this implantable BCI technology, which is relevant to the neurotechnology field.</span></span></td>
                 <td class="source-cell">Tavily (www.neurofounders.co)</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#3498db">5</span></td>
-                <td><span class="cat-badge" style="background:#2ecc71">methods</span></td>
-                <td><a href="https://pubmed.ncbi.nlm.nih.gov/41706793/" target="_blank">Improved Spontaneous EEG Signal Decoding Efficiency by Function Predefined Convolutional N</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item focuses on improving the efficiency of spontaneous EEG signal decoding using a convolutional neural n...<span class="assess-tip">This research item focuses on improving the efficiency of spontaneous EEG signal decoding using a convolutional neural network, which is relevant to the development of brain-computer interfaces. Enhancing neural decoding methods can lead to better performance in BCI applications, making this study significant for the NeuroTech field.</span></span></td>
-                <td class="source-cell">PubMed</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#3498db">5</span></td>
-                <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                <td><a href="https://neurotechnology.substack.com/p/notables-47" target="_blank">Neurotech Notables #47: Jan 16- Jan 31, 2026</a></td>
-                <td class="assessment-cell"><span class="assess-text">This item provides updates on notable commercial activities within the neurotech sector, including funding and partnersh...<span class="assess-tip">This item provides updates on notable commercial activities within the neurotech sector, including funding and partnerships, which are relevant for understanding market dynamics. However, it lacks specific details on human implants or significant regulatory milestones, limiting its impact on the field.</span></span></td>
-                <td class="source-cell">Neurotechnology (Substack)</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#3498db">5</span></td>
-                <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                <td><a href="https://neurotechnology.substack.com/p/notables-46" target="_blank">Neurotech Notables #46: Dec 16, 2025 - Jan 15, 2026</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item provides insights into the neurotechnology market, highlighting various companies and their activitie...<span class="assess-tip">This research item provides insights into the neurotechnology market, highlighting various companies and their activities. While it may not focus on groundbreaking clinical trials or implantable technologies, it offers valuable information on industry trends and funding, which are relevant for understanding the competitive landscape in neurotech.</span></span></td>
-                <td class="source-cell">Neurotechnology (Substack)</td>
-            </tr>
-            <tr>
-                <td><span class="score-pill" style="background:#3498db">5</span></td>
-                <td><span class="cat-badge" style="background:#2ecc71">methods</span></td>
-                <td><a href="https://paradromics.substack.com/p/why-ai-is-not-the-bottleneck-in-bci" target="_blank">AI is not the bottleneck in BCI</a></td>
-                <td class="assessment-cell"><span class="assess-text">This research item discusses the importance of BCI hardware development in the context of advancing AI capabilities, whi...<span class="assess-tip">This research item discusses the importance of BCI hardware development in the context of advancing AI capabilities, which is relevant to the methods of enhancing BCI systems. It highlights a critical aspect of the BCI field, although it does not focus on specific clinical applications or hardware innovations.</span></span></td>
-                <td class="source-cell">Paradromics (Substack)</td>
             </tr></tbody>
     </table>
 </div>
 
 
         <div class="items-section" style="border-left: 3px solid #f39c12; padding-left: 16px;">
-            <h2 style="color: #f39c12;">Watchlist / Near-Miss (10 items)</h2>
+            <h2 style="color: #f39c12;">Watchlist / Near-Miss (6 items)</h2>
             <p class="muted" style="margin-bottom: 12px;">Items scored 3-4 — borderline scope. Review for potential false negatives: non-invasive BCI companies, competitive intelligence, or BCI-adjacent funding.</p>
             <table class="items-table">
                 <thead><tr>
@@ -647,79 +696,51 @@ body {
                 <tr>
                     <td><span class="score-pill" style="background:#7f8c8d">4</span></td>
                     <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                    <td><a href="https://neurotechnology.substack.com/p/synaptrix-cuban" target="_blank">Noise To Signal: Cuban Backs Synaptrix Labs Non-Invasive BCI Platform</a></td>
-                    <td class="assessment-cell"><span class="assess-text">This article discusses a non-invasive BCI platform backed by Cuban support, indicating potential competitive intelligenc...<span class="assess-tip">This article discusses a non-invasive BCI platform backed by Cuban support, indicating potential competitive intelligence in the BCI market. However, it lacks depth in technical details or clinical relevance, suggesting it may lean towards marketing.</span></span></td>
-                    <td class="source-cell">Neurotechnology (Substack)</td>
+                    <td><a href="https://www.beckershospitalreview.com/healthcare-information-technology/innovation/openai-backs-brain-computer-interface-startup-in-252m-investment/" target="_blank">OpenAI backs brain-computer interface startup in $252M investment</a></td>
+                    <td class="assessment-cell"><span class="assess-text">This article discusses a significant funding round for Merge Labs, a brain-computer interface startup backed by OpenAI. ...<span class="assess-tip">This article discusses a significant funding round for Merge Labs, a brain-computer interface startup backed by OpenAI. While it does not provide details on specific technologies or clinical milestones, the investment signals confidence in the BCI sector and highlights competitive intelligence in the market.</span></span></td>
+                    <td class="source-cell">Tavily (www.beckershospitalreview.com)</td>
                 </tr>
                 <tr>
                     <td><span class="score-pill" style="background:#7f8c8d">4</span></td>
                     <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                    <td><a href="https://www.datacenterdynamics.com/en/news/openai-invests-in-brain-computer-interface-startup-founded-by-openai-ceo/" target="_blank">OpenAI invests in brain-computer interface startup founded by ...</a></td>
-                    <td class="assessment-cell"><span class="assess-text">This article discusses OpenAI&#x27;s investment in Merge Labs, a BCI startup, which is relevant for competitive intellig...<span class="assess-tip">This article discusses OpenAI&#x27;s investment in Merge Labs, a BCI startup, which is relevant for competitive intelligence in the BCI industry. While it highlights a new player in the field, the focus on funding and company formation does not provide insights into technological advancements or clinical applications.</span></span></td>
-                    <td class="source-cell">Tavily (www.datacenterdynamics.com)</td>
-                </tr>
-                <tr>
-                    <td><span class="score-pill" style="background:#7f8c8d">4</span></td>
-                    <td><span class="cat-badge" style="background:#95a5a6">BCI industry/market news</span></td>
-                    <td><a href="https://finance.yahoo.com/news/china-brain-computer-interface-industry-160000692.html" target="_blank">China&#x27;s brain-computer interface industry is racing ahead</a></td>
-                    <td class="assessment-cell"><span class="assess-text">This article discusses the rapid development of China&#x27;s BCI industry, highlighting government initiatives and the m...<span class="assess-tip">This article discusses the rapid development of China&#x27;s BCI industry, highlighting government initiatives and the movement from research to scale. While it provides insight into competitive intelligence within the BCI market, it lacks specific details on technological advancements or clinical applications.</span></span></td>
-                    <td class="source-cell">Tavily (finance.yahoo.com)</td>
+                    <td><a href="https://www.tomshardware.com/peripherals/wearable-tech/sam-altman-raises-usd252-million-for-brain-computer-interface-venture-but-merge-labs-is-still-in-an-early-research-phase" target="_blank">OpenAI CEO Sam Altman raises $252 million for brain computer ...</a></td>
+                    <td class="assessment-cell"><span class="assess-text">This article discusses a significant funding round for a brain-computer interface venture led by OpenAI CEO Sam Altman. ...<span class="assess-tip">This article discusses a significant funding round for a brain-computer interface venture led by OpenAI CEO Sam Altman. While it indicates interest and investment in the BCI field, the venture is still in an early research phase, which may suggest it is not yet ready for practical applications.</span></span></td>
+                    <td class="source-cell">Tavily (www.tomshardware.com)</td>
                 </tr>
                 <tr>
                     <td><span class="score-pill" style="background:#7f8c8d">4</span></td>
                     <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                    <td><a href="https://techcrunch.com/2026/02/22/chinas-brain-computer-interface-industry-is-racing-ahead/" target="_blank">China&#x27;s brain-computer interface industry is racing ahead</a></td>
-                    <td class="assessment-cell"><span class="assess-text">This article discusses the rapid development of China&#x27;s BCI industry and its strategic roadmap, which is relevant f...<span class="assess-tip">This article discusses the rapid development of China&#x27;s BCI industry and its strategic roadmap, which is relevant for understanding competitive dynamics in the BCI market. While it does not focus on specific technological advancements or clinical applications, it provides insights into the industry&#x27;s direction and potential funding opportunities.</span></span></td>
-                    <td class="source-cell">Tavily (techcrunch.com)</td>
+                    <td><a href="https://www.from-the-interface.com/bci-funding-clinical-trials/" target="_blank">Venture Capital Funding for Brain-Computer Interfaces outstrips ...</a></td>
+                    <td class="assessment-cell"><span class="assess-text">This research item discusses the significant venture capital funding for implantable BCI startups, which is relevant for...<span class="assess-tip">This research item discusses the significant venture capital funding for implantable BCI startups, which is relevant for understanding market dynamics and competitive intelligence in the NeuroTech field. However, it lacks details on clinical milestones or technological advancements, making it less impactful.</span></span></td>
+                    <td class="source-cell">Tavily (www.from-the-interface.com)</td>
                 </tr>
                 <tr>
                     <td><span class="score-pill" style="background:#7f8c8d">4</span></td>
                     <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                    <td><a href="https://neurotechnology.substack.com/p/bci-costs" target="_blank">What Does it Cost to Build a Brain-Computer Interface (BCI) Today?</a></td>
-                    <td class="assessment-cell"><span class="assess-text">The article discusses the costs associated with building a BCI today, which is relevant to the industry and funding land...<span class="assess-tip">The article discusses the costs associated with building a BCI today, which is relevant to the industry and funding landscape. However, it does not delve into specific technological advancements or clinical applications, limiting its significance.</span></span></td>
-                    <td class="source-cell">Neurotechnology (Substack)</td>
-                </tr>
-                <tr>
-                    <td><span class="score-pill" style="background:#7f8c8d">3</span></td>
-                    <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                    <td><a href="https://neurotechnology.substack.com/p/valleys-of-death-and-silicon-in-bci" target="_blank">Valleys of Death and Silicon in BCI</a></td>
-                    <td class="assessment-cell"><span class="assess-text">This research item discusses the investing landscape in neurotechnology, which is relevant for understanding market dyna...<span class="assess-tip">This research item discusses the investing landscape in neurotechnology, which is relevant for understanding market dynamics and funding trends. However, it does not provide specific insights into implantable BCIs or related technologies.</span></span></td>
-                    <td class="source-cell">Neurotechnology (Substack)</td>
-                </tr>
-                <tr>
-                    <td><span class="score-pill" style="background:#7f8c8d">3</span></td>
-                    <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                    <td><a href="https://neurotechnology.substack.com/p/nycbci25" target="_blank">Brains, Gains And Growing Pains: Inside Mount Sinai’s BCI Crystal Ball</a></td>
-                    <td class="assessment-cell"><span class="assess-text">This article appears to provide insights into the current state of BCI development at Mount Sinai, which may include com...<span class="assess-tip">This article appears to provide insights into the current state of BCI development at Mount Sinai, which may include competitive intelligence and market trends. However, without specific details on human trials or significant technological advancements, its relevance is limited.</span></span></td>
-                    <td class="source-cell">Neurotechnology (Substack)</td>
-                </tr>
-                <tr>
-                    <td><span class="score-pill" style="background:#7f8c8d">3</span></td>
-                    <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                    <td><a href="https://paradromics.substack.com/p/measuring-what-matters-in-bci" target="_blank">Measuring What Matters in BCI</a></td>
-                    <td class="assessment-cell"><span class="assess-text">The article discusses accountability in BCI user experience, which is relevant to the industry but lacks specific detail...<span class="assess-tip">The article discusses accountability in BCI user experience, which is relevant to the industry but lacks specific details on technological advancements or clinical trials. It may provide insights into the BCI market landscape but does not present substantial technical content.</span></span></td>
-                    <td class="source-cell">Paradromics (Substack)</td>
+                    <td><a href="https://www.neurofounders.co/articles/who-is-brainco-inside-chinas-280m-bci-raise" target="_blank">Who Is BrainCo? Inside China&#x27;s $280m BCI Raise - Neurofounders</a></td>
+                    <td class="assessment-cell"><span class="assess-text">This article discusses a significant funding round for a non-invasive BCI company, which is relevant for competitive int...<span class="assess-tip">This article discusses a significant funding round for a non-invasive BCI company, which is relevant for competitive intelligence in the BCI industry. While it highlights the company&#x27;s focus on EEG and neurofeedback, it does not delve into novel technologies or applications that would elevate its relevance further.</span></span></td>
+                    <td class="source-cell">Tavily (www.neurofounders.co)</td>
                 </tr>
                 <tr>
                     <td><span class="score-pill" style="background:#7f8c8d">3</span></td>
                     <td><span class="cat-badge" style="background:#7f8c8d">out_of_scope</span></td>
-                    <td><a href="https://www.paradromics.com/insights/neuralink-implant" target="_blank">Neuralink implant limitations</a></td>
-                    <td class="assessment-cell"><span class="assess-text">The research item discusses limitations of a specific BCI implant but does not provide substantial insights into the tec...<span class="assess-tip">The research item discusses limitations of a specific BCI implant but does not provide substantial insights into the technology or its clinical applications. It appears to be more of a marketing piece rather than a rigorous analysis or peer-reviewed study.</span></span></td>
-                    <td class="source-cell">Tavily (www.paradromics.com)</td>
+                    <td><a href="https://spectrum.ieee.org/mastering-the-braincomputer-interface" target="_blank">Mastering the Brain-Computer Interface - IEEE Spectrum</a></td>
+                    <td class="assessment-cell"><span class="assess-text">The article appears to focus on a personal narrative related to BCI training and does not provide substantial technical ...<span class="assess-tip">The article appears to focus on a personal narrative related to BCI training and does not provide substantial technical or clinical insights relevant to implantable BCIs or advanced neurotechnology. It leans more towards general interest rather than contributing to the field&#x27;s scientific or technological discourse.</span></span></td>
+                    <td class="source-cell">Tavily (spectrum.ieee.org)</td>
                 </tr>
                 <tr>
                     <td><span class="score-pill" style="background:#7f8c8d">3</span></td>
                     <td><span class="cat-badge" style="background:#f1c40f">funding</span></td>
-                    <td><a href="https://www.forbes.com/sites/naveenrao/2024/10/23/is-the-future-of-bci-right-under-our-nose/" target="_blank">Is The Future Of BCI Right Under Our Nose? - Forbes</a></td>
-                    <td class="assessment-cell"><span class="assess-text">The article discusses Augmental&#x27;s MouthPad, a hands-free interface that could have implications for BCI technology,...<span class="assess-tip">The article discusses Augmental&#x27;s MouthPad, a hands-free interface that could have implications for BCI technology, particularly for individuals with disabilities. While it highlights a new product and its potential impact, it lacks depth in terms of technical details or clinical relevance, making it more of a market news piece.</span></span></td>
-                    <td class="source-cell">Tavily (www.forbes.com)</td>
+                    <td><a href="https://spectrum.ieee.org/tag/brain-computer-interface" target="_blank">brain computer interface News &amp; Articles - IEEE Spectrum</a></td>
+                    <td class="assessment-cell"><span class="assess-text">This item appears to be a collection of news and articles related to brain-computer interfaces, but lacks specific detai...<span class="assess-tip">This item appears to be a collection of news and articles related to brain-computer interfaces, but lacks specific details on significant advancements or research findings. It is more focused on general industry news rather than groundbreaking research or developments, thus scoring lower on relevance.</span></span></td>
+                    <td class="source-cell">Tavily (spectrum.ieee.org)</td>
                 </tr></tbody>
             </table>
         </div>
 
 <div class="footer">
     Generated by <a href="https://github.com/kgrajski/neurotech_newshound">NeuroTech NewsHound</a>
-    &middot; Model: gpt-4o-mini &middot; 2026-02-22
+    &middot; Model: gpt-4o-mini &middot; 2026-03-14
 </div>
 
 </div>

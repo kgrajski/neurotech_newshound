@@ -69,6 +69,9 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
 .meta-obs { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
 .meta-summary { color: var(--accent-gold); font-size: 0.85rem; margin-top: 4px; }
 
+.error-list { list-style: none; padding: 0; margin: 8px 0 0; }
+.error-list li { background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.2); border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; font-size: 0.82rem; color: var(--text); }
+
 .footer { text-align: center; padding: 16px 0; margin-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; }
 .footer a { color: var(--accent-blue); text-decoration: none; }
 </style>
@@ -81,68 +84,75 @@ tr:hover { background: rgba(88, 166, 255, 0.04); }
         <h1>NeuroTech NewsHound</h1>
         <div class="subtitle">Agentic research intelligence for the NeuroTech ecosystem</div>
     </div>
-    <div class="date">Operational Dashboard — 2026-02-22</div>
+    <div class="date">Operational Dashboard — 2026-03-14</div>
 </div>
 
 <div class="nav">
-    <a href="2026-02-22.html">Latest Report</a>
+    <a href="2026-03-14.html">Latest Report</a>
     <a href="dashboard.html" class="active">Dashboard</a>
 </div>
 
 
         <div class="run-card">
-            <h3>Latest Run — 2026-02-22</h3>
+            <h3>Latest Run — 2026-03-14</h3>
             <div class="run-stats">
-                <div class="rs"><span class="rv">507</span><span class="rl">Fetched</span></div>
-                <div class="rs"><span class="rv">53</span><span class="rl">In-Scope</span></div>
-                <div class="rs"><span class="rv">53</span><span class="rl">Scored</span></div>
-                <div class="rs"><span class="rv" style="color:#e74c3c">8</span><span class="rl">Alerts</span></div>
-                <div class="rs"><span class="rv">49,382</span><span class="rl">Tokens</span></div>
-                <div class="rs"><span class="rv">$0.0110</span><span class="rl">Cost</span></div>
-                <div class="rs"><span class="rv">206s</span><span class="rl">Duration</span></div>
+                <div class="rs"><span class="rv">629</span><span class="rl">Fetched</span></div>
+                <div class="rs"><span class="rv">101</span><span class="rl">In-Scope</span></div>
+                <div class="rs"><span class="rv">101</span><span class="rl">Scored</span></div>
+                <div class="rs"><span class="rv" style="color:#e74c3c">11</span><span class="rl">Alerts</span></div>
+                <div class="rs"><span class="rv">94,131</span><span class="rl">Tokens</span></div>
+                <div class="rs"><span class="rv">$0.0201</span><span class="rl">Cost</span></div>
+                <div class="rs"><span class="rv">567s</span><span class="rl">Duration</span></div>
             </div>
+        </div>
+
+
+        <div class="info-card" style="border-left: 3px solid var(--accent-red);">
+            <h3 style="color: var(--accent-red);">Run Health — 2 Warnings</h3>
+            <ul class="error-list"><li>ClinicalTrials.gov: ClinicalTrials.gov API error: HTTP Error 403: Forbidden</li><li>Date gate: 26 items outside 7+2d lookback (IEEE Trans Neural Systems &amp; Rehab Engineering=4, Neurotechnology (Substack)=4, Paradromics (Substack)=4, Tavily (www.neurofounders.co)=3, PubMed=2, Tavily (www.medtechdive.com)=1, Tavily (www.digitimes.com)=1, Tavily (www.biospace.com)=1, Tavily (www.thedailystar.net)=1, Tavily (www.reuters.com)=1, Tavily (axoft.us)=1, Tavily (synchron.com)=1, Tavily (bcisociety.org)=1, Tavily (www.cheninstitute.org)=1)</li></ul>
         </div>
 
 
         <div class="info-card">
             <h3>Meta-Agent (ReAct) — 5 tool calls</h3>
-            <p class="meta-summary">Stopped after maximum iterations.</p>
+            <p class="meta-summary">Enhanced vocabulary with new electrode-related terms, confirmed source health, assessed coverage with no blind spots, and discovered three new BCI companies for potential tracking.</p>
             <div class="meta-trace">
                 <div class="meta-step meta-tool">
                     <div class="meta-label">Step 1 — <strong>check_vocabulary_gaps</strong></div>
-                    <div class="meta-thought">I will first check for any vocabulary gaps in the high-scoring items to ensure that our vocabulary is comprehensive and up-to-date with the latest developments in the field. This will help in enhancin</div>
-                    <div class="meta-obs">Analyzed 33 high-scoring items. Potential gaps:
-  - &quot;cortical electrode&quot; (found in: for high-resolution cortical electrode array. new york, apri...)
-  - &quot;100 electrode&quot; (found in:  recorded from over </div>
+                    <div class="meta-thought">The pipeline output indicates a need to explore vocabulary gaps, especially since the reviewer highlighted the competitive landscape of non-invasive BCIs and their funding. This suggests there may be </div>
+                    <div class="meta-obs">Analyzed 63 high-scoring items. Potential gaps:
+  - &quot;100 electrode&quot; (found in:  recorded from over 100 electrode channels implanted in any ...)
+  - &quot;uses electrodes&quot; (found in: cal monitoring that use</div>
                 </div>
                 <div class="meta-step meta-tool">
                     <div class="meta-label">Step 2 — <strong>add_vocabulary_terms</strong></div>
-                    <div class="meta-thought">I will add the identified vocabulary terms to our vocabulary.yaml to ensure that we are capturing the latest terminology relevant to implantable BCIs and related technologies. This will enhance our an</div>
-                    <div class="meta-obs">Added 8 terms: cortical electrode, 100 electrode, the electrode, to electrode, an implant, this implant, channels implant, be implant
-Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
+                    <div class="meta-thought">The vocabulary gap analysis revealed several relevant terms that are not currently in our vocabulary, particularly related to electrodes and their implantation. Adding these terms could enhance our un</div>
+                    <div class="meta-obs">Added 5 terms: uses electrodes, and electrode, implanting electrodes, penetrating electrodes, robotically implant
+Skipped 5: 100 electrode (duplicate), each electrode (duplicate), the electrode (dupli</div>
                 </div>
                 <div class="meta-step meta-tool">
                     <div class="meta-label">Step 3 — <strong>check_source_health</strong></div>
-                    <div class="meta-thought">Next, I will check the health of our sources to identify any that may be cold, broken, or underperforming. This will help ensure that we are relying on robust and active sources for our intelligence p</div>
+                    <div class="meta-thought">The vocabulary enhancement was successful, adding relevant terms related to electrodes that will improve our tracking of advancements in implantable BCIs. Next, I will assess the health of the sources</div>
                     <div class="meta-obs">Source health (25 total, 24 enabled):
-  HIGH YIELD: PubMed (58% yield), Tavily Wideband Search (75% yield), Neurotechnology (Substack) (35% yield), Paradromics (Substack) (67% yield)
-  All sources pro</div>
+  HIGH YIELD: Paradromics (Substack) (67% yield), Tavily Wideband Search (59% yield)
+  All sources producing. No action needed.</div>
                 </div>
                 <div class="meta-step meta-tool">
                     <div class="meta-label">Step 4 — <strong>assess_coverage</strong></div>
-                    <div class="meta-thought">I will assess the coverage of this week&#x27;s topics to ensure that all expected areas, such as implantable BCIs, materials, regulatory, and methods, are adequately represented. This will help identify an</div>
-                    <div class="meta-obs">Coverage: 53 items scored, 8 alerts, 4 themes
-  Categories: funding=16, implantable_bci=13, ecog_seeg=8, regulatory=6, methods=4, materials=2, out_of_scope=2, stimulation=1, BCI industry/market news=1</div>
+                    <div class="meta-thought">The source health assessment indicates that all sources are producing valuable content, so no action is needed in this area. Next, I will assess the coverage of this week&#x27;s topics to identify any pote</div>
+                    <div class="meta-obs">Coverage: 101 items scored, 11 alerts, 4 themes
+  Categories: implantable_bci=29, ecog_seeg=19, funding=15, out_of_scope=13, regulatory=9, methods=9, materials=3, animal_study=3, stimulation=1
+  Theme</div>
                 </div>
                 <div class="meta-step meta-tool">
                     <div class="meta-label">Step 5 — <strong>discover_companies</strong></div>
-                    <div class="meta-thought">I will now check for any new BCI companies that may have emerged from the high-scoring items, as tracking new entrants can provide valuable insights into the competitive landscape of the BCI sector.</div>
-                    <div class="meta-obs">Discovered 2 new companies: ABILITY Neurotech, Synchron. Added to discoveries list for human review.</div>
+                    <div class="meta-thought">The coverage assessment shows that all expected categories are represented, and there are no significant blind spots in the pipeline output. This indicates a well-rounded collection of information for</div>
+                    <div class="meta-obs">Discovered 3 new companies: Paradromics, Blackrock Neurotech, Precision Neuroscience. Added to discoveries list for human review.</div>
                 </div>
                 <div class="meta-step meta-finish">
-                    <div class="meta-label">Step 5 — <strong>FINISH</strong></div>
-                    <div class="meta-thought">Max iterations reached.</div>
-                    <div class="meta-obs">Stopped after maximum iterations.</div>
+                    <div class="meta-label">Step 6 — <strong>FINISH</strong></div>
+                    <div class="meta-thought">I successfully enhanced the vocabulary by adding relevant terms related to electrodes, which will improve our tracking of advancements in implantable BCIs. The source health assessment confirmed that </div>
+                    <div class="meta-obs">Enhanced vocabulary with new electrode-related terms, confirmed source health, assessed coverage with no blind spots, and discovered three new BCI companies for potential tracking.</div>
                 </div></div>
         </div>
 
@@ -161,9 +171,9 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
 
         <div class="info-card">
             <h3>Deduplication History</h3>
-            <p>136 items tracked &middot;
-               62 high-value &middot;
-               74 low-value (will be skipped)</p>
+            <p>101 items tracked &middot;
+               63 high-value &middot;
+               38 low-value (will be skipped)</p>
         </div>
 
 <h2>Source Registry (24 active)</h2>
@@ -177,12 +187,12 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><strong>PubMed</strong></td>
                 <td><span class="cat-chip cat-database">database</span></td>
                 <td>Curated</td>
-                <td><span style="color:#2ecc71">HIGH YIELD</span></td>
-                <td class="num">3</td>
-                <td class="num">106</td>
-                <td class="num">62</td>
+                <td><span style="color:#f39c12">MODERATE</span></td>
+                <td class="num">8</td>
+                <td class="num">120</td>
+                <td class="num">16</td>
                 <td class="num">0</td>
-                <td>2026-02-22</td>
+                <td>2026-03-14</td>
                 <td class="url-cell">API</td>
             </tr>
             <tr>
@@ -190,8 +200,8 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">3</td>
-                <td class="num">120</td>
+                <td class="num">8</td>
+                <td class="num">320</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -201,12 +211,12 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><strong>Nature Neuroscience</strong></td>
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
-                <td><span style="color:#e67e22">LOW</span></td>
-                <td class="num">3</td>
-                <td class="num">24</td>
-                <td class="num">1</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">8</td>
+                <td class="num">64</td>
                 <td class="num">0</td>
-                <td>2026-02-16</td>
+                <td class="num">0</td>
+                <td>None</td>
                 <td class="url-cell"><a href="https://www.nature.com/neuro.rss" target="_blank" class="src-link">https://www.nature.com/neuro.rss</a></td>
             </tr>
             <tr>
@@ -214,8 +224,8 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">3</td>
-                <td class="num">24</td>
+                <td class="num">8</td>
+                <td class="num">64</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -226,8 +236,8 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">3</td>
-                <td class="num">120</td>
+                <td class="num">8</td>
+                <td class="num">312</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -238,8 +248,8 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">3</td>
-                <td class="num">19</td>
+                <td class="num">8</td>
+                <td class="num">56</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -250,11 +260,11 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#f39c12">MODERATE</span></td>
-                <td class="num">3</td>
-                <td class="num">30</td>
+                <td class="num">8</td>
+                <td class="num">80</td>
                 <td class="num">8</td>
                 <td class="num">0</td>
-                <td>2026-02-22</td>
+                <td>2026-03-14</td>
                 <td class="url-cell"><a href="https://iopscience.iop.org/journal/rss/1741-2552" target="_blank" class="src-link">https://iopscience.iop.org/journal/rss/1741-2552</a></td>
             </tr>
             <tr>
@@ -262,11 +272,11 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e67e22">LOW</span></td>
-                <td class="num">3</td>
-                <td class="num">120</td>
-                <td class="num">3</td>
+                <td class="num">8</td>
+                <td class="num">320</td>
+                <td class="num">8</td>
                 <td class="num">0</td>
-                <td>2026-02-22</td>
+                <td>2026-03-14</td>
                 <td class="url-cell"><a href="https://www.cell.com/neuron/inpress.rss" target="_blank" class="src-link">https://www.cell.com/neuron/inpress.rss</a></td>
             </tr>
             <tr>
@@ -274,8 +284,8 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">3</td>
-                <td class="num">84</td>
+                <td class="num">8</td>
+                <td class="num">232</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -286,11 +296,11 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#f39c12">MODERATE</span></td>
-                <td class="num">3</td>
-                <td class="num">120</td>
-                <td class="num">15</td>
+                <td class="num">8</td>
+                <td class="num">320</td>
+                <td class="num">32</td>
                 <td class="num">0</td>
-                <td>2026-02-22</td>
+                <td>2026-03-14</td>
                 <td class="url-cell"><a href="https://ieeexplore.ieee.org/rss/TOC7333.XML" target="_blank" class="src-link">https://ieeexplore.ieee.org/rss/TOC7333.XML</a></td>
             </tr>
             <tr>
@@ -298,8 +308,8 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">3</td>
-                <td class="num">120</td>
+                <td class="num">8</td>
+                <td class="num">304</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -310,8 +320,8 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><span class="cat-chip cat-journal">journal</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">3</td>
-                <td class="num">12</td>
+                <td class="num">8</td>
+                <td class="num">24</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -321,12 +331,12 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><strong>bioRxiv (neuroscience)</strong></td>
                 <td><span class="cat-chip cat-preprint">preprint</span></td>
                 <td>Curated</td>
-                <td><span style="color:#f39c12">MODERATE</span></td>
-                <td class="num">3</td>
-                <td class="num">90</td>
-                <td class="num">5</td>
+                <td><span style="color:#e67e22">LOW</span></td>
+                <td class="num">8</td>
+                <td class="num">240</td>
+                <td class="num">8</td>
                 <td class="num">0</td>
-                <td>2026-02-22</td>
+                <td>2026-03-14</td>
                 <td class="url-cell"><a href="https://connect.biorxiv.org/biorxiv_xml.php?subject=neuroscience" target="_blank" class="src-link">https://connect.biorxiv.org/biorxiv_xml.php?subjec...</a></td>
             </tr>
             <tr>
@@ -345,24 +355,48 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><strong>arXiv q-bio.NC</strong></td>
                 <td><span class="cat-chip cat-preprint">preprint</span></td>
                 <td>Curated</td>
-                <td><span style="color:#f39c12">MODERATE</span></td>
-                <td class="num">1</td>
-                <td class="num">7</td>
-                <td class="num">1</td>
+                <td><span style="color:#7f8c8d">NEW</span></td>
                 <td class="num">0</td>
-                <td>2026-02-16</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
                 <td class="url-cell"><a href="https://rss.arxiv.org/rss/q-bio.NC" target="_blank" class="src-link">https://rss.arxiv.org/rss/q-bio.NC</a></td>
+            </tr>
+            <tr>
+                <td><strong>Neurotechnology (Substack)</strong></td>
+                <td><span class="cat-chip cat-press">press</span></td>
+                <td>Curated</td>
+                <td><span style="color:#f39c12">MODERATE</span></td>
+                <td class="num">8</td>
+                <td class="num">160</td>
+                <td class="num">32</td>
+                <td class="num">0</td>
+                <td>2026-03-14</td>
+                <td class="url-cell"><a href="https://neurotechnology.substack.com/feed" target="_blank" class="src-link">https://neurotechnology.substack.com/feed</a></td>
+            </tr>
+            <tr>
+                <td><strong>Paradromics (Substack)</strong></td>
+                <td><span class="cat-chip cat-press">press</span></td>
+                <td>Curated</td>
+                <td><span style="color:#2ecc71">HIGH YIELD</span></td>
+                <td class="num">8</td>
+                <td class="num">48</td>
+                <td class="num">32</td>
+                <td class="num">0</td>
+                <td>2026-03-14</td>
+                <td class="url-cell"><a href="https://paradromics.substack.com/feed" target="_blank" class="src-link">https://paradromics.substack.com/feed</a></td>
             </tr>
             <tr>
                 <td><strong>NYT Science</strong></td>
                 <td><span class="cat-chip cat-press">press</span></td>
                 <td>Curated</td>
-                <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">3</td>
-                <td class="num">82</td>
+                <td><span style="color:#e67e22">LOW</span></td>
+                <td class="num">8</td>
+                <td class="num">248</td>
+                <td class="num">8</td>
                 <td class="num">0</td>
-                <td class="num">0</td>
-                <td>None</td>
+                <td>2026-03-14</td>
                 <td class="url-cell"><a href="https://rss.nytimes.com/services/xml/rss/nyt/Science.xml" target="_blank" class="src-link">https://rss.nytimes.com/services/xml/rss/nyt/Scien...</a></td>
             </tr>
             <tr>
@@ -370,8 +404,8 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><span class="cat-chip cat-press">press</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">3</td>
-                <td class="num">60</td>
+                <td class="num">8</td>
+                <td class="num">160</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -381,9 +415,9 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><strong>FT Technology</strong></td>
                 <td><span class="cat-chip cat-press">press</span></td>
                 <td>Curated</td>
-                <td><span style="color:#7f8c8d">NEW</span></td>
-                <td class="num">0</td>
-                <td class="num">0</td>
+                <td><span style="color:#e74c3c">NO MATCHES</span></td>
+                <td class="num">8</td>
+                <td class="num">200</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
@@ -394,71 +428,47 @@ Skipped 2: brain implant (duplicate), interface implant (duplicate</div>
                 <td><span class="cat-chip cat-press">press</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">3</td>
-                <td class="num">60</td>
+                <td class="num">8</td>
+                <td class="num">160</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
                 <td class="url-cell"><a href="https://www.statnews.com/feed/" target="_blank" class="src-link">https://www.statnews.com/feed/</a></td>
             </tr>
             <tr>
-                <td><strong>Neurotechnology (Substack)</strong></td>
-                <td><span class="cat-chip cat-press">press</span></td>
+                <td><strong>ClinicalTrials.gov</strong></td>
+                <td><span class="cat-chip cat-regulatory">regulatory</span></td>
                 <td>Curated</td>
-                <td><span style="color:#2ecc71">HIGH YIELD</span></td>
-                <td class="num">1</td>
-                <td class="num">20</td>
-                <td class="num">7</td>
+                <td><span style="color:#7f8c8d">NEW</span></td>
                 <td class="num">0</td>
-                <td>2026-02-22</td>
-                <td class="url-cell"><a href="https://neurotechnology.substack.com/feed" target="_blank" class="src-link">https://neurotechnology.substack.com/feed</a></td>
-            </tr>
-            <tr>
-                <td><strong>Paradromics (Substack)</strong></td>
-                <td><span class="cat-chip cat-press">press</span></td>
-                <td>Curated</td>
-                <td><span style="color:#2ecc71">HIGH YIELD</span></td>
-                <td class="num">1</td>
-                <td class="num">6</td>
-                <td class="num">4</td>
                 <td class="num">0</td>
-                <td>2026-02-22</td>
-                <td class="url-cell"><a href="https://paradromics.substack.com/feed" target="_blank" class="src-link">https://paradromics.substack.com/feed</a></td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td>None</td>
+                <td class="url-cell">API</td>
             </tr>
             <tr>
                 <td><strong>FDA MedWatch Safety</strong></td>
                 <td><span class="cat-chip cat-regulatory">regulatory</span></td>
                 <td>Curated</td>
                 <td><span style="color:#e74c3c">NO MATCHES</span></td>
-                <td class="num">3</td>
-                <td class="num">60</td>
+                <td class="num">8</td>
+                <td class="num">160</td>
                 <td class="num">0</td>
                 <td class="num">0</td>
                 <td>None</td>
                 <td class="url-cell"><a href="http://www.fda.gov/AboutFDA/ContactFDA/StayInformed/RSSFeeds/MedWatch/rss.xml" target="_blank" class="src-link">http://www.fda.gov/AboutFDA/ContactFDA/StayInforme...</a></td>
             </tr>
             <tr>
-                <td><strong>ClinicalTrials.gov</strong></td>
-                <td><span class="cat-chip cat-regulatory">regulatory</span></td>
-                <td>Curated</td>
-                <td><span style="color:#f39c12">MODERATE</span></td>
-                <td class="num">1</td>
-                <td class="num">29</td>
-                <td class="num">2</td>
-                <td class="num">0</td>
-                <td>2026-02-22</td>
-                <td class="url-cell">API</td>
-            </tr>
-            <tr>
                 <td><strong>Tavily Wideband Search</strong></td>
                 <td><span class="cat-chip cat-search">search</span></td>
                 <td>Curated</td>
                 <td><span style="color:#2ecc71">HIGH YIELD</span></td>
-                <td class="num">3</td>
-                <td class="num">99</td>
-                <td class="num">74</td>
+                <td class="num">8</td>
+                <td class="num">1,017</td>
+                <td class="num">598</td>
                 <td class="num">0</td>
-                <td>2026-02-22</td>
+                <td>2026-03-14</td>
                 <td class="url-cell">API</td>
             </tr></tbody>
 </table>
