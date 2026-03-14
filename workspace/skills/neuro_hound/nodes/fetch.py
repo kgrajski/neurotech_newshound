@@ -100,7 +100,9 @@ def fetch_rss(state: HoundState) -> HoundState:
 
 
 def fetch_tavily(state: HoundState) -> HoundState:
-    """Wideband Tavily search for items not covered by RSS/API sources."""
+    """Wideband Tavily search with ensemble retrieval + memory recall."""
+    from tools.config import get_ensemble_variants
+
     registry = state.get("_registry") or load_sources()
     tavily_sources = get_enabled_sources(registry, source_type="tavily")
 
@@ -109,9 +111,18 @@ def fetch_tavily(state: HoundState) -> HoundState:
         return state
 
     print("  Fetching Tavily wideband search...")
+
+    # RECALL: inject memory-informed queries for cold entities
+    recall_queries = _get_recall_queries(state)
+
     try:
         from tools.tavily import tavily_search
-        items = tavily_search(days=state["days"])
+        ensemble_variants = get_ensemble_variants()
+        items = tavily_search(
+            days=state["days"],
+            ensemble_variants=ensemble_variants,
+            recall_queries=recall_queries,
+        )
         state["raw_items"].extend(items)
         in_scope = sum(
             1 for it in items
@@ -132,6 +143,21 @@ def fetch_tavily(state: HoundState) -> HoundState:
 
     state["_registry"] = registry
     return state
+
+
+def _get_recall_queries(state: HoundState) -> list:
+    """Load discovery memory and generate recall queries for cold entities."""
+    try:
+        from tools.memory import load_memory, get_recall_queries
+        memory = load_memory()
+        queries = get_recall_queries(memory, max_queries=5)
+        if queries:
+            print(f"    Memory recall: {len(queries)} queries for cold/active entities")
+            state["_discovery_memory"] = memory
+        return queries
+    except Exception as e:
+        print(f"    [warn] Memory recall skipped: {e}")
+        return []
 
 
 def save_registry(state: HoundState) -> HoundState:

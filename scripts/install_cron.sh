@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 #
-# Install the weekly cron job on the OpenClaw droplet.
+# Install the nightly cron job on the OpenClaw droplet.
 #
 # Usage (from project root):
 #   bash scripts/install_cron.sh
 #
-# Schedule: Every Saturday at 11:00 UTC (6am ET / 7am EDT)
+# Schedule: Every night at 05:00 UTC (midnight ET / 1am EDT)
+# On Saturdays, the agent also produces a weekly digest (7-day lookback).
 
 set -euo pipefail
 
@@ -29,8 +30,8 @@ echo "=== Installing cron job on ${DROPLET_USER}@${DROPLET_HOST} ==="
 scp "${SCRIPT_DIR}/cron_run.sh" "${DROPLET_USER}@${DROPLET_HOST}:${REMOTE_SKILL}/cron_run.sh"
 ssh "${DROPLET_USER}@${DROPLET_HOST}" "chmod +x ${REMOTE_SKILL}/cron_run.sh"
 
-# Install crontab entry (Saturday 11:00 UTC = 6am ET)
-CRON_LINE="0 11 * * 6 ${REMOTE_SKILL}/cron_run.sh"
+# Install crontab entry (daily at 05:00 UTC = midnight ET)
+CRON_LINE="0 5 * * * ${REMOTE_SKILL}/cron_run.sh"
 
 ssh "${DROPLET_USER}@${DROPLET_HOST}" "
     crontab -l 2>/dev/null | grep -v 'cron_run.sh' | crontab - 2>/dev/null || true
@@ -41,7 +42,8 @@ ssh "${DROPLET_USER}@${DROPLET_HOST}" "
 
 echo ""
 echo "=== Cron job installed ==="
-echo "  Schedule: Every Saturday at 11:00 UTC (6am ET)"
+echo "  Schedule: Every night at 05:00 UTC (midnight ET)"
+echo "  Weekly digest: Saturdays (configurable via cadence.weekly_digest_day in config.yaml)"
 echo "  Script:   ${REMOTE_SKILL}/cron_run.sh"
 echo "  Log:      ${REMOTE_WORKSPACE}/archives/neurotech/cron.log"
 echo ""

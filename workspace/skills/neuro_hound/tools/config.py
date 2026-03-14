@@ -76,6 +76,29 @@ def get_max_sources() -> int:
     return get_defaults().get("max_sources", 40)
 
 
+def get_ensemble_variants() -> int:
+    """Number of synonym-swapped variants per Tavily query (0 = disabled)."""
+    cfg = load_config()
+    return cfg.get("ensemble", {}).get("variants_per_query", 2)
+
+
+def get_cadence_config() -> Dict[str, Any]:
+    """Get cadence settings for daily/weekly scheduling."""
+    cfg = load_config()
+    return cfg.get("cadence", {
+        "daily_days": 2,
+        "weekly_days": 7,
+        "weekly_digest_day": 6,
+    })
+
+
+def is_weekly_digest_day() -> bool:
+    """True if today is the configured day for the weekly digest."""
+    import datetime as dt
+    cadence = get_cadence_config()
+    return dt.date.today().weekday() == cadence.get("weekly_digest_day", 6)
+
+
 # ── Sources ──────────────────────────────────────────────────────────
 
 def get_sources() -> List[Dict[str, Any]]:

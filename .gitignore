@@ -29,6 +29,7 @@ dev/sample_output/
 # Runtime data (regenerated each run)
 workspace/skills/neuro_hound/sources.json
 workspace/skills/neuro_hound/seen_items.json
+workspace/skills/neuro_hound/discovery_memory.json
 
 # Log files
 *.log

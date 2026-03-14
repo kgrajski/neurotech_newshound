@@ -41,12 +41,24 @@ rsync -avz \
     "${DROPLET_USER}@${DROPLET_HOST}:${REMOTE_ARCHIVES}" \
     "${LOCAL_ARCHIVES}"
 
-# Pull back vocabulary.yaml (meta-agent may have added terms on the droplet)
+# Pull back evolving state files (meta-agent may have updated these on the droplet)
 echo ""
-echo "=== Syncing vocabulary changes ==="
+echo "=== Syncing state files ==="
 rsync -avz \
     "${DROPLET_USER}@${DROPLET_HOST}:${REMOTE_SKILL}/vocabulary.yaml" \
     "${LOCAL_SKILL}/vocabulary.yaml"
+
+rsync -avz \
+    "${DROPLET_USER}@${DROPLET_HOST}:${REMOTE_SKILL}/discovery_memory.json" \
+    "${LOCAL_SKILL}/discovery_memory.json" 2>/dev/null || true
+
+rsync -avz \
+    "${DROPLET_USER}@${DROPLET_HOST}:${REMOTE_SKILL}/sources.json" \
+    "${LOCAL_SKILL}/sources.json" 2>/dev/null || true
+
+rsync -avz \
+    "${DROPLET_USER}@${DROPLET_HOST}:${REMOTE_SKILL}/seen_items.json" \
+    "${LOCAL_SKILL}/seen_items.json" 2>/dev/null || true
 
 echo ""
 echo "=== Fetch complete ==="
@@ -62,14 +74,19 @@ HAS_META="no"
 [[ -f "${LOCAL_ARCHIVES}meta_actions.yaml" ]] && HAS_META="yes"
 HAS_DISCO="no"
 [[ -f "${LOCAL_ARCHIVES}discoveries.yaml" ]] && HAS_DISCO="yes"
+DIGEST_COUNT=$(find "$LOCAL_ARCHIVES" -name "*.weekly_digest.json" 2>/dev/null | wc -l | tr -d ' ')
+HAS_MEMORY="no"
+[[ -f "${LOCAL_SKILL}/discovery_memory.json" ]] && HAS_MEMORY="yes"
 
 echo "  Markdown reports:  ${REPORT_COUNT}"
 echo "  HTML reports:      ${HTML_COUNT}"
 echo "  Alert files:       ${ALERT_COUNT}"
 echo "  Full JSON:         ${JSON_COUNT}"
+echo "  Weekly digests:    ${DIGEST_COUNT}"
 echo "  Dashboard:         ${HAS_DASHBOARD}"
 echo "  Meta-agent trace:  ${HAS_META}"
 echo "  Discoveries:       ${HAS_DISCO}"
+echo "  Discovery memory:  ${HAS_MEMORY}"
 
 # Show most recent and offer to open
 LATEST=$(find "$LOCAL_ARCHIVES" -name "*.html" -not -name "dashboard.html" 2>/dev/null | sort -r | head -1)

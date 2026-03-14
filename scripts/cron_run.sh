@@ -1,25 +1,28 @@
 #!/usr/bin/env bash
 #
-# Cron wrapper: run the NeuroTech NewsHound and send notifications.
+# Cron wrapper: run the NeuroTech NewsHound nightly and send notifications.
 #
 # Installed on the droplet via: scripts/install_cron.sh
-# Schedule: Saturdays 6am ET (11:00 UTC EST / 10:00 UTC EDT)
+# Schedule: Every night at 05:00 UTC (midnight ET)
+#
+# On the configured weekly digest day (default: Saturday), the agent
+# also produces a 7-day digest aggregating daily reports.
 
 set -euo pipefail
 
 SKILL_DIR="/root/.openclaw/workspace/skills/neuro_hound"
 LOG_FILE="/root/.openclaw/workspace/archives/neurotech/cron.log"
-
-echo "$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Starting NeuroTech NewsHound" >> "$LOG_FILE"
-
-# Run the agent
-cd "$SKILL_DIR"
 ARCHIVE_DIR="/root/.openclaw/workspace/archives/neurotech"
 TODAY=$(date -u '+%Y-%m-%d')
+DAY_OF_WEEK=$(date -u '+%u')  # 1=Mon, 6=Sat, 7=Sun
 
-if python3 -u run.py --days 7 >> "$LOG_FILE" 2>&1; then
+echo "$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Starting NeuroTech NewsHound (daily)" >> "$LOG_FILE"
+
+cd "$SKILL_DIR"
+
+# Daily run with 2-day lookback (default from config.yaml)
+if python3 -u run.py >> "$LOG_FILE" 2>&1; then
     STATUS="done"
-    # Parse actual counts from the alerts and full JSON
     ALERT_COUNT=0
     THEME_COUNT=0
     ALERT_FILE="${ARCHIVE_DIR}/${TODAY}.alerts.json"
@@ -30,7 +33,17 @@ if python3 -u run.py --days 7 >> "$LOG_FILE" 2>&1; then
     if [[ -f "$FULL_FILE" ]]; then
         THEME_COUNT=$(python3 -c "import json; d=json.load(open('${FULL_FILE}')); print(len(d.get('themes',[])) if isinstance(d,dict) else 0)" 2>/dev/null || echo 0)
     fi
-    MSG="NeuroTech NewsHound briefing for ${TODAY} is ready. ${ALERT_COUNT} alerts, ${THEME_COUNT} themes. Fetch with: bash scripts/fetch_reports.sh"
+    MSG="NeuroTech NewsHound daily briefing (${TODAY}): ${ALERT_COUNT} alerts, ${THEME_COUNT} themes."
+
+    # Check if weekly digest was also produced (run.py auto-detects the day)
+    DIGEST_FILE="${ARCHIVE_DIR}/${TODAY}.weekly_digest.json"
+    if [[ -f "$DIGEST_FILE" ]]; then
+        DIGEST_ITEMS=$(python3 -c "import json; d=json.load(open('${DIGEST_FILE}')); print(d.get('total_items',0))" 2>/dev/null || echo 0)
+        DIGEST_ALERTS=$(python3 -c "import json; d=json.load(open('${DIGEST_FILE}')); print(d.get('total_alerts',0))" 2>/dev/null || echo 0)
+        MSG="${MSG} Weekly digest: ${DIGEST_ITEMS} items, ${DIGEST_ALERTS} alerts."
+    fi
+
+    MSG="${MSG} Fetch with: bash scripts/fetch_reports.sh"
 else
     STATUS="failed"
     MSG="NeuroTech NewsHound run failed. Check cron.log on the droplet."
@@ -44,6 +57,7 @@ mkdir -p "$OPENCLAW_REPORTS"
 cp -r "$ARCHIVE_DIR"/* "$OPENCLAW_REPORTS/" 2>/dev/null || true
 cp "$SKILL_DIR/vocabulary.yaml" "$OPENCLAW_REPORTS/" 2>/dev/null || true
 cp "$SKILL_DIR/config.yaml" "$OPENCLAW_REPORTS/" 2>/dev/null || true
+cp "$SKILL_DIR/discovery_memory.json" "$OPENCLAW_REPORTS/" 2>/dev/null || true
 chown -R openclaw:openclaw "$OPENCLAW_REPORTS" 2>/dev/null || true
 echo "$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Published to OpenClaw workspace" >> "$LOG_FILE"
 

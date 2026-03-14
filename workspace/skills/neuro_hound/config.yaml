@@ -16,9 +16,25 @@ agent:
 defaults:
   model: "gpt-4o-mini"            # LLM for scoring + synthesis
   reviewer_model: ""               # Reviewer LLM (empty = same as model)
-  days: 7                          # Lookback window
+  days: 7                          # Lookback window (7 days even for nightly runs —
+                                   # dedup prevents re-scoring, and longer lookback
+                                   # catches items that take days to percolate through
+                                   # indexing pipelines: PubMed, Tavily, RSS, etc.)
   max_items_per_source: 40         # Cap per source
   max_sources: 40                  # Source registry cap
+
+# ── Cadence ──────────────────────────────────────────────────────────
+# The agent runs nightly with a 7-day lookback. The dedup system
+# (seen_items.json) ensures already-scored items are skipped, so the
+# overlap between consecutive runs is essentially free. The longer
+# window catches items that take 2-5 days to appear in search indexes
+# after initial publication ("percolation delay").
+# On Saturdays, a weekly digest aggregates the past 7 days of reports.
+
+cadence:
+  daily_days: 7                    # Lookback for nightly runs (dedup handles overlap)
+  weekly_days: 7                   # Lookback for Saturday weekly digest
+  weekly_digest_day: 5             # 0=Mon, 5=Sat, 6=Sun — day of week for weekly digest
 
 # ── Data sources ─────────────────────────────────────────────────────
 # Each source needs: id, name, category, type, enabled
@@ -300,6 +316,14 @@ curated_industry_sources:
 # Each query costs ~$0.001. Add/remove as needed.
 # NOTE: Company-specific queries are auto-generated from the watchlist
 # above — you do NOT need to duplicate company names here.
+#
+# Ensemble retrieval: each query is expanded into synonym-swapped
+# variants and run independently (union of results). This reduces
+# the impact of Tavily's non-deterministic result ordering.
+# Set ensemble_variants to 0 to disable.
+
+ensemble:
+  variants_per_query: 2      # 0=off, 2=original+2 rewrites (3x coverage)
 
 tavily_queries:
   - '"brain-computer interface" OR "neural implant" clinical trial'

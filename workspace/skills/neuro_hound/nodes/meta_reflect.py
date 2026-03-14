@@ -46,6 +46,8 @@ Think step by step about whether the pipeline's output reveals any gaps:
 2. Source health: Are any sources cold or broken?
 3. Coverage: Are expected topic areas represented? Any blind spots?
 4. Companies: Are there new BCI companies in the web search results?
+5. Memory: Are previously discovered entities still being found? Any cold entities
+   that need attention? Any entities seen consistently enough to promote to the watchlist?
 
 You do NOT need to use every tool. On a quiet week with good coverage, doing
 nothing is the correct answer.

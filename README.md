@@ -1,6 +1,6 @@
 # NeuroTech NewsHound
 
-An **agentic AI research analyst** that monitors the NeuroTech ecosystem — implantable BCIs, ECoG/sEEG, microstimulation, enabling materials — and produces weekly intelligence briefings with LLM-scored relevance, thematic synthesis, and a reflection-based quality review.
+An **agentic AI research analyst** that monitors the NeuroTech ecosystem — implantable BCIs, ECoG/sEEG, microstimulation, enabling materials — and produces nightly intelligence briefings (with weekly digests) featuring LLM-scored relevance, thematic synthesis, ensemble retrieval, persistent discovery memory, and a reflection-based quality review.
 
 Built with [LangGraph](https://github.com/langchain-ai/langgraph). Deployed on [OpenClaw](https://openclaw.ai/). Developed locally in [Cursor](https://cursor.com/).
 
@@ -25,6 +25,7 @@ If you're new to agentic AI or just want a refresher, here's a cheat sheet for t
 | **Reflection Pattern** | A second LLM call that _critiques_ the first LLM's output — checking calibration, spotting missed connections, flagging vaporware. | A senior reviewer reading a junior analyst's draft. |
 | **ReAct Pattern** | A multi-turn loop where the LLM _reasons_ (Thought), _acts_ (calls a tool), and _observes_ the result — then decides what to do next. The agent, not the code, chooses which tools to use. | A researcher who checks their work, notices a gap, looks something up, and decides whether to keep going. |
 | **Meta-Tools** | Functions the ReAct meta-agent can call — check vocabulary gaps, assess source health, discover companies, evaluate coverage. Defined in `tools/meta_tools.py`. | The reference books and checklists the researcher reaches for. |
+| **Discovery Memory** | Persistent JSON store (`discovery_memory.json`) that tracks entities across runs. Implements Retain/Recall/Reflect: entities are retained after scoring, recalled via targeted queries when they go cold, and reflected upon by the meta-agent. | A field notebook where the analyst writes down every company and development they encounter, and checks it before each new search. |
 | **[MLflow](https://mlflow.org/)** | Experiment tracker that logs every run — parameters, token costs, artifacts. Lets you compare runs over time. | A lab notebook that records every experiment. |
 
 > **Why so many files?** Each layer has one job: SOUL.md says _who_, SKILL.md says _how_, config.yaml says _what to monitor_, prompts.yaml says _what to ask the LLM_, and vocabulary.yaml says _what terms to search for_. This separation means you can change the search vocabulary without editing code, or swap the LLM model without touching prompts. See [ADR-001](docs/ADR-001-agent-specification.md) for the full rationale.
@@ -33,7 +34,7 @@ If you're new to agentic AI or just want a refresher, here's a cheat sheet for t
 
 ## What This Project Does
 
-Each week, the agent:
+Each night (with a 2-day lookback and weekly digest on Saturdays), the agent:
 
 1. **Fetches** from 24+ sources — PubMed, ClinicalTrials.gov, journal RSS feeds (Nature, Nature Neuroscience, Science, Lancet Neurology, Neuron, NEJM, IEEE TNSRE, ...), preprint servers (bioRxiv, medRxiv, arXiv), company Substacks (auto-injected from watchlist), general press (NYT, FT, STAT News), FDA MedWatch, and Tavily wideband search (with auto-generated queries from a company watchlist of 11 BCI companies)
 2. **Pre-filters** with domain-specific regex patterns built from a 126-term domain vocabulary (fast, free, deterministic)
@@ -48,15 +49,15 @@ Each week, the agent:
 
 All sources, models, and behavior are configured via YAML files (`config.yaml`, `prompts.yaml`, `vocabulary.yaml`) — no code edits needed to add sources, change models, update prompts, or expand search vocabulary.
 
-The weekly pipeline runs in ~2.5 minutes and costs ~$0.009 per run with `gpt-4o-mini`. A separate **backfill mode** fetches 5 years of historical data from PubMed, bioRxiv, medRxiv, and arXiv using their archival APIs.
+The nightly pipeline runs in ~2.5 minutes and costs ~$0.009 per run with `gpt-4o-mini` (~$0.27/month at daily cadence). The 7-day lookback on daily runs is intentional: dedup prevents re-scoring already-seen items, and the longer window catches items that take several days to percolate through indexing pipelines (PubMed, Tavily, RSS aggregators). A separate **backfill mode** fetches 5 years of historical data from PubMed, bioRxiv, medRxiv, and arXiv using their archival APIs.
 
 ---
 
 ## Architecture
 
-The system has two operating modes: a **weekly pipeline** that monitors current activity across 24+ sources, and a **backfill mode** that builds historical depth from archival APIs (PubMed, bioRxiv, medRxiv, arXiv). Both modes feed the same dedup history and source registry.
+The system has two operating modes: a **nightly pipeline** (7-day lookback with dedup, plus Saturday weekly digest) that monitors current activity across 24+ sources, and a **backfill mode** that builds historical depth from archival APIs (PubMed, bioRxiv, medRxiv, arXiv). Both modes feed the same dedup history, source registry, and discovery memory.
 
-### Weekly Pipeline
+### Nightly Pipeline
 
 ```mermaid
 flowchart TD
@@ -74,7 +75,7 @@ flowchart TD
         A["fetch_pubmed<br>(NCBI E-utilities)"] --> CT["fetch_clinicaltrials<br>(ClinicalTrials.gov API v2)"]
         CT --> D["save_registry<br>(per-source stats)"]
         B["fetch_rss<br>(19+ feeds: journals,<br>preprints, Substacks,<br>press, FDA)"] --> D
-        C["fetch_tavily<br>(wideband + watchlist<br>+ curated sources)"] --> D
+        C["fetch_tavily<br>(ensemble retrieval:<br>wideband + watchlist<br>+ curated sources)"] --> D
     end
 
     D --> E["prefilter<br>(regex + dedup history)"]
@@ -87,11 +88,20 @@ flowchart TD
         H --> I["review<br>(Reflection Pattern)"]
     end
 
-    I --> M
+    I --> RM
+
+    subgraph memory ["Discovery Memory (Phase 10b)"]
+        RM["retain_memory<br>(Retain: update entities)"]
+        DM[("discovery_memory.json<br>(persistent)")]
+        RM -->|"write"| DM
+        DM -->|"recall queries"| C
+    end
+
+    RM --> M
 
     subgraph react ["ReAct Meta-Agent (Phase 9)"]
         M["meta_reflect<br>(Thought → Action → Observe)"]
-        M -.->|"tool calls"| MT["check_vocabulary_gaps<br>check_source_health<br>discover_companies<br>assess_coverage<br>add_vocabulary_terms<br>propose_source"]
+        M -.->|"tool calls"| MT["check_vocabulary_gaps<br>check_source_health<br>discover_companies<br>assess_coverage<br>reflect_on_memory<br>promote_entity"]
     end
 
     M --> J["HTML Report · Dashboard<br>Markdown · Alerts JSON · MLflow"]
@@ -102,6 +112,7 @@ flowchart TD
     style config fill:#e8f5e9,stroke:#43a047
     style fetch fill:#f0f4f8,stroke:#4a90d9
     style llm fill:#fff3e0,stroke:#e67e22
+    style memory fill:#fce4ec,stroke:#c62828
     style react fill:#e3f2fd,stroke:#1565c0
 ```
 
@@ -133,6 +144,8 @@ flowchart LR
 - **Adaptive Source Management**: The company watchlist auto-generates Tavily queries from aliases and injects Substack RSS feeds. The ReAct meta-agent can discover new companies, flag cold sources, and propose new feeds.
 - **ReAct Meta-Reflection**: After the pipeline completes, a genuine ReAct agent receives the output and decides which self-improvement tools to invoke — vocabulary gap detection, source health checks, company discovery, coverage assessment. The LLM reasons about *whether* to act (not a fixed code path). Trace logged to `meta_actions.yaml`.
 - **Dynamic Query Construction**: PubMed queries are built at runtime from `vocabulary.yaml` (126+ domain terms extracted from representative papers). The vocabulary grows as new papers are processed and self-stabilizes as domain terminology is finite.
+- **Ensemble Retrieval**: Each Tavily query is expanded into synonym-swapped variants (e.g., "brain-computer interface" → "brain-machine interface", "neural prosthesis"). All variants run independently and results are unioned. This counters retrieval stochasticity — the same query to Tavily returns different results across runs — by casting a wider net. Configurable via `ensemble.variants_per_query` in `config.yaml` (default: 2 variants per base query = 3× coverage). See [Generative Query Reformulation](https://arxiv.org/abs/2405.17658).
+- **Discovery Memory (HindSight)**: Persistent `discovery_memory.json` tracks entities discovered via Tavily across runs. Implements three phases: **Retain** (after scoring, extract entities and update memory with `times_seen`, `best_score`, `consecutive_misses`), **Recall** (before Tavily fetch, generate targeted queries for cold/active entities not seen recently), and **Reflect** (meta-agent reviews memory health, detects cold entities, and promotes consistently-seen entities to the watchlist). Entities transition through states: `active` → `cold` → `archived` (or `promoted`). See [Hindsight](https://arxiv.org/abs/2512.12818).
 - **Two-Stage Scoring**: Regex pre-filter (free, ~485 → ~56 items) followed by LLM assessment with domain-aware judgment. Keeps costs near-zero while leveraging LLM reasoning where it matters.
 - **Deduplication**: Hash-based history tracks every scored item. Items scored < 7 in prior runs are skipped (confirmed low-value). Items ≥ 7 are re-evaluated (things evolve — a preprint becomes a publication, a trial advances).
 - **Reflection Pattern**: The reviewer node critiques the executive brief, checks calibration of significance ratings, flags missed connections, and calls out vaporware — mimicking a PI reviewing a research associate's work. (Company discovery has moved to the ReAct meta-agent.)
@@ -222,6 +235,7 @@ neurotech_newshound/
 │   │       ├── vocabulary.yaml        # Domain vocabulary for dynamic query construction
 │   │       ├── run.py                 # CLI entry point (weekly pipeline)
 │   │       ├── backfill.py            # Historical backfill (5-year, archival APIs)
+│   │       ├── bootstrap_memory.py    # Seed discovery memory from existing data
 │   │       ├── state.py               # HoundState TypedDict
 │   │       ├── graph.py               # LangGraph StateGraph definition
 │   │       ├── requirements.txt       # Python dependencies
@@ -231,6 +245,7 @@ neurotech_newshound/
 │   │       │   ├── score.py           #   LLM per-item scoring
 │   │       │   ├── summarize.py       #   Theme clustering + executive brief
 │   │       │   ├── review.py          #   Reflection + score adjustment
+│   │       │   ├── retain_memory.py   #   Discovery memory update (Phase 10b)
 │   │       │   └── meta_reflect.py    #   ReAct meta-agent (Phase 9)
 │   │       └── tools/                 # Shared utilities
 │   │           ├── config.py          #   Config + prompts + watchlist loader
@@ -245,6 +260,7 @@ neurotech_newshound/
 │   │           ├── sources.py         #   Source registry (JSON persistence)
 │   │           ├── scoring.py         #   Regex scoring patterns
 │   │           ├── dedup.py           #   Deduplication history
+│   │           ├── memory.py          #   Discovery memory (HindSight pattern)
 │   │           ├── llm.py             #   LLM factory + usage tracker
 │   │           ├── meta_tools.py       #   ReAct meta-agent tool registry
 │   │           ├── html_report.py     #   HTML report generator
@@ -345,7 +361,7 @@ PubMed queries are built at runtime from this vocabulary — no hardcoded querie
 | **Press** | NYT Science, NYT Health, FT Technology, [STAT News](https://www.statnews.com/) |
 | **Substacks** | [Neurotechnology](https://neurotechnology.substack.com/), [Paradromics](https://paradromics.substack.com/) + watchlist auto-feeds |
 | **Regulatory** | [FDA MedWatch](https://www.fda.gov/safety/medwatch-fda-safety-information-and-adverse-event-reporting-program) |
-| **Search** | [Tavily](https://tavily.com/) — static queries + auto-generated from company watchlist + curated industry sources |
+| **Search** | [Tavily](https://tavily.com/) — static queries + auto-generated from company watchlist + curated industry sources, with ensemble retrieval (synonym-swapped query variants, 3× coverage) |
 
 ### Company Watchlist
 
@@ -421,14 +437,20 @@ cp .env.example .env
 ### Run Locally
 
 ```bash
-# Full pipeline (LLM scoring + synthesis + reflection)
+# Daily run (2-day lookback, from config.yaml defaults)
+python dev/test_run.py
+
+# Full 7-day run
 python dev/test_run.py --days 7
+
+# Force weekly digest (aggregates past 7 days of daily reports)
+python dev/test_run.py --weekly-digest
 
 # Phase 1 only (regex scoring, no LLM cost)
 python dev/test_run.py --phase1-only --days 7
 
 # With a specific model
-python dev/test_run.py --days 7 --model gpt-4o
+python dev/test_run.py --days 2 --model gpt-4o
 ```
 
 Output goes to `dev/sample_output/`:
@@ -473,20 +495,30 @@ bash scripts/deploy.sh
 # Run on droplet via SSH
 ssh root@your-droplet
 cd /root/.openclaw/workspace/skills/neuro_hound
-python3 -u run.py --days 7
+python3 -u run.py              # Daily (2-day lookback)
+python3 -u run.py --days 7     # Weekly (7-day lookback)
+
+# Bootstrap discovery memory from existing data (run once after first deploy)
+python3 -u bootstrap_memory.py
 
 # Fetch reports back locally
 bash scripts/fetch_reports.sh
 ```
 
-### Weekly Cron Job
+### Nightly Cron Job
 
 ```bash
-# Install Saturday 6am ET cron on the droplet
+# Install nightly midnight ET cron on the droplet
 bash scripts/install_cron.sh
 ```
 
-The cron job runs the agent every Saturday and sends a notification via WhatsApp/Telegram (set `NOTIFY_PHONE` in `.env`).
+The cron job runs the agent every night at 05:00 UTC (midnight ET) with a 7-day lookback (dedup prevents re-scoring). On Saturdays, it also produces a weekly digest aggregating the past 7 days of daily reports. Notifications are sent via WhatsApp/Telegram (set `NOTIFY_PHONE` in `.env`).
+
+Reports accumulate on the droplet. Pull them to your laptop whenever convenient — `rsync` only transfers new/changed files, so days of accumulated reports sync in seconds:
+
+```bash
+bash scripts/fetch_reports.sh   # Smart sync: pulls all new reports + state files
+```
 
 ---
 
@@ -502,6 +534,7 @@ The cron job runs the agent every Saturday and sends a notification via WhatsApp
 | **Output** | HTML report, operational dashboard, Markdown, JSON, MLflow artifacts |
 | **Configuration** | YAML-driven (config.yaml + prompts.yaml + vocabulary.yaml — sources, models, prompts, vocabulary, watchlist) |
 | **Agent Specification** | SOUL.md (identity) + SKILL.md (operational spec) — see [ADR-001](docs/ADR-001-agent-specification.md) |
+| **Scheduling** | Nightly cron (05:00 UTC), 2-day lookback, Saturday weekly digest |
 | **Deployment** | OpenClaw, rsync, Digital Ocean |
 | **Development** | Cursor IDE, Python 3.11+, python-dotenv |
 
@@ -521,7 +554,10 @@ The cron job runs the agent every Saturday and sends a notification via WhatsApp
 | **7b** | Domain vocabulary store (`vocabulary.yaml`), dynamic PubMed query construction, keyword bootstrapping from papers | **Done** |
 | **8** | Historical backfill mode (PubMed, bioRxiv/medRxiv, arXiv APIs — 5-year depth) | **Done** |
 | **9** | Agentic meta-layer: ReAct meta-agent with tool-calling for vocabulary, source health, company discovery, coverage assessment | **Done** |
-| 10 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
+| **10** | Ensemble retrieval: synonym-swapped query variants (3× Tavily coverage), config-driven `ensemble.variants_per_query` | **Done** |
+| **10b** | Discovery memory (HindSight pattern): persistent `discovery_memory.json` with retain/recall/reflect across sessions, meta-agent memory tools, bootstrap from existing data | **Done** |
+| **10c** | Daily cadence: nightly runs (05:00 UTC) with 7-day lookback + dedup, auto weekly digest on Saturdays, `--weekly-digest` CLI flag | **Done** |
+| 11 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
 
 This project shares design patterns with [trading_etf](https://github.com/kgrajski/trading_etf), an ETF trading system with an agentic AI analyst — same LangGraph architecture, Reflection Pattern, and multi-model routing approach applied to a different domain.
 
@@ -529,11 +565,17 @@ This project shares design patterns with [trading_etf](https://github.com/kgrajs
 
 ## Current Development Focus
 
-**The memory problem — a cautionary tale from the field.**
+**Retrieval stochasticity — the problem, and our three-layer solution.**
 
 During a routine weekly run, our reviewer flagged a false negative: a non-invasive BCI company (Synaptrix Labs) had been incorrectly classified as out-of-scope. We fixed the scoring — broadened vocabulary, added a false-negative sweep to the reflection step, softened the regex pre-filter. Good engineering, problem solved. Then we re-ran the pipeline. Synaptrix didn't appear at all. Not misclassified — *absent*. The Tavily web search API, our wideband discovery source, is non-deterministic: the same query returns different results across runs. The world hadn't changed in the past hour, but our report had.
 
-This is not a bug — it's a fundamental property of agentic systems that rely on external tool-calling for retrieval. The literature calls it **retrieval stochasticity** ([Stochasticity in Agentic Evaluations](https://arxiv.org/abs/2512.06710), [ReproRAG](https://arxiv.org/abs/2509.18869)), and the research shows that agentic retrieval tasks require 8–16 repeated trials to converge to stable results. Our experience confirms this viscerally: an item discovered on Tuesday can vanish on Wednesday, not because it's gone from the web, but because the retrieval sample shifted. The solutions involve **ensemble retrieval** (multiple query variations, take the union — validated by [Generative Query Reformulation](https://arxiv.org/abs/2405.17658) showing up to 18% recall improvement), **persistent structured memory** so discoveries are never forgotten between runs ([Hindsight](https://arxiv.org/abs/2512.12818) — retain/recall/reflect across sessions), and **auto-promotion** of discovered entities to the tracking watchlist. We are currently designing these layers.
+This is not a bug — it's a fundamental property of agentic systems that rely on external tool-calling for retrieval. The literature calls it **retrieval stochasticity** ([Stochasticity in Agentic Evaluations](https://arxiv.org/abs/2512.06710), [ReproRAG](https://arxiv.org/abs/2509.18869)), and the research shows that agentic retrieval tasks require 8–16 repeated trials to converge to stable results. We are addressing this with three layers:
+
+**Layer 1 — Ensemble Retrieval (Phase 10, done).** Each Tavily query is expanded into synonym-swapped variants using a domain-specific synonym map (e.g., "brain-computer interface" → "brain-machine interface" / "neural interface"; "clinical trial" → "first-in-human" / "FDA trial"). All variants run independently and results are unioned. With `ensemble.variants_per_query: 2`, each base query generates up to 3 API calls (original + 2 rewrites), tripling the retrieval surface without any LLM cost. Validated by [Generative Query Reformulation](https://arxiv.org/abs/2405.17658) showing up to 18% recall improvement with ensemble strategies.
+
+**Layer 2 — Discovery Memory (Phase 10b, planned).** Persistent `discovery_memory.json` implementing the Retain/Recall/Reflect pattern from [Hindsight](https://arxiv.org/abs/2512.12818). Every entity discovered via Tavily is retained with `first_seen`, `last_seen`, `times_seen`, `best_score`, and `status`. On each run, "active" entities not seen recently are recalled via targeted re-search queries injected into the Tavily pipeline. The meta-agent reflects on memory health and auto-promotes consistently seen entities to `company_watchlist` in `config.yaml`.
+
+**Layer 3 — Daily Cadence (Phase 10c, planned).** Switching from weekly to nightly runs (2-day lookback) to increase temporal sampling. Higher sampling frequency means the ensemble + memory layers have more data points to work with, and the agent tracks the news cycle in near real-time. Lightweight daily reports with a weekly digest rollup.
 
 The broader lesson: we are at a stage of agentic AI development akin to programming in the era of assembly language. Memory management, retrieval consistency, and state persistence across sessions are problems that today's developers must solve explicitly — with careful architecture and explicit data structures. Eventually these concerns will be abstracted into frameworks and handled implicitly, the way garbage collection and memory safety are handled by modern languages. But not yet. If you're building agentic systems and everything seems to work on the first run, run it again.
 

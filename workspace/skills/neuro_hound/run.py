@@ -129,6 +129,7 @@ def run_phase2(args, out_dir: str):
         "source_discoveries": [],
         "company_discoveries": [],
         "_dedup_history": None,
+        "_discovery_memory": None,
         "meta_actions": [],
         "errors": [],
         "usage": {},
@@ -490,13 +491,28 @@ def _write_discoveries(out_dir: str, run_date: str, discoveries: list):
 
 def main():
     ap = argparse.ArgumentParser(description="NeuroTech NewsHound — agentic research intelligence")
-    ap.add_argument("--days", type=int, default=7, help="Lookback window in days")
+    ap.add_argument("--days", type=int, default=None,
+                    help="Lookback window in days (default: from config.yaml)")
     ap.add_argument("--max", type=int, default=40, help="Max items per source")
     ap.add_argument("--output-dir", type=str, default=None, help="Output directory")
-    ap.add_argument("--model", type=str, default=None, help="LLM model (default: HOUND_LLM_MODEL or gemini-2.0-flash)")
-    ap.add_argument("--reviewer", type=str, default=None, help="Reviewer model (default: same as model)")
-    ap.add_argument("--phase1-only", action="store_true", help="Phase 1 only: regex scoring, no LLM")
+    ap.add_argument("--model", type=str, default=None,
+                    help="LLM model (default: from config.yaml)")
+    ap.add_argument("--reviewer", type=str, default=None,
+                    help="Reviewer model (default: same as model)")
+    ap.add_argument("--phase1-only", action="store_true",
+                    help="Phase 1 only: regex scoring, no LLM")
+    ap.add_argument("--weekly-digest", action="store_true",
+                    help="Force weekly digest (7-day lookback) regardless of day")
     args = ap.parse_args()
+
+    from tools.config import get_default_days, get_cadence_config, is_weekly_digest_day
+
+    if args.days is None:
+        if args.weekly_digest:
+            cadence = get_cadence_config()
+            args.days = cadence.get("weekly_days", 7)
+        else:
+            args.days = get_default_days()
 
     # Default: workspace/archives/neurotech/ (two levels up from skill dir)
     skill_dir = os.path.dirname(os.path.abspath(__file__))
@@ -508,6 +524,108 @@ def main():
         run_phase1(args, out_dir)
     else:
         run_phase2(args, out_dir)
+
+        if args.weekly_digest or is_weekly_digest_day():
+            _run_weekly_digest(args, out_dir)
+
+
+def _run_weekly_digest(args, out_dir: str):
+    """Produce a weekly digest by aggregating the past 7 days of daily full.json files."""
+    from tools.config import get_cadence_config, get_agent_name
+
+    cadence = get_cadence_config()
+    digest_days = cadence.get("weekly_days", 7)
+    agent_name = get_agent_name()
+
+    today = dt.date.today()
+    digest_items = []
+    digest_alerts = []
+    days_covered = []
+
+    for offset in range(digest_days):
+        day = (today - dt.timedelta(days=offset)).isoformat()
+        full_path = os.path.join(out_dir, f"{day}.full.json")
+        if os.path.exists(full_path):
+            with open(full_path) as f:
+                data = json.load(f)
+            scored = data.get("scored_items", [])
+            alerts = data.get("alerts", [])
+            digest_items.extend(scored)
+            digest_alerts.extend(alerts)
+            days_covered.append(day)
+
+    if not digest_items:
+        print("\n  [weekly-digest] No daily reports found for aggregation — skipping")
+        return
+
+    seen_urls = set()
+    unique_items = []
+    for item in sorted(digest_items, key=lambda x: x.get("llm_score", 0), reverse=True):
+        url = item.get("url", "")
+        if url and url in seen_urls:
+            continue
+        if url:
+            seen_urls.add(url)
+        unique_items.append(item)
+
+    unique_alerts = []
+    alert_urls = set()
+    for a in sorted(digest_alerts, key=lambda x: x.get("llm_score", 0), reverse=True):
+        url = a.get("url", "")
+        if url and url in alert_urls:
+            continue
+        if url:
+            alert_urls.add(url)
+        unique_alerts.append(a)
+
+    digest = {
+        "type": "weekly_digest",
+        "date": today.isoformat(),
+        "days_covered": days_covered,
+        "lookback_days": digest_days,
+        "total_items": len(unique_items),
+        "total_alerts": len(unique_alerts),
+        "scored_items": unique_items[:100],
+        "alerts": unique_alerts,
+    }
+
+    digest_path = os.path.join(out_dir, f"{today.isoformat()}.weekly_digest.json")
+    with open(digest_path, "w") as f:
+        json.dump(digest, f, indent=2, default=str)
+
+    print(f"\n  [weekly-digest] {len(unique_items)} unique items from {len(days_covered)} days → {digest_path}")
+
+    # Build a summary markdown
+    lines = [
+        f"# {agent_name} — Weekly Digest ({today.isoformat()})",
+        "",
+        f"Covering {len(days_covered)} days: {', '.join(days_covered)}",
+        f"Total unique items: {len(unique_items)} | Alerts: {len(unique_alerts)}",
+        "",
+    ]
+    if unique_alerts:
+        lines.append("## Top Alerts")
+        lines.append("")
+        for a in unique_alerts[:10]:
+            lines.append(
+                f"- [{a.get('llm_score', '?')}] **{a.get('title', '')[:100]}** "
+                f"({a.get('category', '?')})"
+            )
+        lines.append("")
+
+    lines.append("## Top Items")
+    lines.append("")
+    for item in unique_items[:20]:
+        lines.append(
+            f"- [{item.get('llm_score', '?')}] {item.get('title', '')[:100]} "
+            f"({item.get('category', '?')})"
+        )
+
+    digest_md_path = os.path.join(out_dir, f"{today.isoformat()}.weekly_digest.md")
+    with open(digest_md_path, "w") as f:
+        f.write("\n".join(lines))
+
+    print(f"  [weekly-digest] Digest markdown → {digest_md_path}")
 
 
 if __name__ == "__main__":

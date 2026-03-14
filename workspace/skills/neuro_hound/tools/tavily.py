@@ -9,10 +9,18 @@ Query sources (merged automatically):
   2. Auto-generated queries from company_watchlist entries
   3. Site-scoped queries from curated_industry_sources (e.g. Neurofounders)
 
+Ensemble retrieval: each query is expanded into multiple variants
+(synonym-swapped, restructured) and run independently. The union of
+results is returned, reducing the impact of Tavily's non-deterministic
+result ordering. See: "Generative Query Reformulation Using Ensemble
+Prompting" (arXiv:2405.17658) — ensemble strategies improve recall by
+up to 18%.
+
 Also tracks new domains and companies: if a domain yields high-scoring
 items consistently, propose it as a new source for the registry.
 """
 import os
+import random
 import re
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
@@ -25,6 +33,65 @@ DEFAULT_QUERIES = [
     'FDA "neural device" OR "brain implant" approval OR clearance',
     'BCI funding OR investment "neural interface"',
 ]
+
+# ── Ensemble query variant templates ─────────────────────────────────
+# Each base query is expanded by substituting domain-specific synonyms
+# and restructuring. This is template-based (no LLM cost) and covers
+# the most common terminology variation in the neurotech space.
+
+_SYNONYM_MAP = {
+    '"brain-computer interface"': [
+        '"brain-computer interface"',
+        '"brain-machine interface"',
+        '"neural interface"',
+    ],
+    '"neural implant"': [
+        '"neural implant"',
+        '"brain implant"',
+        '"neural prosthesis"',
+        '"neuroprosthetic"',
+    ],
+    'BCI': ['BCI', '"brain-computer interface"'],
+    '"neural interface"': ['"neural interface"', '"brain-machine interface"'],
+    '"neural device"': ['"neural device"', '"neural implant"', '"neurostimulation device"'],
+    'clinical trial': ['clinical trial', 'first-in-human', 'FDA trial'],
+    'funding OR investment': ['funding OR investment', 'venture capital OR Series', 'raised OR financing'],
+    'approval OR clearance': ['approval OR clearance', 'breakthrough device OR 510k', 'De Novo OR IDE'],
+}
+
+
+def _generate_variants(query: str, max_variants: int = 2) -> List[str]:
+    """Generate query variants via synonym substitution.
+
+    Returns the original query plus up to max_variants rewrites.
+    Substitution is deterministic per query (seeded by query hash)
+    but covers different terminology each run when combined with
+    the shuffled synonym lists.
+    """
+    variants = [query]
+
+    applicable = [
+        (phrase, syns)
+        for phrase, syns in _SYNONYM_MAP.items()
+        if phrase.lower() in query.lower()
+    ]
+
+    if not applicable:
+        return variants
+
+    rng = random.Random(hash(query) & 0xFFFFFFFF)
+
+    for _ in range(max_variants):
+        rewritten = query
+        for phrase, syns in applicable:
+            alternatives = [s for s in syns if s.lower() != phrase.lower()]
+            if alternatives:
+                replacement = rng.choice(alternatives)
+                rewritten = re.sub(re.escape(phrase), replacement, rewritten, count=1, flags=re.IGNORECASE)
+        if rewritten != query and rewritten not in variants:
+            variants.append(rewritten)
+
+    return variants
 
 
 def _get_client():
@@ -41,57 +108,95 @@ def _get_client():
     return TavilyClient(api_key=api_key)
 
 
+def _run_single_query(
+    client, query: str, max_results: int, days: int,
+    seen_urls: set, all_items: list,
+) -> int:
+    """Execute one Tavily query, append new items, return count of new items."""
+    try:
+        response = client.search(
+            query=query,
+            max_results=max_results,
+            search_depth="basic",
+            include_answer=False,
+            days=days,
+        )
+        results = response.get("results", [])
+        new_count = 0
+        for r in results:
+            url = r.get("url", "")
+            if url in seen_urls:
+                continue
+            seen_urls.add(url)
+            new_count += 1
+
+            domain = urlparse(url).netloc if url else ""
+            all_items.append({
+                "title": r.get("title", ""),
+                "url": url,
+                "summary": r.get("content", "")[:500],
+                "meta": domain,
+                "source": f"Tavily ({domain})",
+                "source_id": "tavily_wideband",
+                "source_category": "search",
+                "discovered_domain": domain,
+            })
+        return new_count
+    except Exception as e:
+        print(f"      [warn] query failed: {e}")
+        return 0
+
+
 def tavily_search(
     queries: Optional[List[str]] = None,
     max_results_per_query: int = 5,
     days: int = 7,
+    ensemble_variants: int = 2,
+    recall_queries: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
     """
-    Run Tavily searches and return deduplicated results.
+    Run Tavily searches with ensemble retrieval and return deduplicated results.
 
-    Uses merged queries from static config + watchlist + curated sources.
-    Each result becomes an item dict compatible with the pipeline.
+    Each base query is expanded into 1 + ensemble_variants queries via
+    synonym substitution. All variants are searched independently and
+    results are unioned, reducing the impact of non-deterministic ordering.
+
+    Args:
+        queries: Base queries (defaults to config-driven merged set)
+        max_results_per_query: Max results per individual API call
+        days: Lookback window in days
+        ensemble_variants: Number of synonym-swapped variants per base query
+            (0 = no ensemble, just run originals; 2 = original + 2 variants)
+        recall_queries: Memory-informed queries for cold/active entities
+            (from discovery_memory.json). These are run without ensemble
+            expansion since they are already targeted.
     """
     queries = queries or get_all_tavily_queries() or DEFAULT_QUERIES
     client = _get_client()
 
-    seen_urls = set()
-    all_items = []
+    seen_urls: set = set()
+    all_items: list = []
 
-    print(f"    Running {len(queries)} Tavily queries...")
+    if ensemble_variants > 0:
+        total_base = len(queries)
+        expanded = []
+        for q in queries:
+            expanded.extend(_generate_variants(q, max_variants=ensemble_variants))
+        expanded = list(dict.fromkeys(expanded))
+        print(f"    Ensemble retrieval: {total_base} base queries → {len(expanded)} total (variants={ensemble_variants})")
+        queries = expanded
+    else:
+        print(f"    Running {len(queries)} Tavily queries (no ensemble)...")
+
+    # Append recall queries (no ensemble expansion — already targeted)
+    if recall_queries:
+        queries = list(queries) + recall_queries
+        print(f"    + {len(recall_queries)} memory recall queries appended")
+
     for i, query in enumerate(queries):
-        try:
-            response = client.search(
-                query=query,
-                max_results=max_results_per_query,
-                search_depth="basic",
-                include_answer=False,
-                days=days,
-            )
-            results = response.get("results", [])
-            new_count = 0
-            for r in results:
-                url = r.get("url", "")
-                if url in seen_urls:
-                    continue
-                seen_urls.add(url)
-                new_count += 1
-
-                domain = urlparse(url).netloc if url else ""
-                all_items.append({
-                    "title": r.get("title", ""),
-                    "url": url,
-                    "summary": r.get("content", "")[:500],
-                    "meta": domain,
-                    "source": f"Tavily ({domain})",
-                    "source_id": "tavily_wideband",
-                    "source_category": "search",
-                    "discovered_domain": domain,
-                })
-            if new_count > 0:
-                print(f"    [{i+1}/{len(queries)}] +{new_count} items: {query[:60]}...")
-        except Exception as e:
-            print(f"    [warn] Tavily query {i+1} failed: {e}")
+        new_count = _run_single_query(client, query, max_results_per_query, days, seen_urls, all_items)
+        if new_count > 0:
+            print(f"    [{i+1}/{len(queries)}] +{new_count} items: {query[:60]}...")
 
     return all_items
 

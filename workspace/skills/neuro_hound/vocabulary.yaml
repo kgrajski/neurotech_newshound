@@ -216,6 +216,29 @@ provenance:
     - brain implant
     - endovascular implants
     - interface implant
+  auto_2026-03-14:
+    date: '2026-03-14'
+    source: meta-agent auto-extraction
+    terms_added:
+    - subdural electrodes
+    - brain implants
+    - an implant
+    - human implant
+    - has implant
+    - safely implant
+    - electrodes implant
+    - beinao implants
+    - retinal implant
+    - subdural electrodes
+    - first implant
+    - brain implants
+    - brain implant
+    - an implant
+    - human implant
+    - has implant
+    - safely implant
+    - electrodes implant
+    - beinao implants
 materials_terms:
   materials:
   - graphene electrodes
@@ -227,6 +250,16 @@ implantable_bci_terms:
   - endovascular implants
   - brain implant
   - interface implant
+  - brain implants
+  - an implant
+  - human implant
+  - has implant
+  - beinao implants
+  - retinal implant
+  methods:
+  - subdural electrodes
+  - safely implant
+  - electrodes implant
 neurotechnology_terms:
   implantable_bci:
   - utah electrode
@@ -235,3 +268,16 @@ neurotechnology_terms:
   - interface implant
   materials:
   - graphene electrodes
+general_terms:
+  ecog_seeg:
+  - subdural electrodes
+  - electrodes implant
+  implantable_bci:
+  - first implant
+  - brain implants
+  - brain implant
+  - an implant
+  - human implant
+  - has implant
+  - safely implant
+  - beinao implants

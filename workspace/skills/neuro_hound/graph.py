@@ -4,7 +4,7 @@ LangGraph workflow for the NeuroTech NewsHound agent.
 Architecture:
     fetch_pubmed → fetch_clinicaltrials → fetch_rss → fetch_tavily → save_registry
         → prefilter → [conditional] → score_items
-        → summarize_themes → write_brief → review → meta_reflect → END
+        → summarize_themes → write_brief → review → retain_memory → meta_reflect → END
 
 Sources are registry-driven (sources.json):
     - PubMed (API), ClinicalTrials.gov (API), RSS feeds (journals, preprints, press, regulatory), Tavily (wideband)
@@ -15,6 +15,7 @@ Design Patterns:
     - Conditional edge for cost control
     - Two-stage scoring: regex pre-filter → LLM assessment
     - Source registry with auto-discovery and cold-source pruning
+    - Discovery memory: Retain/Recall/Reflect (HindSight pattern)
     - ReAct meta-reflection: LLM reasons about self-improvement after pipeline
 """
 from langgraph.graph import StateGraph, END
@@ -25,6 +26,7 @@ from nodes.prefilter import prefilter
 from nodes.score import score_items
 from nodes.summarize import summarize_themes, write_brief
 from nodes.review import review
+from nodes.retain_memory import retain_memory
 from nodes.meta_reflect import meta_reflect
 
 
@@ -56,6 +58,7 @@ def build_hound_graph():
     wf.add_node("summarize_themes", summarize_themes)
     wf.add_node("write_brief", write_brief)
     wf.add_node("review", review)
+    wf.add_node("retain_memory", retain_memory)
     wf.add_node("meta_reflect", meta_reflect)
 
     # Define flow: fetch cascade → prefilter → conditional → LLM pipeline
@@ -77,7 +80,8 @@ def build_hound_graph():
     wf.add_edge("score_items", "summarize_themes")
     wf.add_edge("summarize_themes", "write_brief")
     wf.add_edge("write_brief", "review")
-    wf.add_edge("review", "meta_reflect")
+    wf.add_edge("review", "retain_memory")
+    wf.add_edge("retain_memory", "meta_reflect")
     wf.add_edge("meta_reflect", END)
 
     return wf.compile()

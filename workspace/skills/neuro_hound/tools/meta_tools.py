@@ -315,3 +315,74 @@ def tool_propose_source(args: Dict, state: Dict) -> str:
     return (f"Proposed new {source_type} source: {value}\n"
             f"Reason: {reason}\n"
             "Logged for human review in meta_actions output.")
+
+
+@_register(
+    name="reflect_on_memory",
+    description="Review discovery memory health: report active/cold/promotable entities. "
+                "Shows which entities are being consistently found vs. going cold. "
+                "Use after assess_coverage to understand persistence.",
+    parameters={},
+)
+def tool_reflect_on_memory(args: Dict, state: Dict) -> str:
+    from tools.memory import load_memory, get_memory_summary, get_promotion_candidates
+
+    memory = state.get("_discovery_memory") or load_memory()
+    summary = get_memory_summary(memory)
+
+    candidates = get_promotion_candidates(memory)
+    if candidates:
+        promo_lines = [f"\nPromotion-ready (seen {PROMO_MIN}+ times, score >= 7):"]
+        for c in candidates[:5]:
+            promo_lines.append(
+                f"  - {c['name']} (seen {c['times_seen']}x, best score {c['best_score']}, "
+                f"category: {c['best_category']})"
+            )
+        summary += "\n".join(promo_lines)
+
+    return summary
+
+
+PROMO_MIN = 4
+
+
+@_register(
+    name="promote_entity_to_watchlist",
+    description="Promote a consistently-seen entity from discovery memory to the company watchlist in config.yaml.",
+    parameters={"entity_name": "Name of the entity to promote"},
+)
+def tool_promote_entity(args: Dict, state: Dict) -> str:
+    from tools.memory import load_memory, save_memory, mark_promoted, _entity_key
+    import yaml
+
+    entity_name = args.get("entity_name", "")
+    if not entity_name:
+        return "ERROR: entity_name is required."
+
+    memory = state.get("_discovery_memory") or load_memory()
+    key = _entity_key(entity_name)
+    ent = memory.get("entities", {}).get(key)
+
+    if not ent:
+        return f"Entity '{entity_name}' not found in discovery memory."
+
+    if ent.get("status") == "promoted":
+        return f"Entity '{entity_name}' already promoted."
+
+    from tools.config import get_watchlist_company_names, CONFIG_PATH
+    existing = [n.lower() for n in get_watchlist_company_names()]
+    if entity_name.lower() in existing:
+        mark_promoted(memory, key)
+        save_memory(memory)
+        return f"Entity '{entity_name}' already in watchlist — marked as promoted in memory."
+
+    mark_promoted(memory, key)
+    save_memory(memory)
+    state["_discovery_memory"] = memory
+
+    return (f"Entity '{entity_name}' marked as promoted in memory. "
+            f"To complete promotion, add it to company_watchlist in config.yaml:\n"
+            f"  - name: {entity_name}\n"
+            f"    aliases: [\"{entity_name.lower()}\"]\n"
+            f"    enabled: true\n"
+            f"(Auto-editing config.yaml is deferred to human review for safety.)")
