@@ -19,7 +19,9 @@ Inserted in the pipeline between review and retain_memory:
     review → cluster_stories → retain_memory → meta_reflect
 """
 import json
+import re
 from typing import Any, Dict, List
+from urllib.parse import urlparse
 
 from state import HoundState
 from tools.llm import create_llm, invoke_llm, parse_json
@@ -109,6 +111,10 @@ def cluster_stories(state: HoundState) -> HoundState:
             print("  [warn] Clustering returned non-list, skipping")
             return state
 
+        splits = _split_mismerged_papers(scored, clusters)
+        if splits > 0:
+            print(f"  [fix] Post-validation split {splits} mismerged academic papers")
+
         _apply_clusters(scored, clusters)
 
         multi_clusters = [c for c in clusters if len(c.get("indices", [])) > 1]
@@ -149,6 +155,103 @@ def _build_items_text(scored: list, candidates: list) -> str:
         lines.append(f"    ASSESSMENT: {assessment}")
         lines.append("")
     return "\n".join(lines)
+
+
+_ACADEMIC_DOMAINS = {
+    "medrxiv.org", "biorxiv.org", "arxiv.org", "pmc.ncbi.nlm.nih.gov",
+    "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org", "cell.com",
+    "thelancet.com", "nejm.org", "ieee.org", "iopscience.iop.org",
+    "doi.org",
+}
+
+_DOI_RE = re.compile(r"10\.\d{4,}/[^\s]+")
+
+
+def _is_academic(item: dict) -> bool:
+    """Check if an item is an academic paper based on source/URL."""
+    url = item.get("url", "")
+    source = item.get("source", "").lower()
+    source_id = item.get("source_id", "").lower()
+    if any(d in url for d in _ACADEMIC_DOMAINS):
+        return True
+    if any(kw in source_id for kw in ("pubmed", "biorxiv", "medrxiv", "arxiv", "jne")):
+        return True
+    if "preprint" in item.get("source_category", ""):
+        return True
+    return False
+
+
+def _extract_doi(item: dict) -> str:
+    """Extract DOI from URL or meta fields."""
+    url = item.get("url", "")
+    meta = item.get("meta", "")
+    for text in (url, meta):
+        m = _DOI_RE.search(text)
+        if m:
+            return m.group(0).rstrip(".,;)")
+    return ""
+
+
+def _paper_identity(item: dict) -> str:
+    """Fingerprint for an academic paper — DOI if available, else normalized URL."""
+    doi = _extract_doi(item)
+    if doi:
+        return f"doi:{doi}"
+    url = item.get("url", "").rstrip("/").split("?")[0]
+    if url.endswith(".pdf"):
+        url = url[:-4]
+    return url
+
+
+def _split_mismerged_papers(scored: list, clusters: list) -> int:
+    """Post-LLM validation: split clusters that incorrectly merge different papers.
+
+    If a cluster contains multiple academic papers with different DOIs/URLs,
+    each distinct paper becomes its own single-item cluster. News articles
+    and company pages are left in the original cluster.
+    """
+    total_splits = 0
+
+    new_clusters = []
+    for cluster in clusters:
+        indices = cluster.get("indices", [])
+        label = cluster.get("label", "")
+        if len(indices) < 2:
+            new_clusters.append(cluster)
+            continue
+
+        valid = [i for i in indices if 0 <= i < len(scored)]
+        academic = [(i, _paper_identity(scored[i])) for i in valid if _is_academic(scored[i])]
+        non_academic = [i for i in valid if not _is_academic(scored[i])]
+
+        if len(academic) < 2:
+            new_clusters.append(cluster)
+            continue
+
+        # Group academic items by identity
+        by_identity: Dict[str, List[int]] = {}
+        for idx, identity in academic:
+            by_identity.setdefault(identity, []).append(idx)
+
+        if len(by_identity) <= 1:
+            new_clusters.append(cluster)
+            continue
+
+        # Multiple distinct papers incorrectly merged — split them
+        for identity, group_indices in by_identity.items():
+            combined = group_indices + non_academic
+            non_academic = []  # non-academic items go with the first paper only
+            paper_title = scored[group_indices[0]].get("title", "")[:60]
+            new_clusters.append({
+                "label": paper_title,
+                "indices": combined,
+            })
+
+        total_splits += len(by_identity) - 1
+
+    clusters.clear()
+    clusters.extend(new_clusters)
+    return total_splits
 
 
 def _apply_clusters(scored: List[Dict[str, Any]], clusters: list):

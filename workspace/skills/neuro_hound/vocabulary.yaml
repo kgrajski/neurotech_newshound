@@ -252,6 +252,16 @@ provenance:
     - an implant
     - has implant
     - developing implant
+    - 100 electrode
+    - each electrode
+    - the electrode
+    - to electrode
+    - brain implants
+    - brain implant
+    - an implant
+    - robotically implant
+    - human implant
+    - has implant
 materials_terms:
   materials:
   - graphene electrodes
@@ -308,3 +318,17 @@ general_terms:
   - has implant
   - safely implant
   - beinao implants
+electrode_terms:
+  implantable_bci:
+  - 100 electrode
+  - each electrode
+  - the electrode
+  - to electrode
+implant_terms:
+  implantable_bci:
+  - brain implants
+  - brain implant
+  - an implant
+  - robotically implant
+  - human implant
+  - has implant
