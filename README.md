@@ -60,86 +60,122 @@ The nightly pipeline runs in ~2.5 minutes and costs ~$0.009 per run with `gpt-4o
 
 The system has two operating modes: a **nightly pipeline** (7-day lookback with dedup, plus Saturday weekly digest) that monitors current activity across 24+ sources, and a **backfill mode** that builds historical depth from archival APIs (PubMed, bioRxiv, medRxiv, arXiv). Both modes feed the same dedup history, source registry, and discovery memory.
 
-### Nightly Pipeline
+The architecture is presented in three views: what the pipeline *does*, how it's *controlled*, and what it *remembers*.
 
-```mermaid
-flowchart TD
-    subgraph config ["Configuration Layer (YAML, no code edits)"]
-        V["vocabulary.yaml<br>(126+ domain terms)"]
-        W["config.yaml<br>(sources, watchlist,<br>curated industry)"]
-        P["prompts.yaml<br>(LLM templates)"]
-    end
+### A. What It Does — Nightly Pipeline
 
-    V -->|"builds query<br>dynamically"| A
-    W -->|"auto-generates<br>queries + feeds"| B
-    W -->|"watchlist aliases<br>→ Tavily queries"| C
-
-    subgraph fetch ["Fetch (no LLM cost)"]
-        A["fetch_pubmed<br>(NCBI E-utilities)"] --> CT["fetch_clinicaltrials<br>(ClinicalTrials.gov API v2)"]
-        CT --> B["fetch_rss<br>(19+ feeds: journals,<br>preprints, Substacks,<br>press, FDA)"]
-        B --> PP["fetch_preprints_api<br>(medRxiv + bioRxiv<br>content API)"]
-        PP --> C["fetch_tavily<br>(ensemble retrieval:<br>wideband + watchlist<br>+ curated sources)"]
-        C --> D["save_registry<br>(per-source stats)"]
-    end
-
-    D --> E["prefilter<br>(regex + date gate<br>+ dedup history)"]
-
-    E -->|"conditional edge<br>(skip if empty)"| F
-
-    subgraph llm ["LLM Pipeline"]
-        F["score_items<br>(LLM × N items)"] --> G["summarize_themes<br>(cluster + significance)"]
-        G --> H["write_brief<br>(executive briefing)"]
-        H --> I["review<br>(Reflection Pattern)"]
-    end
-
-    I --> CL["cluster_stories<br>(LLM story-level dedup)"]
-
-    CL --> RM
-
-    subgraph memory ["Discovery Memory (Phase 10b)"]
-        RM["retain_memory<br>(Retain: update entities)"]
-        DM[("discovery_memory.json<br>(persistent)")]
-        RM -->|"write"| DM
-        DM -->|"recall queries"| C
-    end
-
-    RM --> M
-
-    subgraph react ["ReAct Meta-Agent (Phase 9)"]
-        M["meta_reflect<br>(Thought → Action → Observe)"]
-        M -.->|"tool calls"| MT["check_vocabulary_gaps<br>check_source_health<br>discover_companies<br>assess_coverage<br>reflect_on_memory<br>promote_entity"]
-    end
-
-    M --> J["HTML Report · Dashboard<br>Markdown · Alerts JSON · MLflow"]
-    M -->|"new companies"| K["discoveries.yaml<br>(human review)"]
-    M -->|"trace log"| MA["meta_actions.yaml"]
-    K -->|"promote"| W
-
-    style config fill:#e8f5e9,stroke:#43a047
-    style fetch fill:#f0f4f8,stroke:#4a90d9
-    style llm fill:#fff3e0,stroke:#e67e22
-    style memory fill:#fce4ec,stroke:#c62828
-    style react fill:#e3f2fd,stroke:#1565c0
-```
-
-### Backfill Mode (Phase 8)
+The end-to-end flow, showing where the system makes decisions (diamonds) and which role performs each step.
 
 ```mermaid
 flowchart LR
-    subgraph backfill ["Historical Backfill (5-year depth)"]
-        BP["PubMed API<br>(POST, 6-month chunks)"]
-        BB["bioRxiv API<br>(3-month chunks,<br>client-side filter)"]
-        BM["medRxiv API<br>(3-month chunks,<br>client-side filter)"]
-        BA["arXiv API<br>(search + paginate)"]
+    subgraph sources ["🔍 Sources (24+)"]
+        S1["PubMed\nClinicalTrials.gov"]
+        S2["19 RSS feeds\n(journals, preprints,\npress, FDA)"]
+        S3["medRxiv + bioRxiv\ncontent API"]
+        S4["Tavily ensemble\n(wideband + watchlist\n+ company news)"]
     end
 
-    BP --> RS["Regex Score<br>(vocabulary-based)"]
+    sources --> F["🧹 Gatekeeper\nregex · date gate · dedup\n(free, deterministic)"]
+
+    F --> D1{items to\nscore?}
+    D1 -->|no| SKIP["Skip LLM\n(quiet week)"]
+    D1 -->|yes| RA
+
+    subgraph analysis ["🧠 Analysis"]
+        RA["Research Analyst\nscore each item\n(LLM × N)"]
+        RA --> TH["Synthesizer\ncluster themes\nwrite executive brief"]
+        TH --> RV["Reviewer\ncritique · adjust scores\nflag vaporware"]
+    end
+
+    RV --> SD["🔗 Story Dedup\ncluster same-story items\n+ DOI post-validation"]
+    SD --> MA["🔭 Scout\nReAct meta-agent\nchooses which tools to call"]
+
+    MA --> D2{improve\nsomething?}
+    D2 -.->|vocab gaps| T1["add terms"]
+    D2 -.->|cold source| T2["flag source"]
+    D2 -.->|new company| T3["discover + propose"]
+    D2 -.->|coverage gap| T4["assess + suggest"]
+    D2 -->|done| OUT
+
+    subgraph OUT ["📊 Outputs"]
+        O1["HTML briefing\n+ dashboard"]
+        O2["Alerts JSON\nMarkdown report"]
+        O3["MLflow run log"]
+        O4["WhatsApp / Telegram\nnotification"]
+    end
+
+    style sources fill:#f0f4f8,stroke:#4a90d9
+    style analysis fill:#fff3e0,stroke:#e67e22
+    style OUT fill:#e8f5e9,stroke:#43a047
+```
+
+### B. How It's Controlled — Configuration Layers
+
+No code edits needed to change sources, models, prompts, or vocabulary. Each layer has one job.
+
+```mermaid
+flowchart LR
+    SOUL["🪪 Identity\nSOUL.md\n(who am I?)"] --> SKILL["📋 Specification\nSKILL.md\n(how do I work?)"]
+
+    SKILL --> CFGBOX
+
+    subgraph CFGBOX ["⚙️ Runtime Config (YAML)"]
+        C1["config.yaml\nsources · watchlist\nmodels · cadence"]
+        C2["prompts.yaml\nLLM templates"]
+        C3["vocabulary.yaml\n126+ domain terms"]
+    end
+
+    CFGBOX --> ENG["🔧 Engine\nLangGraph StateGraph\nnodes · tools · edges"]
+
+    style CFGBOX fill:#e8f5e9,stroke:#43a047
+```
+
+### C. What It Remembers — Persistence & Observability
+
+The system learns across runs. Memory feeds back into retrieval; MLflow tracks every experiment.
+
+```mermaid
+flowchart LR
+    subgraph persist ["💾 Persistence"]
+        H["seen_items.json\ndedup history\n(skip low-value repeats)"]
+        DM["discovery_memory.json\nentity lifecycle\n(active → cold → promoted)"]
+        SR["sources.json\nper-source yield stats"]
+    end
+
+    subgraph observe ["📈 Observability"]
+        ML["MLflow\nparams · tokens · cost\nartifacts per run"]
+        DA["Dashboard\nsource health · run health\nmeta-agent trace"]
+        ER["Report warnings\nerrors surfaced in HTML\n+ notifications"]
+    end
+
+    DM -->|"recall queries\nfor cold entities"| TAVILY["Tavily\n(next run)"]
+    DM -->|"promote entities"| CFG["config.yaml\nwatchlist"]
+    H -->|"skip / re-evaluate"| FILTER["prefilter\n(next run)"]
+
+    style persist fill:#fce4ec,stroke:#c62828
+    style observe fill:#e3f2fd,stroke:#1565c0
+```
+
+### Backfill Mode
+
+A separate entry point (`backfill.py`) fetches 5 years of historical data from archival APIs (PubMed, bioRxiv, medRxiv, arXiv), regex-scores them, and feeds the dedup history. No LLM cost.
+
+```mermaid
+flowchart LR
+    subgraph backfill ["📚 Historical Backfill (5-year depth)"]
+        BP["PubMed API"]
+        BB["bioRxiv API"]
+        BM["medRxiv API"]
+        BA["arXiv API"]
+    end
+
+    BP --> RS["Regex Score\n(vocabulary-based)"]
     BB --> RS
     BM --> RS
     BA --> RS
 
-    RS --> DH["Dedup History<br>(seen_items.json)"]
-    RS --> AR["Backfill Archive<br>(JSON + top items)"]
+    RS --> DH["Dedup History"]
+    RS --> AR["Backfill Archive"]
 
     style backfill fill:#f3e5f5,stroke:#8e24aa
 ```
