@@ -213,6 +213,8 @@ def _parse_react_response(response: str) -> Tuple[str, str, Dict]:
     action_match = re.search(r"ACTION:\s*(.+?)(?=\nACTION_INPUT:|\Z)", response, re.DOTALL)
     if action_match:
         action = action_match.group(1).strip()
+        # LLMs sometimes append () to tool names — strip them
+        action = re.sub(r"\(\)$", "", action)
 
     input_match = re.search(r"ACTION_INPUT:\s*(.+?)(?=\nTHOUGHT:|\nOBSERVATION:|\Z)", response, re.DOTALL)
     if input_match:

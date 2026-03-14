@@ -41,6 +41,7 @@ def get_tool_descriptions() -> str:
 
 def call_tool(name: str, args: Dict[str, Any], state: Dict[str, Any]) -> str:
     """Dispatch a tool call by name. Returns the observation string."""
+    name = name.strip().rstrip("()")
     if name not in TOOL_REGISTRY:
         return f"ERROR: Unknown tool '{name}'. Available: {', '.join(TOOL_REGISTRY.keys())}"
     try:
