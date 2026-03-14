@@ -172,28 +172,41 @@ flowchart LR
 - [**HTML Intelligence Briefing**](https://kgrajski.github.io/neurotech_newshound/docs/samples/report.html) — the full report with executive brief, themes, alerts, and scored items
 - [**Operational Dashboard**](https://kgrajski.github.io/neurotech_newshound/docs/samples/dashboard.html) — source health, config, run metrics, dedup history
 
-From a real run (2026-02-16, 7-day lookback, 21 sources):
+From a real run (2026-03-14, 7-day lookback, 24 sources, Phases 11–13 active):
 
 | Metric | Value |
 |--------|-------|
-| Raw items fetched | 485 |
-| Sources active | 21 |
-| After regex pre-filter | 56 |
-| LLM-scored items | 56 |
-| Priority alerts (9–10) | 6 |
+| Raw items fetched | 629 |
+| Sources active | 24 (incl. medRxiv/bioRxiv API, company news pages) |
+| After regex + date gate | 101 |
+| LLM-scored items | 101 |
+| Unique stories (after clustering) | 81 |
+| Redundant items demoted | 20 |
+| Priority alerts (9–10, unique) | 11 |
 | Themes identified | 4 (1 breakthrough) |
-| Total tokens | 38,397 |
-| Cost | $0.009 |
-| Duration | ~2.5 min |
+| Meta-agent tool calls | 5 (vocabulary, source health, coverage, discovery) |
+| Total tokens | 94,131 |
+| Cost | $0.020 |
+| Duration | ~10 min |
 
-**Alerts detected** (from Tavily wideband — not in any curated RSS feed):
-- *"Neuralink competitor Paradromics completes first human brain implant"* — score 9 (implantable_bci)
-- *"Precision Neuroscience receives FDA clearance for brain implant"* — score 9 (regulatory)
-- *"Brain implant cleared by FDA for Musk Neuralink rival Precision Neuroscience"* — score 9 (regulatory)
+**Alerts detected** — 11 unique stories after story-level dedup (down from 21 raw):
+- *"Paradromics Completes First-In-Human Recording"* — score 9, **6 sources** (implantable_bci)
+- *"FDA Clears Brain–Computer Interface Device"* — score 9, **2 sources** (regulatory)
+- *"China approves world's first brain implant for commercialisation"* — score 9, **2 sources** (regulatory)
+- *"Long-term independent use of an intracortical brain-computer interface"* — score 9 (implantable_bci)
+- *"Self-paced silent speech brain-computer interface for device control"* — score 9 (ecog_seeg)
+- *"Neuralink's First User Describes Life with Brain Chip"* — score 9 (implantable_bci)
+- ...plus 5 more unique alerts
 
-**Theme: "Advancements in Implantable BCIs"** — rated **breakthrough** (6 items from PubMed, Tavily, STAT News).
+Each multi-source alert shows "also reported by" links in the report. The Paradromics story, for example, was covered by CNBC, BioWorld, Wired, and Paradromics' own press page — all collapsed into one alert.
 
-The LLM correctly distinguished `ECOG` (oncology performance status) from `ECoG` (electrocorticography) — scoring the former as 1/out_of_scope and the latter as 7-8/ecog_seeg.
+**Theme: "Implantable BCI Milestones"** — rated **breakthrough** (items from Tavily, bioRxiv API, company news pages).
+
+**Story clustering in action:** The raw pipeline produced 21 score-9 alerts. After LLM clustering + DOI-based post-validation, these collapsed to 11 unique stories. The remaining 10 were duplicates from different outlets covering the same event.
+
+**Date gate in action:** 26 stale items removed — Tavily returned articles from months ago despite a 7-day lookback parameter. The date gate caught them before LLM scoring.
+
+**Academic coverage:** bioRxiv content API contributed 26 BCI-relevant preprints (supplements the RSS feed). medRxiv API added 1 item. Site-scoped Tavily safety net queries provided additional preprint coverage.
 
 ---
 
