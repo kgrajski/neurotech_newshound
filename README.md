@@ -64,49 +64,35 @@ The architecture is presented in three views: what the pipeline *does*, how it's
 
 ### A. What It Does — Nightly Pipeline
 
-The end-to-end flow, showing where the system makes decisions (diamonds) and which role performs each step.
+The end-to-end flow wraps top-to-bottom in three stages. Diamonds show where the system decides; roles label each step.
 
 ```mermaid
-flowchart LR
-    subgraph sources ["🔍 Sources (24+)"]
-        S1["PubMed\nClinicalTrials.gov"]
-        S2["19 RSS feeds\n(journals, preprints,\npress, FDA)"]
-        S3["medRxiv + bioRxiv\ncontent API"]
-        S4["Tavily ensemble\n(wideband + watchlist\n+ company news)"]
+flowchart TD
+    subgraph gather ["① Gather"]
+        direction LR
+        SRC["🔍 Sources (24+)\nPubMed · ClinTrials\nRSS · APIs · Tavily"] --> GK["🧹 Gatekeeper\nregex · date gate\ndedup history"] --> D1{items to\nscore?}
     end
 
-    sources --> F["🧹 Gatekeeper\nregex · date gate · dedup\n(free, deterministic)"]
-
-    F --> D1{items to\nscore?}
-    D1 -->|no| SKIP["Skip LLM\n(quiet week)"]
+    D1 -->|no| SKIP["⏭️ Skip LLM\n(quiet week)"]
     D1 -->|yes| RA
 
-    subgraph analysis ["🧠 Analysis"]
-        RA["Research Analyst\nscore each item\n(LLM × N)"]
-        RA --> TH["Synthesizer\ncluster themes\nwrite executive brief"]
-        TH --> RV["Reviewer\ncritique · adjust scores\nflag vaporware"]
+    subgraph analyze ["② Analyze"]
+        direction LR
+        RA["🧠 Research Analyst\nscore each item\n(LLM × N)"] --> SY["📝 Synthesizer\nthemes · executive\nbriefing"] --> RV["🔬 Reviewer\ncritique · adjust\nflag vaporware"]
     end
 
-    RV --> SD["🔗 Story Dedup\ncluster same-story items\n+ DOI post-validation"]
-    SD --> MA["🔭 Scout\nReAct meta-agent\nchooses which tools to call"]
+    RV --> SD
 
-    MA --> D2{improve\nsomething?}
-    D2 -.->|vocab gaps| T1["add terms"]
-    D2 -.->|cold source| T2["flag source"]
-    D2 -.->|new company| T3["discover + propose"]
-    D2 -.->|coverage gap| T4["assess + suggest"]
-    D2 -->|done| OUT
-
-    subgraph OUT ["📊 Outputs"]
-        O1["HTML briefing\n+ dashboard"]
-        O2["Alerts JSON\nMarkdown report"]
-        O3["MLflow run log"]
-        O4["WhatsApp / Telegram\nnotification"]
+    subgraph refine ["③ Refine"]
+        direction LR
+        SD["🔗 Story Dedup\ncluster same-story\nDOI post-validation"] --> SC["🔭 Scout\nReAct meta-agent\nvocab · sources · gaps"]
     end
 
-    style sources fill:#f0f4f8,stroke:#4a90d9
-    style analysis fill:#fff3e0,stroke:#e67e22
-    style OUT fill:#e8f5e9,stroke:#43a047
+    SC --> OUT["📊 Outputs\nHTML brief · dashboard\nMLflow · notifications"]
+
+    style gather fill:#f0f4f8,stroke:#4a90d9
+    style analyze fill:#fff3e0,stroke:#e67e22
+    style refine fill:#e3f2fd,stroke:#1565c0
 ```
 
 ### B. How It's Controlled — Configuration Layers
@@ -119,10 +105,11 @@ flowchart LR
 
     SKILL --> CFGBOX
 
-    subgraph CFGBOX ["⚙️ Runtime Config (YAML)"]
+    subgraph CFGBOX ["⚙️ Runtime Config"]
+        direction LR
         C1["config.yaml\nsources · watchlist\nmodels · cadence"]
-        C2["prompts.yaml\nLLM templates"]
-        C3["vocabulary.yaml\n126+ domain terms"]
+        C2["prompts.yaml\nLLM templates\nscoring rubrics"]
+        C3["vocabulary.yaml\n126+ domain terms\nauto-growing"]
     end
 
     CFGBOX --> ENG["🔧 Engine\nLangGraph StateGraph\nnodes · tools · edges"]
@@ -137,20 +124,20 @@ The system learns across runs. Memory feeds back into retrieval; MLflow tracks e
 ```mermaid
 flowchart LR
     subgraph persist ["💾 Persistence"]
-        H["seen_items.json\ndedup history\n(skip low-value repeats)"]
-        DM["discovery_memory.json\nentity lifecycle\n(active → cold → promoted)"]
-        SR["sources.json\nper-source yield stats"]
+        H["seen_items.json\ndedup history\nskip known items"]
+        DM["discovery_memory.json\nentity lifecycle\nactive → cold → promoted"]
+        SR["sources.json\nper-source stats\nyield tracking"]
     end
 
     subgraph observe ["📈 Observability"]
         ML["MLflow\nparams · tokens · cost\nartifacts per run"]
-        DA["Dashboard\nsource health · run health\nmeta-agent trace"]
-        ER["Report warnings\nerrors surfaced in HTML\n+ notifications"]
+        DA["Dashboard HTML\nsource health\nrun health"]
+        ER["Report warnings\nerrors in HTML\n+ notifications"]
     end
 
     DM -->|"recall queries\nfor cold entities"| TAVILY["Tavily\n(next run)"]
     DM -->|"promote entities"| CFG["config.yaml\nwatchlist"]
-    H -->|"skip / re-evaluate"| FILTER["prefilter\n(next run)"]
+    H -->|"skip / filter"| FILTER["prefilter\n(next run)"]
 
     style persist fill:#fce4ec,stroke:#c62828
     style observe fill:#e3f2fd,stroke:#1565c0
@@ -162,20 +149,17 @@ A separate entry point (`backfill.py`) fetches 5 years of historical data from a
 
 ```mermaid
 flowchart LR
-    subgraph backfill ["📚 Historical Backfill (5-year depth)"]
-        BP["PubMed API"]
-        BB["bioRxiv API"]
-        BM["medRxiv API"]
-        BA["arXiv API"]
+    subgraph backfill ["📚 Backfill (5-year)"]
+        direction LR
+        BP["PubMed API\n6-month chunks\nE-utilities"] --> RS
+        BB["bioRxiv API\n3-month chunks\nclient filter"] --> RS
+        BM["medRxiv API\n3-month chunks\nclient filter"] --> RS
+        BA["arXiv API\nsearch + paginate\nq-bio.NC"] --> RS
     end
 
-    BP --> RS["Regex Score\n(vocabulary-based)"]
-    BB --> RS
-    BM --> RS
-    BA --> RS
-
-    RS --> DH["Dedup History"]
-    RS --> AR["Backfill Archive"]
+    RS["Regex Score\nvocabulary-based\n(no LLM cost)"]
+    RS --> DH["Dedup History\nseen_items.json"]
+    RS --> AR["Backfill Archive\nJSON + top items"]
 
     style backfill fill:#f3e5f5,stroke:#8e24aa
 ```
