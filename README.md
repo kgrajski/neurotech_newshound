@@ -70,25 +70,25 @@ The end-to-end flow wraps top-to-bottom in three stages. Diamonds show where the
 flowchart TD
     subgraph gather ["① Gather"]
         direction LR
-        SRC["🔍 Sources (24+)\nPubMed · ClinTrials\nRSS · APIs · Tavily"] --> GK["🧹 Gatekeeper\nregex · date gate\ndedup history"] --> D1{items to\nscore?}
+        SRC["🔍 Sources (24+)<br>PubMed · ClinTrials<br>RSS · APIs · Tavily"] --> GK["🧹 Gatekeeper<br>regex · date gate<br>dedup history"] --> D1{items to<br>score?}
     end
 
-    D1 -->|no| SKIP["⏭️ Skip LLM\n(quiet week)"]
+    D1 -->|no| SKIP["⏭️ Skip LLM<br>(quiet week)"]
     D1 -->|yes| RA
 
     subgraph analyze ["② Analyze"]
         direction LR
-        RA["🧠 Research Analyst\nscore each item\n(LLM × N)"] --> SY["📝 Synthesizer\nthemes · executive\nbriefing"] --> RV["🔬 Reviewer\ncritique · adjust\nflag vaporware"]
+        RA["🧠 Research Analyst<br>score each item<br>(LLM × N)"] --> SY["📝 Synthesizer<br>themes · executive<br>briefing"] --> RV["🔬 Reviewer<br>critique · adjust<br>flag vaporware"]
     end
 
     RV --> SD
 
     subgraph refine ["③ Refine"]
         direction LR
-        SD["🔗 Story Dedup\ncluster same-story\nDOI post-validation"] --> SC["🔭 Scout\nReAct meta-agent\nvocab · sources · gaps"]
+        SD["🔗 Story Dedup<br>cluster same-story<br>DOI post-validation"] --> SC["🔭 Scout<br>ReAct meta-agent<br>vocab · sources · gaps"]
     end
 
-    SC --> OUT["📊 Outputs\nHTML brief · dashboard\nMLflow · notifications"]
+    SC --> OUT["📊 Outputs<br>HTML brief · dashboard<br>MLflow · notifications"]
 
     style gather fill:#f0f4f8,stroke:#4a90d9
     style analyze fill:#fff3e0,stroke:#e67e22
@@ -101,18 +101,18 @@ No code edits needed to change sources, models, prompts, or vocabulary. Each lay
 
 ```mermaid
 flowchart LR
-    SOUL["🪪 Identity\nSOUL.md\n(who am I?)"] --> SKILL["📋 Specification\nSKILL.md\n(how do I work?)"]
+    SOUL["🪪 Identity<br>SOUL.md<br>(who am I?)"] --> SKILL["📋 Specification<br>SKILL.md<br>(how do I work?)"]
 
     SKILL --> CFGBOX
 
     subgraph CFGBOX ["⚙️ Runtime Config"]
         direction LR
-        C1["config.yaml\nsources · watchlist\nmodels · cadence"]
-        C2["prompts.yaml\nLLM templates\nscoring rubrics"]
-        C3["vocabulary.yaml\n126+ domain terms\nauto-growing"]
+        C1["config.yaml<br>sources · watchlist<br>models · cadence"]
+        C2["prompts.yaml<br>LLM templates<br>scoring rubrics"]
+        C3["vocabulary.yaml<br>126+ domain terms<br>auto-growing"]
     end
 
-    CFGBOX --> ENG["🔧 Engine\nLangGraph StateGraph\nnodes · tools · edges"]
+    CFGBOX --> ENG["🔧 Engine<br>LangGraph StateGraph<br>nodes · tools · edges"]
 
     style CFGBOX fill:#e8f5e9,stroke:#43a047
 ```
@@ -124,20 +124,20 @@ The system learns across runs. Memory feeds back into retrieval; MLflow tracks e
 ```mermaid
 flowchart LR
     subgraph persist ["💾 Persistence"]
-        H["seen_items.json\ndedup history\nskip known items"]
-        DM["discovery_memory.json\nentity lifecycle\nactive → cold → promoted"]
-        SR["sources.json\nper-source stats\nyield tracking"]
+        H["seen_items.json<br>dedup history<br>skip known items"]
+        DM["discovery_memory.json<br>entity lifecycle<br>active → cold → promoted"]
+        SR["sources.json<br>per-source stats<br>yield tracking"]
     end
 
     subgraph observe ["📈 Observability"]
-        ML["MLflow\nparams · tokens · cost\nartifacts per run"]
-        DA["Dashboard HTML\nsource health\nrun health"]
-        ER["Report warnings\nerrors in HTML\n+ notifications"]
+        ML["MLflow<br>params · tokens · cost<br>artifacts per run"]
+        DA["Dashboard HTML<br>source health<br>run health"]
+        ER["Report warnings<br>errors in HTML<br>+ notifications"]
     end
 
-    DM -->|"recall queries\nfor cold entities"| TAVILY["Tavily\n(next run)"]
-    DM -->|"promote entities"| CFG["config.yaml\nwatchlist"]
-    H -->|"skip / filter"| FILTER["prefilter\n(next run)"]
+    DM -->|"recall queries<br>for cold entities"| TAVILY["Tavily<br>(next run)"]
+    DM -->|"promote entities"| CFG["config.yaml<br>watchlist"]
+    H -->|"skip / filter"| FILTER["prefilter<br>(next run)"]
 
     style persist fill:#fce4ec,stroke:#c62828
     style observe fill:#e3f2fd,stroke:#1565c0
@@ -151,15 +151,15 @@ A separate entry point (`backfill.py`) fetches 5 years of historical data from a
 flowchart LR
     subgraph backfill ["📚 Backfill (5-year)"]
         direction LR
-        BP["PubMed API\n6-month chunks\nE-utilities"] --> RS
-        BB["bioRxiv API\n3-month chunks\nclient filter"] --> RS
-        BM["medRxiv API\n3-month chunks\nclient filter"] --> RS
-        BA["arXiv API\nsearch + paginate\nq-bio.NC"] --> RS
+        BP["PubMed API<br>6-month chunks<br>E-utilities"] --> RS
+        BB["bioRxiv API<br>3-month chunks<br>client filter"] --> RS
+        BM["medRxiv API<br>3-month chunks<br>client filter"] --> RS
+        BA["arXiv API<br>search + paginate<br>q-bio.NC"] --> RS
     end
 
-    RS["Regex Score\nvocabulary-based\n(no LLM cost)"]
-    RS --> DH["Dedup History\nseen_items.json"]
-    RS --> AR["Backfill Archive\nJSON + top items"]
+    RS["Regex Score<br>vocabulary-based<br>(no LLM cost)"]
+    RS --> DH["Dedup History<br>seen_items.json"]
+    RS --> AR["Backfill Archive<br>JSON + top items"]
 
     style backfill fill:#f3e5f5,stroke:#8e24aa
 ```
