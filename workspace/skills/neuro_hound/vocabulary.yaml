@@ -239,6 +239,19 @@ provenance:
     - safely implant
     - electrodes implant
     - beinao implants
+    - 100 electrode
+    - the electrode
+    - to electrode
+    - 100 electrode
+    - the electrode
+    - to electrode
+    - safely implant
+    - this implant
+    - tiny electrodes
+    - each electrode
+    - an implant
+    - has implant
+    - developing implant
 materials_terms:
   materials:
   - graphene electrodes
@@ -256,10 +269,24 @@ implantable_bci_terms:
   - has implant
   - beinao implants
   - retinal implant
+  - 100 electrode
+  - the electrode
+  - to electrode
+  - safely implant
+  - this implant
   methods:
   - subdural electrodes
   - safely implant
   - electrodes implant
+  - 100 electrode
+  - the electrode
+  - to electrode
+  - tiny electrodes
+  - each electrode
+  - an implant
+  - has implant
+  regulatory:
+  - developing implant
 neurotechnology_terms:
   implantable_bci:
   - utah electrode

@@ -177,6 +177,25 @@ def get_watchlist_rss_feeds() -> List[Dict[str, Any]]:
     return feeds
 
 
+def get_watchlist_news_queries() -> List[str]:
+    """Generate site-scoped Tavily queries for company news/press pages.
+
+    Targets the primary news page for each watchlist company that has a
+    news_url configured. These go directly to the company's own
+    press page — the original and best source for company announcements.
+    """
+    companies = get_company_watchlist()
+    queries = []
+    for company in companies:
+        news_url = company.get("news_url", "")
+        if not news_url:
+            continue
+        domain = company.get("domain", "")
+        name = company.get("name", "")
+        queries.append(f'site:{domain} {name}')
+    return queries
+
+
 # ── Curated Industry Sources ────────────────────────────────────────
 
 def get_curated_industry_queries() -> List[str]:
@@ -193,11 +212,12 @@ def get_curated_industry_queries() -> List[str]:
 # ── Combined Tavily Queries ─────────────────────────────────────────
 
 def get_all_tavily_queries() -> List[str]:
-    """Merge static queries + watchlist-generated + curated industry queries."""
+    """Merge static + watchlist + company news pages + curated industry queries."""
     static = get_tavily_queries()
     watchlist = get_watchlist_tavily_queries()
+    news_pages = get_watchlist_news_queries()
     curated = get_curated_industry_queries()
-    return static + watchlist + curated
+    return static + watchlist + news_pages + curated
 
 
 def get_tavily_queries() -> List[str]:

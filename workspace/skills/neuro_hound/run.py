@@ -181,7 +181,7 @@ def run_phase2(args, out_dir: str):
             lines.append(notes)
             lines.append("")
 
-    # Alerts
+    # Alerts (skip cluster secondaries)
     alerts = final_state.get("alerts", [])
     lines.append("## Alerts (9-10)")
     lines.append("")
@@ -191,23 +191,35 @@ def run_phase2(args, out_dir: str):
             lines.append(f"  {a.get('assessment', '')}")
             if a.get("url"):
                 lines.append(f"  [{a.get('source', 'link')}]({a['url']})")
+            also = a.get("_also_reported_by", [])
+            if also:
+                sources = ", ".join(r.get("source", "?") for r in also)
+                lines.append(f"  *Also reported by: {sources}*")
             lines.append("")
     else:
         lines.append("_None this week._")
         lines.append("")
 
-    # Scored items
+    # Scored items (skip cluster secondaries in main list)
     scored = final_state.get("scored_items", [])
-    lines.append("## All Scored Items")
+    primary_items = [x for x in scored if not x.get("_cluster_secondary")]
+    lines.append(f"## All Scored Items ({len(primary_items)} unique stories)")
     lines.append("")
-    for x in scored[:50]:
+    for x in primary_items[:50]:
         adjusted = " (reviewer-adjusted)" if x.get("adjusted_by_reviewer") else ""
         vap = " [VAPORWARE]" if x.get("vaporware") else ""
-        lines.append(f"### [{x.get('llm_score', '?')}] {x.get('title', '')[:100]}{adjusted}{vap}")
+        cluster_tag = ""
+        if x.get("_cluster_size", 0) > 1:
+            cluster_tag = f" [{x['_cluster_size']} sources]"
+        lines.append(f"### [{x.get('llm_score', '?')}] {x.get('title', '')[:100]}{adjusted}{vap}{cluster_tag}")
         lines.append(f"- Category: {x.get('category', '?')} | Source: {x.get('source', '')}")
         lines.append(f"- Assessment: {x.get('assessment', '')}")
         if x.get("url"):
             lines.append(f"- Link: {x['url']}")
+        also = x.get("_also_reported_by", [])
+        if also:
+            also_links = ", ".join(f"[{r.get('source', '?')}]({r.get('url', '')})" for r in also)
+            lines.append(f"- Also reported by: {also_links}")
         lines.append("")
 
     # Near-miss / Watchlist (scored 3-4, potential false negatives)
@@ -292,6 +304,7 @@ def run_phase2(args, out_dir: str):
                 "tokens": tracker.input_tokens + tracker.output_tokens,
                 "source_breakdown": source_breakdown,
             },
+            errors=errors,
         )
         with open(out_html, "w") as f:
             f.write(html_content)
@@ -327,6 +340,7 @@ def run_phase2(args, out_dir: str):
                 "low_value": len(dedup_history) - high_val,
             },
             meta_actions=final_state.get("meta_actions", []),
+            errors=errors,
         )
         out_dashboard = os.path.join(out_dir, "dashboard.html")
         with open(out_dashboard, "w") as f:

@@ -1,10 +1,14 @@
-"""bioRxiv / medRxiv API fetcher for historical backfill.
+"""bioRxiv / medRxiv API fetcher — nightly pipeline + historical backfill.
 
 Uses the official content-detail API:
     https://api.biorxiv.org/details/{server}/{start}/{end}/{cursor}/json
 
 Returns 100 papers per page (all subjects). We filter client-side using
 the vocabulary regex because the API has no search/subject parameter.
+
+Two modes:
+  1. Nightly pipeline: fetch_preprint_items() — short lookback, few pages
+  2. Historical backfill: fetch_biorxiv_backfill() — multi-year, chunked
 
 Rate limiting: bioRxiv asks for ≤1 request/sec. We sleep 1.5s between pages.
 """
@@ -117,6 +121,32 @@ def fetch_biorxiv_window(
         time.sleep(RATE_LIMIT_SLEEP)
 
     return all_items
+
+
+def fetch_preprint_items(
+    server: str,
+    days: int = 7,
+    max_pages: int = 20,
+) -> List[Dict[str, Any]]:
+    """Fetch recent BCI-relevant preprints for the nightly pipeline.
+
+    Unlike the RSS feeds (which return all subjects and may be broken),
+    this queries the content API directly with a date window and filters
+    client-side for BCI relevance. Caps at max_pages to keep runtime
+    reasonable (~30s for 20 pages at 1.5s/page).
+    """
+    today = dt.date.today()
+    start = (today - dt.timedelta(days=days)).strftime("%Y-%m-%d")
+    end = today.strftime("%Y-%m-%d")
+
+    items = fetch_biorxiv_window(
+        server=server,
+        start_date=start,
+        end_date=end,
+        max_pages=max_pages,
+        verbose=False,
+    )
+    return items
 
 
 def fetch_biorxiv_backfill(

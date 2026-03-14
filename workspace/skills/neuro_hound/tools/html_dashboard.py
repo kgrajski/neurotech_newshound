@@ -40,6 +40,7 @@ def generate_dashboard(
     run_metadata: Optional[Dict[str, Any]] = None,
     history_summary: Optional[Dict[str, Any]] = None,
     meta_actions: Optional[List[Dict[str, Any]]] = None,
+    errors: Optional[List[str]] = None,
 ) -> str:
     """Generate the operational dashboard HTML."""
 
@@ -115,6 +116,25 @@ def generate_dashboard(
                 <div class="rs"><span class="rv">${run_metadata.get('cost', 0):.4f}</span><span class="rl">Cost</span></div>
                 <div class="rs"><span class="rv">{run_metadata.get('duration_seconds', 0):.0f}s</span><span class="rl">Duration</span></div>
             </div>
+        </div>"""
+
+    # Run Health — errors/warnings
+    health_html = ""
+    run_errors = errors or []
+    if run_errors:
+        error_rows = ""
+        for e in run_errors:
+            error_rows += f'<li>{_esc(str(e))}</li>'
+        health_html = f"""
+        <div class="info-card" style="border-left: 3px solid var(--accent-red);">
+            <h3 style="color: var(--accent-red);">Run Health — {len(run_errors)} Warning{'s' if len(run_errors) != 1 else ''}</h3>
+            <ul class="error-list">{error_rows}</ul>
+        </div>"""
+    else:
+        health_html = """
+        <div class="info-card" style="border-left: 3px solid #2ecc71;">
+            <h3 style="color: #2ecc71;">Run Health — All Clear</h3>
+            <p style="color: var(--muted);">All sources fetched successfully. No errors or warnings.</p>
         </div>"""
 
     # Meta-agent actions
@@ -228,6 +248,9 @@ tr:hover {{ background: rgba(88, 166, 255, 0.04); }}
 .meta-obs {{ font-size: 0.75rem; color: var(--muted); margin-top: 2px; }}
 .meta-summary {{ color: var(--accent-gold); font-size: 0.85rem; margin-top: 4px; }}
 
+.error-list {{ list-style: none; padding: 0; margin: 8px 0 0; }}
+.error-list li {{ background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.2); border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; font-size: 0.82rem; color: var(--text); }}
+
 .footer {{ text-align: center; padding: 16px 0; margin-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; }}
 .footer a {{ color: var(--accent-blue); text-decoration: none; }}
 </style>
@@ -249,6 +272,8 @@ tr:hover {{ background: rgba(88, 166, 255, 0.04); }}
 </div>
 
 {run_html}
+
+{health_html}
 
 {meta_html}
 

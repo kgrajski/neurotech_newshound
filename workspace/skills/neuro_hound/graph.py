@@ -2,9 +2,10 @@
 LangGraph workflow for the NeuroTech NewsHound agent.
 
 Architecture:
-    fetch_pubmed → fetch_clinicaltrials → fetch_rss → fetch_tavily → save_registry
-        → prefilter → [conditional] → score_items
-        → summarize_themes → write_brief → review → retain_memory → meta_reflect → END
+    fetch_pubmed → fetch_clinicaltrials → fetch_rss → fetch_preprints_api
+        → fetch_tavily → save_registry → prefilter → [conditional] → score_items
+        → summarize_themes → write_brief → review → cluster_stories
+        → retain_memory → meta_reflect → END
 
 Sources are registry-driven (sources.json):
     - PubMed (API), ClinicalTrials.gov (API), RSS feeds (journals, preprints, press, regulatory), Tavily (wideband)
@@ -21,11 +22,12 @@ Design Patterns:
 from langgraph.graph import StateGraph, END
 
 from state import HoundState
-from nodes.fetch import fetch_pubmed, fetch_clinicaltrials, fetch_rss, fetch_tavily, save_registry
+from nodes.fetch import fetch_pubmed, fetch_clinicaltrials, fetch_rss, fetch_preprints_api, fetch_tavily, save_registry
 from nodes.prefilter import prefilter
 from nodes.score import score_items
 from nodes.summarize import summarize_themes, write_brief
 from nodes.review import review
+from nodes.cluster import cluster_stories
 from nodes.retain_memory import retain_memory
 from nodes.meta_reflect import meta_reflect
 
@@ -49,6 +51,7 @@ def build_hound_graph():
     wf.add_node("fetch_pubmed", fetch_pubmed)
     wf.add_node("fetch_clinicaltrials", fetch_clinicaltrials)
     wf.add_node("fetch_rss", fetch_rss)
+    wf.add_node("fetch_preprints_api", fetch_preprints_api)
     wf.add_node("fetch_tavily", fetch_tavily)
     wf.add_node("save_registry", save_registry)
 
@@ -58,6 +61,7 @@ def build_hound_graph():
     wf.add_node("summarize_themes", summarize_themes)
     wf.add_node("write_brief", write_brief)
     wf.add_node("review", review)
+    wf.add_node("cluster_stories", cluster_stories)
     wf.add_node("retain_memory", retain_memory)
     wf.add_node("meta_reflect", meta_reflect)
 
@@ -65,7 +69,8 @@ def build_hound_graph():
     wf.set_entry_point("fetch_pubmed")
     wf.add_edge("fetch_pubmed", "fetch_clinicaltrials")
     wf.add_edge("fetch_clinicaltrials", "fetch_rss")
-    wf.add_edge("fetch_rss", "fetch_tavily")
+    wf.add_edge("fetch_rss", "fetch_preprints_api")
+    wf.add_edge("fetch_preprints_api", "fetch_tavily")
     wf.add_edge("fetch_tavily", "save_registry")
     wf.add_edge("save_registry", "prefilter")
 
@@ -80,7 +85,8 @@ def build_hound_graph():
     wf.add_edge("score_items", "summarize_themes")
     wf.add_edge("summarize_themes", "write_brief")
     wf.add_edge("write_brief", "review")
-    wf.add_edge("review", "retain_memory")
+    wf.add_edge("review", "cluster_stories")
+    wf.add_edge("cluster_stories", "retain_memory")
     wf.add_edge("retain_memory", "meta_reflect")
     wf.add_edge("meta_reflect", END)
 

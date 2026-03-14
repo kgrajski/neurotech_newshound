@@ -33,7 +33,26 @@ if python3 -u run.py >> "$LOG_FILE" 2>&1; then
     if [[ -f "$FULL_FILE" ]]; then
         THEME_COUNT=$(python3 -c "import json; d=json.load(open('${FULL_FILE}')); print(len(d.get('themes',[])) if isinstance(d,dict) else 0)" 2>/dev/null || echo 0)
     fi
-    MSG="NeuroTech NewsHound daily briefing (${TODAY}): ${ALERT_COUNT} alerts, ${THEME_COUNT} themes."
+    # Extract error/warning count from full.json
+    ERROR_COUNT=0
+    ERROR_DETAIL=""
+    if [[ -f "$FULL_FILE" ]]; then
+        ERROR_COUNT=$(python3 -c "import json; d=json.load(open('${FULL_FILE}')); print(len(d.get('errors',[])) if isinstance(d,dict) else 0)" 2>/dev/null || echo 0)
+        if [[ "$ERROR_COUNT" -gt 0 ]]; then
+            ERROR_DETAIL=$(python3 -c "
+import json
+d=json.load(open('${FULL_FILE}'))
+errs=d.get('errors',[])[:3]
+print('; '.join(str(e)[:60] for e in errs))
+" 2>/dev/null || echo "see report")
+        fi
+    fi
+
+    if [[ "$ERROR_COUNT" -gt 0 ]]; then
+        MSG="NeuroTech NewsHound (${TODAY}): ${ALERT_COUNT} alerts, ${THEME_COUNT} themes, ${ERROR_COUNT} warnings. Issues: ${ERROR_DETAIL}"
+    else
+        MSG="NeuroTech NewsHound (${TODAY}): ${ALERT_COUNT} alerts, ${THEME_COUNT} themes. All sources healthy."
+    fi
 
     # Check if weekly digest was also produced (run.py auto-detects the day)
     DIGEST_FILE="${ARCHIVE_DIR}/${TODAY}.weekly_digest.json"

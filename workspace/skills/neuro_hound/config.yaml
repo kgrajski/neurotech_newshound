@@ -243,32 +243,38 @@ company_watchlist:
   - name: Paradromics
     aliases: ["paradromics"]
     domain: "paradromics.com"
+    news_url: "https://www.paradromics.com/news"
     substack: "https://paradromics.substack.com/feed"
     enabled: true
 
   - name: Axoft
     aliases: ["axoft", "fleuron"]
     domain: "axoft.us"
+    news_url: "https://www.axoft.us/news"
     enabled: true
 
   - name: Synchron
     aliases: ["synchron", "stentrode"]
     domain: "synchron.com"
+    news_url: "https://synchron.com/news"
     enabled: true
 
   - name: Precision Neuroscience
     aliases: ["precision neuroscience", "precision neuro", "layer 7"]
     domain: "precisionneuro.io"
+    news_url: "https://www.precisionneuro.io/news"
     enabled: true
 
   - name: Blackrock Neurotech
     aliases: ["blackrock neurotech", "blackrock microsystems"]
     domain: "blackrockneurotech.com"
+    news_url: "https://blackrockneurotech.com/news"
     enabled: true
 
   - name: Neuralink
     aliases: ["neuralink"]
     domain: "neuralink.com"
+    news_url: "https://neuralink.com/blog"
     enabled: true
 
   - name: Cortera Neurotechnologies
@@ -309,6 +315,26 @@ curated_industry_sources:
   - name: IEEE Spectrum Biomedical
     url: "https://spectrum.ieee.org/"
     tavily_query: 'site:spectrum.ieee.org brain-computer interface OR neural implant OR BCI'
+    enabled: true
+
+  - name: Friedman Brain Institute (Mount Sinai)
+    url: "https://icahn.mssm.edu/research/friedman-brain-institute"
+    tavily_query: 'site:icahn.mssm.edu "brain institute" OR neurotech OR BCI OR "neural interface" OR neurostimulation'
+    enabled: true
+
+  - name: BCI Society
+    url: "https://bcisociety.org/"
+    tavily_query: 'site:bcisociety.org conference OR workshop OR symposium OR meeting'
+    enabled: true
+
+  - name: medRxiv Preprints
+    url: "https://www.medrxiv.org/"
+    tavily_query: 'site:medrxiv.org "brain-computer interface" OR "neural implant" OR ECoG OR "intracranial EEG" OR neuroprosthetic'
+    enabled: true
+
+  - name: bioRxiv Neuroscience
+    url: "https://www.biorxiv.org/"
+    tavily_query: 'site:biorxiv.org "brain-computer interface" OR "neural implant" OR "intracortical recording" OR neuroprosthetic'
     enabled: true
 
 # ── Tavily search queries ────────────────────────────────────────────

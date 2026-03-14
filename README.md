@@ -1,6 +1,6 @@
 # NeuroTech NewsHound
 
-An **agentic AI research analyst** that monitors the NeuroTech ecosystem — implantable BCIs, ECoG/sEEG, microstimulation, enabling materials — and produces nightly intelligence briefings (with weekly digests) featuring LLM-scored relevance, thematic synthesis, ensemble retrieval, persistent discovery memory, and a reflection-based quality review.
+An **agentic AI research analyst** that monitors the NeuroTech ecosystem — implantable BCIs, ECoG/sEEG, microstimulation, enabling materials — and produces nightly intelligence briefings (with weekly digests) featuring LLM-scored relevance, thematic synthesis, ensemble retrieval, persistent discovery memory, story-level deduplication, and a reflection-based quality review.
 
 Built with [LangGraph](https://github.com/langchain-ai/langgraph). Deployed on [OpenClaw](https://openclaw.ai/). Developed locally in [Cursor](https://cursor.com/).
 
@@ -34,18 +34,21 @@ If you're new to agentic AI or just want a refresher, here's a cheat sheet for t
 
 ## What This Project Does
 
-Each night (with a 2-day lookback and weekly digest on Saturdays), the agent:
+Each night (with a 7-day lookback and weekly digest on Saturdays), the agent:
 
-1. **Fetches** from 24+ sources — PubMed, ClinicalTrials.gov, journal RSS feeds (Nature, Nature Neuroscience, Science, Lancet Neurology, Neuron, NEJM, IEEE TNSRE, ...), preprint servers (bioRxiv, medRxiv, arXiv), company Substacks (auto-injected from watchlist), general press (NYT, FT, STAT News), FDA MedWatch, and Tavily wideband search (with auto-generated queries from a company watchlist of 11 BCI companies)
+1. **Fetches** from 24+ sources — PubMed, ClinicalTrials.gov, journal RSS feeds (Nature, Nature Neuroscience, Science, Lancet Neurology, Neuron, NEJM, IEEE TNSRE, ...), preprint servers (bioRxiv, medRxiv, arXiv), company Substacks (auto-injected from watchlist), company news/press pages (site-scoped Tavily queries), general press (NYT, FT, STAT News), FDA MedWatch, and Tavily wideband search (with auto-generated queries from a company watchlist of 11 BCI companies)
 2. **Pre-filters** with domain-specific regex patterns built from a 126-term domain vocabulary (fast, free, deterministic)
-3. **Deduplicates** against a history of previously-scored items — skips confirmed low-value repeats, re-evaluates high-value items
-4. **Scores** each candidate with an LLM that understands neuroscience — assessing relevance, categorizing, and flagging vaporware
-5. **Clusters** scored items into 2–5 themes with significance ratings
-6. **Writes** an executive brief (TL;DR, themes, alerts, what-to-watch)
-7. **Reviews** the brief via a Reflection Pattern — a reviewer LLM critiques the analysis and adjusts scores
-8. **Meta-reflects** using a ReAct agent that reasons about the pipeline's output and decides which self-improvement actions to take — checking vocabulary gaps, source health, coverage blind spots, and discovering new companies. The LLM chooses which tools to call (or none, on a quiet week).
-9. **Produces** a polished HTML report, operational dashboard, markdown report, alerts JSON, meta-agent trace, and full results JSON
-10. **Logs** to MLflow — parameters, token/cost metrics, per-source yield, and report artifacts
+3. **Date-gates** to discard stale items (Tavily's date filter is unreliable — items from months ago can slip through)
+4. **Deduplicates** against a history of previously-scored items — skips confirmed low-value repeats, re-evaluates high-value items
+5. **Scores** each candidate with an LLM that understands neuroscience — assessing relevance, categorizing, and flagging vaporware
+6. **Clusters** scored items into 2–5 themes with significance ratings
+7. **Writes** an executive brief (TL;DR, themes, alerts, what-to-watch)
+8. **Reviews** the brief via a Reflection Pattern — a reviewer LLM critiques the analysis and adjusts scores
+9. **Story-deduplicates** by sending all scored items to an LLM that groups items about the same underlying story (e.g., "China approves brain implant" from Reuters, Euronews, and SCMP become one alert with "also reported by" references)
+10. **Meta-reflects** using a ReAct agent that reasons about the pipeline's output and decides which self-improvement actions to take — checking vocabulary gaps, source health, coverage blind spots, and discovering new companies. The LLM chooses which tools to call (or none, on a quiet week).
+10. **Produces** a polished HTML report (with error/warning section), operational dashboard (with run health status), markdown report, alerts JSON, meta-agent trace, and full results JSON
+11. **Notifies** via WhatsApp/Telegram with alert count, theme count, and warning count (names failing sources)
+12. **Logs** to MLflow — parameters, token/cost metrics, per-source yield, and report artifacts
 
 All sources, models, and behavior are configured via YAML files (`config.yaml`, `prompts.yaml`, `vocabulary.yaml`) — no code edits needed to add sources, change models, update prompts, or expand search vocabulary.
 
@@ -73,12 +76,13 @@ flowchart TD
 
     subgraph fetch ["Fetch (no LLM cost)"]
         A["fetch_pubmed<br>(NCBI E-utilities)"] --> CT["fetch_clinicaltrials<br>(ClinicalTrials.gov API v2)"]
-        CT --> D["save_registry<br>(per-source stats)"]
-        B["fetch_rss<br>(19+ feeds: journals,<br>preprints, Substacks,<br>press, FDA)"] --> D
-        C["fetch_tavily<br>(ensemble retrieval:<br>wideband + watchlist<br>+ curated sources)"] --> D
+        CT --> B["fetch_rss<br>(19+ feeds: journals,<br>preprints, Substacks,<br>press, FDA)"]
+        B --> PP["fetch_preprints_api<br>(medRxiv + bioRxiv<br>content API)"]
+        PP --> C["fetch_tavily<br>(ensemble retrieval:<br>wideband + watchlist<br>+ curated sources)"]
+        C --> D["save_registry<br>(per-source stats)"]
     end
 
-    D --> E["prefilter<br>(regex + dedup history)"]
+    D --> E["prefilter<br>(regex + date gate<br>+ dedup history)"]
 
     E -->|"conditional edge<br>(skip if empty)"| F
 
@@ -88,7 +92,9 @@ flowchart TD
         H --> I["review<br>(Reflection Pattern)"]
     end
 
-    I --> RM
+    I --> CL["cluster_stories<br>(LLM story-level dedup)"]
+
+    CL --> RM
 
     subgraph memory ["Discovery Memory (Phase 10b)"]
         RM["retain_memory<br>(Retain: update entities)"]
@@ -146,7 +152,10 @@ flowchart LR
 - **Dynamic Query Construction**: PubMed queries are built at runtime from `vocabulary.yaml` (126+ domain terms extracted from representative papers). The vocabulary grows as new papers are processed and self-stabilizes as domain terminology is finite.
 - **Ensemble Retrieval**: Each Tavily query is expanded into synonym-swapped variants (e.g., "brain-computer interface" → "brain-machine interface", "neural prosthesis"). All variants run independently and results are unioned. This counters retrieval stochasticity — the same query to Tavily returns different results across runs — by casting a wider net. Configurable via `ensemble.variants_per_query` in `config.yaml` (default: 2 variants per base query = 3× coverage). See [Generative Query Reformulation](https://arxiv.org/abs/2405.17658).
 - **Discovery Memory (HindSight)**: Persistent `discovery_memory.json` tracks entities discovered via Tavily across runs. Implements three phases: **Retain** (after scoring, extract entities and update memory with `times_seen`, `best_score`, `consecutive_misses`), **Recall** (before Tavily fetch, generate targeted queries for cold/active entities not seen recently), and **Reflect** (meta-agent reviews memory health, detects cold entities, and promotes consistently-seen entities to the watchlist). Entities transition through states: `active` → `cold` → `archived` (or `promoted`). See [Hindsight](https://arxiv.org/abs/2512.12818).
-- **Two-Stage Scoring**: Regex pre-filter (free, ~485 → ~56 items) followed by LLM assessment with domain-aware judgment. Keeps costs near-zero while leveraging LLM reasoning where it matters.
+- **Date Gating**: Post-fetch date validator parses publication dates from all source formats (RSS `pubDate`, Atom `updated`, PubMed `PubDate`, ISO dates, long-form dates) and discards items outside the lookback window. Compensates for Tavily's unreliable `days` parameter — which sometimes returns results from months ago — by enforcing a hard date cutoff with a 2-day grace period for indexing lag. Items with no parseable date pass through.
+- **Company News Monitoring**: Site-scoped Tavily queries (`site:paradromics.com`, `site:precisionneuro.io`, etc.) target each watchlist company's own news/press page. This ensures company announcements are captured from primary sources, not just secondary coverage. Configured via `news_url` field on watchlist entries.
+- **Story Clustering**: After LLM scoring, a single GPT-4o-mini call clusters items that report the same underlying story (e.g., 5 articles about "China approves brain implant" from different outlets). Each cluster keeps one primary item (highest score) with "also reported by" links; secondary items are demoted from alerts. Eliminates the alert spam problem where 5 sources covering the same event produce 5 separate high-priority alerts.
+- **Three-Stage Scoring**: Regex pre-filter → date gate → dedup (free, ~485 → ~56 → ~40 items) followed by LLM assessment with domain-aware judgment. Keeps costs near-zero while leveraging LLM reasoning where it matters.
 - **Deduplication**: Hash-based history tracks every scored item. Items scored < 7 in prior runs are skipped (confirmed low-value). Items ≥ 7 are re-evaluated (things evolve — a preprint becomes a publication, a trial advances).
 - **Reflection Pattern**: The reviewer node critiques the executive brief, checks calibration of significance ratings, flags missed connections, and calls out vaporware — mimicking a PI reviewing a research associate's work. (Company discovery has moved to the ReAct meta-agent.)
 - **Source Registry**: JSON-persisted registry tracks per-source yield stats (items fetched, in-scope count, last hit date). Supports auto-discovery of new sources via Tavily and cold-source pruning.
@@ -240,11 +249,12 @@ neurotech_newshound/
 │   │       ├── graph.py               # LangGraph StateGraph definition
 │   │       ├── requirements.txt       # Python dependencies
 │   │       ├── nodes/                 # Graph nodes (one file per node)
-│   │       │   ├── fetch.py           #   PubMed + RSS + Tavily fetchers
-│   │       │   ├── prefilter.py       #   Regex pre-filter + dedup
+│   │       │   ├── fetch.py           #   PubMed + RSS + Tavily + preprint API fetchers
+│   │       │   ├── prefilter.py       #   Regex pre-filter + date gate + dedup
 │   │       │   ├── score.py           #   LLM per-item scoring
 │   │       │   ├── summarize.py       #   Theme clustering + executive brief
 │   │       │   ├── review.py          #   Reflection + score adjustment
+│   │       │   ├── cluster.py         #   LLM story-level dedup (Phase 12)
 │   │       │   ├── retain_memory.py   #   Discovery memory update (Phase 10b)
 │   │       │   └── meta_reflect.py    #   ReAct meta-agent (Phase 9)
 │   │       └── tools/                 # Shared utilities
@@ -253,13 +263,14 @@ neurotech_newshound/
 │   │           ├── http.py            #   HTTP + SSL helper
 │   │           ├── pubmed.py          #   PubMed E-utilities client (weekly + backfill)
 │   │           ├── clinicaltrials.py  #   ClinicalTrials.gov API v2 client
-│   │           ├── biorxiv.py         #   bioRxiv/medRxiv API client (backfill)
+│   │           ├── biorxiv.py         #   bioRxiv/medRxiv API client (nightly + backfill)
 │   │           ├── arxiv.py           #   arXiv API client (backfill)
 │   │           ├── rss.py             #   Registry-driven RSS/Atom parser (weekly)
 │   │           ├── tavily.py          #   Wideband search + company discovery
 │   │           ├── sources.py         #   Source registry (JSON persistence)
 │   │           ├── scoring.py         #   Regex scoring patterns
 │   │           ├── dedup.py           #   Deduplication history
+│   │           ├── date_utils.py      #   Date parsing + freshness gate
 │   │           ├── memory.py          #   Discovery memory (HindSight pattern)
 │   │           ├── llm.py             #   LLM factory + usage tracker
 │   │           ├── meta_tools.py       #   ReAct meta-agent tool registry
@@ -304,11 +315,12 @@ sources:
     url: "https://example.com/feed.xml"
     enabled: true
 
-# Company watchlist — auto-generates Tavily queries + RSS feeds:
+# Company watchlist — auto-generates Tavily queries + RSS feeds + news page monitoring:
 company_watchlist:
   - name: Paradromics
     aliases: ["paradromics"]
     domain: "paradromics.com"
+    news_url: "https://www.paradromics.com/news"   # site-scoped Tavily query
     substack: "https://paradromics.substack.com/feed"
     enabled: true
 
@@ -357,19 +369,19 @@ PubMed queries are built at runtime from this vocabulary — no hardcoded querie
 |----------|---------|
 | **Database** | [PubMed](https://pubmed.ncbi.nlm.nih.gov/) (NCBI E-utilities), [ClinicalTrials.gov](https://clinicaltrials.gov/) (REST API v2) |
 | **Journals** | Nature, Nature Neuroscience, Nature BME, Science, Science TM, Science Robotics, J Neural Engineering, Neuron, Lancet Neurology, IEEE TNSRE, NEJM |
-| **Preprints** | [bioRxiv](https://www.biorxiv.org/) (neuroscience), [medRxiv](https://www.medrxiv.org/), [arXiv](https://arxiv.org/) q-bio.NC |
+| **Preprints** | [bioRxiv](https://www.biorxiv.org/) (RSS + content API), [medRxiv](https://www.medrxiv.org/) (content API + Tavily safety net), [arXiv](https://arxiv.org/) q-bio.NC |
 | **Press** | NYT Science, NYT Health, FT Technology, [STAT News](https://www.statnews.com/) |
 | **Substacks** | [Neurotechnology](https://neurotechnology.substack.com/), [Paradromics](https://paradromics.substack.com/) + watchlist auto-feeds |
 | **Regulatory** | [FDA MedWatch](https://www.fda.gov/safety/medwatch-fda-safety-information-and-adverse-event-reporting-program) |
-| **Search** | [Tavily](https://tavily.com/) — static queries + auto-generated from company watchlist + curated industry sources, with ensemble retrieval (synonym-swapped query variants, 3× coverage) |
+| **Search** | [Tavily](https://tavily.com/) — static queries + auto-generated from company watchlist + curated industry sources + preprint safety net (`site:medrxiv.org`, `site:biorxiv.org`), with ensemble retrieval (synonym-swapped query variants, 3× coverage) |
 
 ### Company Watchlist
 
-11 BCI companies tracked in `config.yaml`. Each entry auto-generates Tavily search queries from its aliases, and Substack RSS feeds are auto-added when a URL is provided. New companies can be added manually or promoted from `discoveries.yaml` (see below).
+11 BCI companies tracked in `config.yaml`. Each entry auto-generates Tavily search queries from its aliases, Substack RSS feeds are auto-added when a URL is provided, and site-scoped Tavily queries target each company's news/press page when a `news_url` is configured. New companies can be added manually or promoted from `discoveries.yaml` (see below).
 
 ### Curated Industry Sources
 
-Websites without RSS feeds (e.g., [Neurofounders](https://www.neurofounders.co/), IEEE Spectrum) are searched via Tavily `site:` queries.
+Websites without RSS feeds (e.g., [Neurofounders](https://www.neurofounders.co/), IEEE Spectrum, [Friedman Brain Institute](https://icahn.mssm.edu/research/friedman-brain-institute), [BCI Society](https://bcisociety.org/), medRxiv, bioRxiv) are searched via Tavily `site:` queries as a safety net alongside direct API access.
 
 ### Auto-Discovery (via ReAct Meta-Agent)
 
@@ -390,15 +402,18 @@ All data sources except Tavily and LLMs are free and require no API keys.
 
 ## Scoring
 
-### Three-Stage Pipeline
+### Four-Stage Pipeline
 
 **Stage 1 — Regex Pre-filter** (free, deterministic):
 Broad pattern matching keeps items mentioning BCIs, ECoG, sEEG, intracortical recording, microstimulation, etc. Removes obvious non-matches before any API calls.
 
-**Stage 2 — Deduplication** (free, history-based):
+**Stage 2 — Date Gate** (free, deterministic):
+Parses publication dates from all source formats and discards items outside the lookback window (+2 day grace period). Catches stale items from Tavily's unreliable date filtering.
+
+**Stage 3 — Deduplication** (free, history-based):
 Items previously scored < 7 are skipped. Items ≥ 7 are re-evaluated. First-time items always scored.
 
-**Stage 3 — LLM Scoring** (per-item, domain-aware):
+**Stage 4 — LLM Scoring** (per-item, domain-aware):
 Each remaining item gets an individual LLM call with a neuroscience-specific prompt. The LLM returns a score, category, assessment, and vaporware flag.
 
 | Score | Meaning | Examples |
@@ -437,7 +452,7 @@ cp .env.example .env
 ### Run Locally
 
 ```bash
-# Daily run (2-day lookback, from config.yaml defaults)
+# Daily run (7-day lookback, from config.yaml defaults)
 python dev/test_run.py
 
 # Full 7-day run
@@ -495,7 +510,7 @@ bash scripts/deploy.sh
 # Run on droplet via SSH
 ssh root@your-droplet
 cd /root/.openclaw/workspace/skills/neuro_hound
-python3 -u run.py              # Daily (2-day lookback)
+python3 -u run.py              # Daily (7-day lookback)
 python3 -u run.py --days 7     # Weekly (7-day lookback)
 
 # Bootstrap discovery memory from existing data (run once after first deploy)
@@ -512,7 +527,7 @@ bash scripts/fetch_reports.sh
 bash scripts/install_cron.sh
 ```
 
-The cron job runs the agent every night at 05:00 UTC (midnight ET) with a 7-day lookback (dedup prevents re-scoring). On Saturdays, it also produces a weekly digest aggregating the past 7 days of daily reports. Notifications are sent via WhatsApp/Telegram (set `NOTIFY_PHONE` in `.env`).
+The cron job runs the agent every night at 05:00 UTC (midnight ET) with a 7-day lookback (dedup prevents re-scoring). On Saturdays, it also produces a weekly digest aggregating the past 7 days of daily reports. Notifications are sent via WhatsApp/Telegram (set `NOTIFY_PHONE` in `.env`) and include alert count, theme count, and any source warnings — so you'll know immediately if a source broke overnight.
 
 Reports accumulate on the droplet. Pull them to your laptop whenever convenient — `rsync` only transfers new/changed files, so days of accumulated reports sync in seconds:
 
@@ -534,7 +549,7 @@ bash scripts/fetch_reports.sh   # Smart sync: pulls all new reports + state file
 | **Output** | HTML report, operational dashboard, Markdown, JSON, MLflow artifacts |
 | **Configuration** | YAML-driven (config.yaml + prompts.yaml + vocabulary.yaml — sources, models, prompts, vocabulary, watchlist) |
 | **Agent Specification** | SOUL.md (identity) + SKILL.md (operational spec) — see [ADR-001](docs/ADR-001-agent-specification.md) |
-| **Scheduling** | Nightly cron (05:00 UTC), 2-day lookback, Saturday weekly digest |
+| **Scheduling** | Nightly cron (05:00 UTC), 7-day lookback, Saturday weekly digest |
 | **Deployment** | OpenClaw, rsync, Digital Ocean |
 | **Development** | Cursor IDE, Python 3.11+, python-dotenv |
 
@@ -557,7 +572,10 @@ bash scripts/fetch_reports.sh   # Smart sync: pulls all new reports + state file
 | **10** | Ensemble retrieval: synonym-swapped query variants (3× Tavily coverage), config-driven `ensemble.variants_per_query` | **Done** |
 | **10b** | Discovery memory (HindSight pattern): persistent `discovery_memory.json` with retain/recall/reflect across sessions, meta-agent memory tools, bootstrap from existing data | **Done** |
 | **10c** | Daily cadence: nightly runs (05:00 UTC) with 7-day lookback + dedup, auto weekly digest on Saturdays, `--weekly-digest` CLI flag | **Done** |
-| 11 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
+| **11** | Report quality: date gate (discard stale items), company news page monitoring (site-scoped Tavily), operational observability (run health on dashboard, errors in HTML report, warning counts in notifications) | **Done** |
+| **12** | Story-level dedup: LLM clustering groups same-story items from different sources, keeps primary with "also reported by" links, demotes secondaries from alerts | **Done** |
+| **13** | Academic coverage: medRxiv/bioRxiv content API search (nightly pipeline node), site-scoped Tavily safety net for preprints | **Done** |
+| 14 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
 
 This project shares design patterns with [trading_etf](https://github.com/kgrajski/trading_etf), an ETF trading system with an agentic AI analyst — same LangGraph architecture, Reflection Pattern, and multi-model routing approach applied to a different domain.
 
@@ -573,11 +591,21 @@ This is not a bug — it's a fundamental property of agentic systems that rely o
 
 **Layer 1 — Ensemble Retrieval (Phase 10, done).** Each Tavily query is expanded into synonym-swapped variants using a domain-specific synonym map (e.g., "brain-computer interface" → "brain-machine interface" / "neural interface"; "clinical trial" → "first-in-human" / "FDA trial"). All variants run independently and results are unioned. With `ensemble.variants_per_query: 2`, each base query generates up to 3 API calls (original + 2 rewrites), tripling the retrieval surface without any LLM cost. Validated by [Generative Query Reformulation](https://arxiv.org/abs/2405.17658) showing up to 18% recall improvement with ensemble strategies.
 
-**Layer 2 — Discovery Memory (Phase 10b, planned).** Persistent `discovery_memory.json` implementing the Retain/Recall/Reflect pattern from [Hindsight](https://arxiv.org/abs/2512.12818). Every entity discovered via Tavily is retained with `first_seen`, `last_seen`, `times_seen`, `best_score`, and `status`. On each run, "active" entities not seen recently are recalled via targeted re-search queries injected into the Tavily pipeline. The meta-agent reflects on memory health and auto-promotes consistently seen entities to `company_watchlist` in `config.yaml`.
+**Layer 2 — Discovery Memory (Phase 10b, done).** Persistent `discovery_memory.json` implementing the Retain/Recall/Reflect pattern from [Hindsight](https://arxiv.org/abs/2512.12818). Every entity discovered via Tavily is retained with `first_seen`, `last_seen`, `times_seen`, `best_score`, and `status`. On each run, "active" entities not seen recently are recalled via targeted re-search queries injected into the Tavily pipeline. The meta-agent reflects on memory health and auto-promotes consistently seen entities to `company_watchlist` in `config.yaml`.
 
-**Layer 3 — Daily Cadence (Phase 10c, planned).** Switching from weekly to nightly runs (2-day lookback) to increase temporal sampling. Higher sampling frequency means the ensemble + memory layers have more data points to work with, and the agent tracks the news cycle in near real-time. Lightweight daily reports with a weekly digest rollup.
+**Layer 3 — Daily Cadence (Phase 10c, done).** Switched from weekly to nightly runs (7-day lookback with dedup) to increase temporal sampling. Higher sampling frequency means the ensemble + memory layers have more data points to work with, and the agent tracks the news cycle in near real-time. Lightweight daily reports with a Saturday weekly digest rollup.
 
-The broader lesson: we are at a stage of agentic AI development akin to programming in the era of assembly language. Memory management, retrieval consistency, and state persistence across sessions are problems that today's developers must solve explicitly — with careful architecture and explicit data structures. Eventually these concerns will be abstracted into frameworks and handled implicitly, the way garbage collection and memory safety are handled by modern languages. But not yet. If you're building agentic systems and everything seems to work on the first run, run it again.
+**Layer 4 — Report Quality (Phase 11, done).** Three fixes for report quality issues identified during first live testing: (a) a **date gate** in the prefilter discards items with publication dates outside the lookback window — Tavily's `days` parameter is unreliable and was surfacing news from months ago; (b) **company news monitoring** via site-scoped Tavily queries targeting each watchlist company's own press page (the original and best source for company announcements); (c) **operational observability** — errors and warnings now surface in the HTML report, the operational dashboard (Run Health section), and the WhatsApp/Telegram notification (names failing sources instead of silently succeeding).
+
+**Layer 5 — Story Clustering (Phase 12, done).** After LLM scoring, a single GPT-4o-mini call clusters items that report the same underlying story — e.g., "China approves first commercial brain implant" reported by Reuters, Euronews, SCMP, and two other outlets. Each cluster keeps one primary item (highest score) with "also reported by" links to the others; secondary items are demoted from alerts and hidden from the main scored-items list. This eliminates the alert spam problem where the same event covered by 5 sources produced 5 separate high-priority alerts.
+
+**Layer 6 — Academic Coverage (Phase 13, done).** Two-pronged approach to fix the gap in preprint coverage: (a) a new `fetch_preprints_api` node queries the medRxiv and bioRxiv content APIs directly (paginating through all recent preprints and filtering client-side for BCI relevance using the domain vocabulary regex — the API has no search parameter); (b) site-scoped Tavily safety net queries (`site:medrxiv.org`, `site:biorxiv.org`) catch papers that might be missed by either the RSS feeds (which were returning 0 items) or the API (which only supports date-range browsing). The RSS feeds remain as a third channel — when they work.
+
+**Where the agent ends and the human begins.** Layer 6 is a good case study. For weeks, the medRxiv RSS feed was returning 0 items. The meta-agent (Phase 9) dutifully flagged medRxiv as a "zero-yield source" in its `check_source_health` report — but that's all it could do. It could *observe* the failure; it couldn't *diagnose* it (the RSS endpoint returns 200 OK with empty content, but there's a working content API at a different URL), *implement* a fix (write a new fetch node, wire it into the graph), or *re-run* the affected step. That loop — detect anomaly → diagnose root cause → implement fix → validate → learn — required a human and an AI pair-programming in Cursor.
+
+In a true supervisory agentic configuration, a higher-level agent would monitor each pipeline step in real-time, carry a library of fallback strategies (try the content API, try a Tavily `site:` query, try a different date range), have authority to modify the execution graph mid-run, and remember which adaptations worked for future runs. What we have instead is a fixed DAG with an advisory meta-agent at the end: it reasons about the output but cannot intervene during execution. The capabilities gap is clear — runtime graph modification, code generation, step-level retry, causal failure diagnosis, and persistent adaptation are all things the supervisor would need. Frameworks like LangGraph are moving toward dynamic graphs and human-in-the-loop checkpoints, but we're not there yet.
+
+The broader lesson: we are at a stage of agentic AI development akin to programming in the era of assembly language. Memory management, retrieval consistency, fault tolerance, and state persistence across sessions are problems that today's developers must solve explicitly — with careful architecture and explicit data structures. Eventually these concerns will be abstracted into frameworks and handled implicitly, the way garbage collection and memory safety are handled by modern languages. But not yet. If you're building agentic systems and everything seems to work on the first run, run it again.
 
 ---
 

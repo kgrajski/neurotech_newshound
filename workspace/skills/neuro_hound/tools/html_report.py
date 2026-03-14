@@ -114,6 +114,7 @@ def generate_html_report(
     review: Dict[str, Any],
     alerts: List[Dict[str, Any]],
     metadata: Dict[str, Any],
+    errors: Optional[List[str]] = None,
 ) -> str:
     """Generate a self-contained HTML intelligence briefing."""
 
@@ -147,10 +148,11 @@ def generate_html_report(
             <span class="theme-items">{item_count} items</span>
         </div>"""
 
-    # Alert cards
+    # Alert cards (skip cluster secondaries)
     alert_html = ""
-    if alerts:
-        for a in alerts:
+    primary_alerts = [a for a in alerts if not a.get("_cluster_secondary")]
+    if primary_alerts:
+        for a in primary_alerts:
             score = a.get("llm_score", "?")
             title = _esc(a.get("title", "")[:120])
             cat = a.get("category", "?")
@@ -159,22 +161,35 @@ def generate_html_report(
             source = _esc(a.get("source", ""))
             cat_color = CATEGORY_COLORS.get(cat, "#95a5a6")
             link = f'<a href="{_esc(url)}" target="_blank" class="alert-link">{source} &rarr;</a>' if url else ""
+            also = a.get("_also_reported_by", [])
+            also_html = ""
+            if also:
+                also_links = " &middot; ".join(
+                    f'<a href="{_esc(r.get("url", ""))}" target="_blank" class="also-link">{_esc(r.get("source", "?"))}</a>'
+                    for r in also
+                )
+                also_html = f'<div class="also-reported">Also reported by: {also_links}</div>'
+            cluster_badge = ""
+            if a.get("_cluster_size", 0) > 1:
+                cluster_badge = f' <span class="cluster-badge">{a["_cluster_size"]} sources</span>'
             alert_html += f"""
             <div class="alert-card">
                 <div class="alert-score" style="background:{_score_color(int(score) if str(score).isdigit() else 0)}">{score}</div>
                 <div class="alert-body">
-                    <div class="alert-title">{title}</div>
+                    <div class="alert-title">{title}{cluster_badge}</div>
                     <span class="cat-badge" style="background:{cat_color}">{_esc(cat)}</span>
                     <p class="alert-assessment">{assessment}</p>
                     {link}
+                    {also_html}
                 </div>
             </div>"""
     else:
         alert_html = '<p class="muted">No priority alerts this week.</p>'
 
-    # Scored items table
+    # Scored items table (skip cluster secondaries)
+    primary_scored = [x for x in scored_items if not x.get("_cluster_secondary")]
     items_rows = ""
-    for item in scored_items[:40]:
+    for item in primary_scored[:40]:
         score = item.get("llm_score", "?")
         title = _esc(item.get("title", "")[:90])
         cat = item.get("category", "?")
@@ -254,6 +269,17 @@ def generate_html_report(
     source_chips = ""
     for sid, count in sorted(source_breakdown.items(), key=lambda x: -x[1]):
         source_chips += f'<span class="source-chip">{_esc(sid)} <b>{count}</b></span>'
+
+    # Errors/warnings section
+    run_errors = errors or []
+    errors_html = ""
+    if run_errors:
+        error_items = "".join(f"<li>{_esc(str(e))}</li>" for e in run_errors)
+        errors_html = f"""
+<div class="errors-section">
+    <h2 style="color:var(--accent-red);">Warnings ({len(run_errors)})</h2>
+    <ul class="error-list">{error_items}</ul>
+</div>"""
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -348,6 +374,10 @@ body {{
 .alert-assessment {{ color: var(--muted); font-size: 0.85rem; margin: 6px 0; }}
 .alert-link {{ color: var(--accent-blue); text-decoration: none; font-size: 0.85rem; }}
 .alert-link:hover {{ text-decoration: underline; }}
+.also-reported {{ font-size: 0.78rem; color: var(--muted); margin-top: 6px; }}
+.also-link {{ color: var(--muted); text-decoration: none; }}
+.also-link:hover {{ color: var(--accent-blue); text-decoration: underline; }}
+.cluster-badge {{ background: var(--accent-blue); color: #fff; font-size: 0.6rem; padding: 1px 6px; border-radius: 4px; font-weight: 700; vertical-align: middle; margin-left: 6px; }}
 
 /* Category badges */
 .cat-badge {{
@@ -387,6 +417,11 @@ body {{
     padding: 1px 5px; border-radius: 4px; font-weight: 700; vertical-align: middle;
 }}
 .muted {{ color: var(--muted); font-style: italic; }}
+
+/* Errors */
+.errors-section {{ margin-bottom: 24px; }}
+.error-list {{ list-style: none; padding: 0; }}
+.error-list li {{ background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.2); border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; font-size: 0.85rem; color: var(--text); }}
 
 /* Review */
 .review-box {{
@@ -459,8 +494,10 @@ body {{
     {source_chips}
 </div>
 
+{errors_html}
+
 <div class="items-section">
-    <h2>All Scored Items ({scored_count})</h2>
+    <h2>All Scored Items ({len(primary_scored)} unique stories)</h2>
     <table class="items-table">
         <thead><tr>
             <th>Score</th><th>Category</th><th>Title</th><th>Assessment</th><th>Source</th>

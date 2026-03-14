@@ -1,16 +1,19 @@
-"""Pre-filter node — regex-based triage + deduplication before LLM scoring."""
+"""Pre-filter node — regex triage + date gate + deduplication before LLM scoring."""
 from state import HoundState
 from tools.scoring import is_in_scope, regex_score
 from tools.dedup import load_history, filter_seen, get_history_summary
+from tools.date_utils import date_gate
 
 
 def prefilter(state: HoundState) -> HoundState:
     """
-    Fast regex pre-filter + dedup: keep only in-scope, unseen items.
+    Fast pre-filter pipeline: regex → date gate → dedup.
 
-    Two-stage cost-control gate:
+    Three-stage cost-control gate:
     1. Regex: ~300 raw items → ~50 in-scope candidates
-    2. Dedup: skip items previously scored < 7 (confirmed low-value)
+    2. Date gate: discard items published outside lookback window
+       (catches Tavily's unreliable date filtering)
+    3. Dedup: skip items previously scored < 7 (confirmed low-value)
 
     Items scored >= 7 in a prior run are re-evaluated (things evolve).
     """
@@ -28,10 +31,24 @@ def prefilter(state: HoundState) -> HoundState:
 
     regex_count = len(kept)
 
-    # Stage 2: Dedup against history
+    # Stage 2: Date gate — discard items outside lookback window
+    fresh, stale = date_gate(kept, state["days"], grace_days=2)
+    if stale:
+        stale_sources = {}
+        for s in stale:
+            src = s.get("source", "unknown")
+            stale_sources[src] = stale_sources.get(src, 0) + 1
+        stale_summary = ", ".join(f"{k}={v}" for k, v in sorted(stale_sources.items(), key=lambda x: -x[1]))
+        print(f"  Date gate: {len(stale)} stale items removed ({stale_summary})")
+        state["errors"].append(
+            f"Date gate: {len(stale)} items outside {state['days']}+2d lookback "
+            f"({stale_summary})"
+        )
+
+    # Stage 3: Dedup against history
     history = load_history()
     print(f"  {get_history_summary(history)}")
-    to_score, skipped = filter_seen(kept, history)
+    to_score, skipped = filter_seen(fresh, history)
 
     # Sort by regex score descending (best candidates first for LLM)
     to_score.sort(key=lambda x: x.get("regex_score", 0), reverse=True)
@@ -40,6 +57,6 @@ def prefilter(state: HoundState) -> HoundState:
     # Store history ref for post-scoring update
     state["_dedup_history"] = history
 
-    dedup_saved = regex_count - len(to_score)
-    print(f"  Pre-filter: {len(state['raw_items'])} → {regex_count} in-scope → {len(to_score)} to score ({dedup_saved} deduped)")
+    dedup_saved = len(fresh) - len(to_score)
+    print(f"  Pre-filter: {len(state['raw_items'])} raw → {regex_count} in-scope → {len(fresh)} fresh → {len(to_score)} to score ({dedup_saved} deduped)")
     return state

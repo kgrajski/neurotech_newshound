@@ -99,6 +99,38 @@ def fetch_rss(state: HoundState) -> HoundState:
     return state
 
 
+def fetch_preprints_api(state: HoundState) -> HoundState:
+    """Fetch from medRxiv/bioRxiv content API (supplements broken RSS feeds)."""
+    from tools.biorxiv import fetch_preprint_items
+
+    registry = state.get("_registry") or load_sources()
+
+    for server in ("medrxiv", "biorxiv"):
+        print(f"  Fetching {server} API...")
+        try:
+            items = fetch_preprint_items(
+                server=server,
+                days=state["days"],
+                max_pages=10,
+            )
+            for it in items:
+                it["source_id"] = f"{server}_api"
+                it["source_category"] = "preprint"
+            state["raw_items"].extend(items)
+            in_scope = len(items)
+            update_source_stats(
+                registry, f"{server}_api",
+                fetched=in_scope, in_scope=in_scope,
+            )
+            print(f"  [ok] {server} API: {len(items)} BCI-relevant items")
+        except Exception as e:
+            state["errors"].append(f"{server} API: {e}")
+            print(f"  [warn] {server} API: {e}")
+
+    state["_registry"] = registry
+    return state
+
+
 def fetch_tavily(state: HoundState) -> HoundState:
     """Wideband Tavily search with ensemble retrieval + memory recall."""
     from tools.config import get_ensemble_variants
