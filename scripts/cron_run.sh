@@ -95,8 +95,14 @@ if [[ -z "$TARGET" ]]; then
     exit 0
 fi
 
+# Sanitize MSG for shell safety — openclaw-cli.sh passes args through bash -c,
+# so parentheses and ampersands in source names break the command.
+SAFE_MSG="${MSG//\(/[}"
+SAFE_MSG="${SAFE_MSG//\)/]}"
+SAFE_MSG="${SAFE_MSG//&/and}"
+
 # WhatsApp
-"$OPENCLAW" message send --channel whatsapp --target "$TARGET" --message "$MSG" >> "$LOG_FILE" 2>&1 || true
+"$OPENCLAW" message send --channel whatsapp --target "$TARGET" --message "$SAFE_MSG" >> "$LOG_FILE" 2>&1 || true
 
 # Telegram
-"$OPENCLAW" message send --channel telegram --target "$TARGET" --message "$MSG" >> "$LOG_FILE" 2>&1 || true
+"$OPENCLAW" message send --channel telegram --target "$TARGET" --message "$SAFE_MSG" >> "$LOG_FILE" 2>&1 || true
