@@ -181,12 +181,16 @@ def run_phase2(args, out_dir: str):
             lines.append(notes)
             lines.append("")
 
-    # Alerts (skip cluster secondaries)
+    # Alerts — split by editorial classification
     alerts = final_state.get("alerts", [])
-    lines.append("## Alerts (9-10)")
+    breaking = [a for a in alerts if a.get("_editorial_class") in ("BREAKING", None)]
+    discoveries = [a for a in alerts if a.get("_editorial_class") == "DISCOVERY"]
+    follow_ups = [a for a in alerts if a.get("_editorial_class") == "FOLLOW_UP"]
+
+    lines.append("## Breaking News")
     lines.append("")
-    if alerts:
-        for a in alerts:
+    if breaking:
+        for a in breaking:
             lines.append(f"- [{a.get('llm_score', '?')}] **{a.get('title', '')[:100]}** ({a.get('category', '?')})")
             lines.append(f"  {a.get('assessment', '')}")
             if a.get("url"):
@@ -197,8 +201,39 @@ def run_phase2(args, out_dir: str):
                 lines.append(f"  *Also reported by: {sources}*")
             lines.append("")
     else:
-        lines.append("_None this week._")
+        lines.append("_No breaking news this run._")
         lines.append("")
+
+    if discoveries:
+        lines.append("## Discoveries")
+        lines.append("")
+        lines.append("_Older items surfaced for the first time — not recent news, but new to us._")
+        lines.append("")
+        for a in discoveries:
+            lines.append(f"- [{a.get('llm_score', '?')}] **{a.get('title', '')[:100]}** ({a.get('category', '?')})")
+            lines.append(f"  {a.get('assessment', '')}")
+            if a.get("url"):
+                lines.append(f"  [{a.get('source', 'link')}]({a['url']})")
+            also = a.get("_also_reported_by", [])
+            if also:
+                sources = ", ".join(r.get("source", "?") for r in also)
+                lines.append(f"  *Also reported by: {sources}*")
+            lines.append("")
+
+    if follow_ups:
+        lines.append("## Follow-ups")
+        lines.append("")
+        lines.append("_Previously reported stories with new sources._")
+        lines.append("")
+        for a in follow_ups:
+            match_info = ""
+            if a.get("_editorial_similarity"):
+                match_info = f" [match: {a['_editorial_similarity']:.0%}]"
+            lines.append(f"- [{a.get('llm_score', '?')}] **{a.get('title', '')[:100]}**{match_info}")
+            lines.append(f"  {a.get('assessment', '')[:200]}")
+            if a.get("url"):
+                lines.append(f"  [{a.get('source', 'link')}]({a['url']})")
+            lines.append("")
 
     # Scored items (skip cluster secondaries in main list)
     scored = final_state.get("scored_items", [])
@@ -211,7 +246,9 @@ def run_phase2(args, out_dir: str):
         cluster_tag = ""
         if x.get("_cluster_size", 0) > 1:
             cluster_tag = f" [{x['_cluster_size']} sources]"
-        lines.append(f"### [{x.get('llm_score', '?')}] {x.get('title', '')[:100]}{adjusted}{vap}{cluster_tag}")
+        ed_class = x.get("_editorial_class", "")
+        ed_tag = f" [{ed_class}]" if ed_class and ed_class != "BREAKING" else ""
+        lines.append(f"### [{x.get('llm_score', '?')}] {x.get('title', '')[:100]}{adjusted}{vap}{cluster_tag}{ed_tag}")
         lines.append(f"- Category: {x.get('category', '?')} | Source: {x.get('source', '')}")
         lines.append(f"- Assessment: {x.get('assessment', '')}")
         if x.get("url"):
@@ -312,6 +349,12 @@ def run_phase2(args, out_dir: str):
         final_state.get("errors", []).append(f"HTML report: {e}")
         print(f"  [warn] HTML report generation failed: {e}")
 
+    # Editorial classification stats
+    from tools.editorial_memory import load_editorial_memory, get_classification_counts
+    ed_classified = [x for x in scored if x.get("_editorial_class")]
+    ed_counts = get_classification_counts(ed_classified)
+    ed_mem = load_editorial_memory()
+
     # Generate dashboard HTML
     try:
         from tools.html_dashboard import generate_dashboard
@@ -341,6 +384,11 @@ def run_phase2(args, out_dir: str):
             },
             meta_actions=final_state.get("meta_actions", []),
             errors=errors,
+            editorial_stats={
+                "total_stories": len(ed_mem.get("stories", {})),
+                "total_reports": ed_mem.get("meta", {}).get("total_reports", 0),
+                "run_classification": ed_counts,
+            },
         )
         out_dashboard = os.path.join(out_dir, "dashboard.html")
         with open(out_dashboard, "w") as f:
@@ -358,6 +406,12 @@ def run_phase2(args, out_dir: str):
     meta_actions = final_state.get("meta_actions", [])
     if meta_actions:
         _write_meta_actions(out_dir, today, meta_actions)
+
+    # Strip embeddings from scored items before serialization (too large for JSON)
+    for item in scored:
+        item.pop("_embedding", None)
+    for item in alerts:
+        item.pop("_embedding", None)
 
     # Full results JSON (for MLflow artifacts in Phase 3)
     full_results = {
@@ -382,6 +436,7 @@ def run_phase2(args, out_dir: str):
         "cost": tracker.estimate_cost(model),
         "usage": tracker.to_dict(),
         "errors": errors,
+        "editorial_classification": ed_counts,
     }
     with open(out_json, "w") as f:
         json.dump(full_results, f, indent=2, default=str)
@@ -395,6 +450,9 @@ def run_phase2(args, out_dir: str):
     print(f"COMPLETE — {len(scored)} items scored in {duration:.1f}s")
     print(f"Tokens: {tracker.input_tokens + tracker.output_tokens:,} | Cost: ${tracker.estimate_cost(model):.4f}")
     print(f"Alerts: {len(alerts)} | Themes: {len(final_state.get('themes', []))}")
+    if ed_counts:
+        print(f"Editorial: {ed_counts.get('BREAKING', 0)} breaking, {ed_counts.get('DISCOVERY', 0)} discoveries, "
+              f"{ed_counts.get('FOLLOW_UP', 0)} follow-ups, {ed_counts.get('REHASH', 0)} rehashes")
     print(f"Categories: {', '.join(f'{k}={v}' for k, v in sorted(flags.items(), key=lambda x: -x[1]))}")
     if source_breakdown:
         print(f"Sources: {', '.join(f'{k}={v}' for k, v in sorted(source_breakdown.items(), key=lambda x: -x[1]))}")

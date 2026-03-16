@@ -5,7 +5,7 @@ Architecture:
     fetch_pubmed → fetch_clinicaltrials → fetch_rss → fetch_preprints_api
         → fetch_tavily → save_registry → prefilter → [conditional] → score_items
         → summarize_themes → write_brief → review → cluster_stories
-        → retain_memory → meta_reflect → END
+        → classify_editorial → retain_memory → meta_reflect → END
 
 Sources are registry-driven (sources.json):
     - PubMed (API), ClinicalTrials.gov (API), RSS feeds (journals, preprints, press, regulatory), Tavily (wideband)
@@ -28,6 +28,7 @@ from nodes.score import score_items
 from nodes.summarize import summarize_themes, write_brief
 from nodes.review import review
 from nodes.cluster import cluster_stories
+from nodes.classify_editorial import classify_editorial
 from nodes.retain_memory import retain_memory
 from nodes.meta_reflect import meta_reflect
 
@@ -62,6 +63,7 @@ def build_hound_graph():
     wf.add_node("write_brief", write_brief)
     wf.add_node("review", review)
     wf.add_node("cluster_stories", cluster_stories)
+    wf.add_node("classify_editorial", classify_editorial)
     wf.add_node("retain_memory", retain_memory)
     wf.add_node("meta_reflect", meta_reflect)
 
@@ -86,7 +88,8 @@ def build_hound_graph():
     wf.add_edge("summarize_themes", "write_brief")
     wf.add_edge("write_brief", "review")
     wf.add_edge("review", "cluster_stories")
-    wf.add_edge("cluster_stories", "retain_memory")
+    wf.add_edge("cluster_stories", "classify_editorial")
+    wf.add_edge("classify_editorial", "retain_memory")
     wf.add_edge("retain_memory", "meta_reflect")
     wf.add_edge("meta_reflect", END)
 

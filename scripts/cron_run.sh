@@ -77,6 +77,7 @@ cp -r "$ARCHIVE_DIR"/* "$OPENCLAW_REPORTS/" 2>/dev/null || true
 cp "$SKILL_DIR/vocabulary.yaml" "$OPENCLAW_REPORTS/" 2>/dev/null || true
 cp "$SKILL_DIR/config.yaml" "$OPENCLAW_REPORTS/" 2>/dev/null || true
 cp "$SKILL_DIR/discovery_memory.json" "$OPENCLAW_REPORTS/" 2>/dev/null || true
+cp "$SKILL_DIR/editorial_memory.json" "$OPENCLAW_REPORTS/" 2>/dev/null || true
 chown -R openclaw:openclaw "$OPENCLAW_REPORTS" 2>/dev/null || true
 echo "$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Published to OpenClaw workspace" >> "$LOG_FILE"
 

@@ -1,6 +1,6 @@
 # NeuroTech NewsHound
 
-An **agentic AI research analyst** that monitors the NeuroTech ecosystem — implantable BCIs, ECoG/sEEG, microstimulation, enabling materials — and produces nightly intelligence briefings (with weekly digests) featuring LLM-scored relevance, thematic synthesis, ensemble retrieval, persistent discovery memory, story-level deduplication, and a reflection-based quality review.
+An **agentic AI research analyst** that monitors the NeuroTech ecosystem — implantable BCIs, ECoG/sEEG, microstimulation, enabling materials — and produces nightly intelligence briefings (with weekly digests) featuring LLM-scored relevance, thematic synthesis, ensemble retrieval, persistent discovery memory, story-level deduplication, editorial memory with embedding-based semantic matching, and a reflection-based quality review.
 
 Built with [LangGraph](https://github.com/langchain-ai/langgraph). Deployed on [OpenClaw](https://openclaw.ai/). Developed locally in [Cursor](https://cursor.com/).
 
@@ -26,6 +26,7 @@ If you're new to agentic AI or just want a refresher, here's a cheat sheet for t
 | **ReAct Pattern** | A multi-turn loop where the LLM _reasons_ (Thought), _acts_ (calls a tool), and _observes_ the result — then decides what to do next. The agent, not the code, chooses which tools to use. | A researcher who checks their work, notices a gap, looks something up, and decides whether to keep going. |
 | **Meta-Tools** | Functions the ReAct meta-agent can call — check vocabulary gaps, assess source health, discover companies, evaluate coverage. Defined in `tools/meta_tools.py`. | The reference books and checklists the researcher reaches for. |
 | **Discovery Memory** | Persistent JSON store (`discovery_memory.json`) that tracks entities across runs. Implements Retain/Recall/Reflect: entities are retained after scoring, recalled via targeted queries when they go cold, and reflected upon by the meta-agent. | A field notebook where the analyst writes down every company and development they encounter, and checks it before each new search. |
+| **Editorial Memory** | Persistent store (`editorial_memory.json`) that tracks _stories reported to the user_ — not just items seen by the pipeline. Uses OpenAI embeddings (`text-embedding-3-small`) for deterministic semantic matching. Each reported story gets an embedding of its title + LLM assessment, enabling cosine similarity matching against future candidates. Stories are classified as BREAKING, DISCOVERY, FOLLOW-UP, or REHASH. | The editor's memory of what's already been published — "we covered this last Tuesday" vs. "this is genuinely new." |
 | **[MLflow](https://mlflow.org/)** | Experiment tracker that logs every run — parameters, token costs, artifacts. Lets you compare runs over time. | A lab notebook that records every experiment. |
 
 > **Why so many files?** Each layer has one job: SOUL.md says _who_, SKILL.md says _how_, config.yaml says _what to monitor_, prompts.yaml says _what to ask the LLM_, and vocabulary.yaml says _what terms to search for_. This separation means you can change the search vocabulary without editing code, or swap the LLM model without touching prompts. See [ADR-001](docs/ADR-001-agent-specification.md) for the full rationale.
@@ -45,10 +46,11 @@ Each night (with a 7-day lookback and weekly digest on Saturdays), the agent:
 7. **Writes** an executive brief (TL;DR, themes, alerts, what-to-watch)
 8. **Reviews** the brief via a Reflection Pattern — a reviewer LLM critiques the analysis and adjusts scores
 9. **Story-deduplicates** by sending all scored items to an LLM that groups items about the same underlying story (e.g., "China approves brain implant" from Reuters, Euronews, and SCMP become one alert with "also reported by" references)
-10. **Meta-reflects** using a ReAct agent that reasons about the pipeline's output and decides which self-improvement actions to take — checking vocabulary gaps, source health, coverage blind spots, and discovering new companies. The LLM chooses which tools to call (or none, on a quiet week).
-10. **Produces** a polished HTML report (with error/warning section), operational dashboard (with run health status), markdown report, alerts JSON, meta-agent trace, and full results JSON
-11. **Notifies** via WhatsApp/Telegram with alert count, theme count, and warning count (names failing sources)
-12. **Logs** to MLflow — parameters, token/cost metrics, per-source yield, and report artifacts
+10. **Classifies editorially** — each story is matched against an embedding-based editorial memory of previously reported stories. Items are classified as BREAKING (genuinely new), DISCOVERY (old but never reported), FOLLOW-UP (previously reported, new sources), or REHASH (already reported, no new info — suppressed from alerts)
+11. **Meta-reflects** using a ReAct agent that reasons about the pipeline's output and decides which self-improvement actions to take — checking vocabulary gaps, source health, coverage blind spots, and discovering new companies. The LLM chooses which tools to call (or none, on a quiet week).
+12. **Produces** a polished HTML report (with Breaking News, Discoveries, and Follow-ups sections), operational dashboard (with editorial memory stats and run health), markdown report, alerts JSON, meta-agent trace, and full results JSON
+13. **Notifies** via WhatsApp/Telegram with alert count, theme count, and warning count (names failing sources)
+14. **Logs** to MLflow — parameters, token/cost metrics, per-source yield, and report artifacts
 
 All sources, models, and behavior are configured via YAML files (`config.yaml`, `prompts.yaml`, `vocabulary.yaml`) — no code edits needed to add sources, change models, update prompts, or expand search vocabulary.
 
@@ -85,7 +87,7 @@ flowchart TD
 
     subgraph refine ["③ Refine"]
         direction LR
-        SD["🔗 Story Dedup<br>cluster same-story<br>DOI post-validation"] --> SC["🔭 Scout<br>ReAct meta-agent<br>vocab · sources · gaps"]
+        SD["🔗 Story Dedup<br>cluster same-story<br>DOI post-validation"] --> ED["📰 Editor<br>embedding match<br>BREAKING · REHASH"] --> SC["🔭 Scout<br>ReAct meta-agent<br>vocab · sources · gaps"]
     end
 
     SC --> OUT["📊 Outputs<br>HTML brief · dashboard<br>MLflow · notifications"]
@@ -126,18 +128,20 @@ flowchart LR
     subgraph persist ["💾 Persistence"]
         H["seen_items.json<br>dedup history<br>skip known items"]
         DM["discovery_memory.json<br>entity lifecycle<br>active → cold → promoted"]
+        EM["editorial_memory.json<br>story embeddings<br>BREAKING · REHASH"]
         SR["sources.json<br>per-source stats<br>yield tracking"]
     end
 
     subgraph observe ["📈 Observability"]
         ML["MLflow<br>params · tokens · cost<br>artifacts per run"]
-        DA["Dashboard HTML<br>source health<br>run health"]
+        DA["Dashboard HTML<br>source health · editorial stats<br>run health"]
         ER["Report warnings<br>errors in HTML<br>+ notifications"]
     end
 
     DM -->|"recall queries<br>for cold entities"| TAVILY["Tavily<br>(next run)"]
     DM -->|"promote entities"| CFG["config.yaml<br>watchlist"]
     H -->|"skip / filter"| FILTER["prefilter<br>(next run)"]
+    EM -->|"classify stories<br>suppress rehashes"| CLASS["classify_editorial<br>(next run)"]
 
     style persist fill:#fce4ec,stroke:#c62828
     style observe fill:#e3f2fd,stroke:#1565c0
@@ -608,7 +612,8 @@ bash scripts/fetch_reports.sh   # Smart sync: pulls all new reports + state file
 | **11** | Report quality: date gate (discard stale items), company news page monitoring (site-scoped Tavily), operational observability (run health on dashboard, errors in HTML report, warning counts in notifications) | **Done** |
 | **12** | Story-level dedup: LLM clustering groups same-story items from different sources, keeps primary with "also reported by" links, demotes secondaries from alerts | **Done** |
 | **13** | Academic coverage: medRxiv/bioRxiv content API search (nightly pipeline node), site-scoped Tavily safety net for preprints | **Done** |
-| 14 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
+| **14** | Editorial memory: embedding-based story matching (`editorial_memory.json`), story classification (BREAKING/DISCOVERY/FOLLOW-UP/REHASH), report restructured into Breaking News/Discoveries/Follow-ups, REHASH suppression, editorial memory dashboard stats | **Done** |
+| 15 | Auto-publish to [nurosci.com](https://nurosci.com) | Planned |
 
 This project shares design patterns with [trading_etf](https://github.com/kgrajski/trading_etf), an ETF trading system with an agentic AI analyst — same LangGraph architecture, Reflection Pattern, and multi-model routing approach applied to a different domain.
 
@@ -633,6 +638,18 @@ This is not a bug — it's a fundamental property of agentic systems that rely o
 **Layer 5 — Story Clustering (Phase 12, done).** After LLM scoring, a single GPT-4o-mini call clusters items that report the same underlying story — e.g., "China approves first commercial brain implant" reported by Reuters, Euronews, SCMP, and two other outlets. Each cluster keeps one primary item (highest score) with "also reported by" links to the others; secondary items are demoted from alerts and hidden from the main scored-items list. This eliminates the alert spam problem where the same event covered by 5 sources produced 5 separate high-priority alerts.
 
 **Layer 6 — Academic Coverage (Phase 13, done).** Two-pronged approach to fix the gap in preprint coverage: (a) a new `fetch_preprints_api` node queries the medRxiv and bioRxiv content APIs directly (paginating through all recent preprints and filtering client-side for BCI relevance using the domain vocabulary regex — the API has no search parameter); (b) site-scoped Tavily safety net queries (`site:medrxiv.org`, `site:biorxiv.org`) catch papers that might be missed by either the RSS feeds (which were returning 0 items) or the API (which only supports date-range browsing). The RSS feeds remain as a third channel — when they work.
+
+**Layer 7 — Editorial Memory (Phase 14, done).** After running the nightly pipeline for several days, a pattern became clear: the agent's biggest remaining blind spot wasn't in what it *found* — it was in what it *said*. The same Precision Neuroscience FDA approval appeared as 3 separate high-priority alerts on successive days, each from a different news source. A 2021 academic paper kept surfacing as a score-9 alert because Tavily returned it without a reliable publication date. "Meet the Stentrode" — established Synchron technology — was ranked alongside genuinely new developments. Meanwhile, a fascinating Imperial College BCI project appeared only once, tagged no differently from breaking news, even though it was an older paper surfaced for the first time.
+
+The fundamental gap was the difference between *deduplication* (has the pipeline seen this URL before?) and *editorial memory* (has the user been told about this story?). Discovery memory (Layer 2) tracks entities — companies, labs, organizations. Story clustering (Layer 5) groups items about the same event within a single run. But neither answers the editorial question: "Did we already report this to the reader?"
+
+Editorial memory (`editorial_memory.json`) extends the HindSight pattern from entities to stories. After each run, every reported story gets an embedding computed from its title + LLM assessment using `text-embedding-3-small`. On the next run, each new candidate is embedded and compared against stored stories via cosine similarity. This matching is deterministic — unlike chat completions, embedding models produce the same vector for the same input every time (no sampling, no temperature). A threshold of 0.82 reliably distinguishes "same story from different source" from "different story with similar keywords."
+
+Each story is classified: **BREAKING** (genuinely new, not in editorial memory), **DISCOVERY** (publication date >90 days old, but never reported — these are the valuable finds that justify the agent's existence), **FOLLOW-UP** (previously reported story with new sources), or **REHASH** (already reported, no new information — suppressed from alerts). The HTML report is restructured into Breaking News, Discoveries, and Follow-ups sections, and the scored items table shows classification badges. The dashboard displays editorial memory stats and per-run classification counts.
+
+This framing shifts the agent's posture from "score and rank everything" to "what does the reader need to know that they don't already know?" — which is what a good human editor does instinctively.
+
+**Tuning through observation.** Layers 4–7 were all driven by examining the daily reports, not by theoretical analysis. The most productive debugging technique for an agentic pipeline turns out to be the same as for a human analyst: read the output, note what's wrong, trace the cause, fix the process. The daily cadence (Layer 3) made this practical — each night is a new sample, and the stochastic nature of retrieval means each sample surfaces slightly different content. Over a week of daily runs, the ensemble effect revealed both the pipeline's strengths (high-signal clinical trial discoveries, novel preprint captures) and its weaknesses (stale content, semantic duplication, missing temporal context). The fixes were structural, not parameter tweaks: date gates, story clustering, editorial memory. This iterative tighten-the-loop approach — run, examine, diagnose, fix — is likely how most agentic systems will be tuned in practice.
 
 **Where the agent ends and the human begins.** Layer 6 is a good case study. For weeks, the medRxiv RSS feed was returning 0 items. The meta-agent (Phase 9) dutifully flagged medRxiv as a "zero-yield source" in its `check_source_health` report — but that's all it could do. It could *observe* the failure; it couldn't *diagnose* it (the RSS endpoint returns 200 OK with empty content, but there's a working content API at a different URL), *implement* a fix (write a new fetch node, wire it into the graph), or *re-run* the affected step. That loop — detect anomaly → diagnose root cause → implement fix → validate → learn — required a human and an AI pair-programming in Cursor.
 

@@ -41,6 +41,7 @@ def generate_dashboard(
     history_summary: Optional[Dict[str, Any]] = None,
     meta_actions: Optional[List[Dict[str, Any]]] = None,
     errors: Optional[List[str]] = None,
+    editorial_stats: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Generate the operational dashboard HTML."""
 
@@ -135,6 +136,30 @@ def generate_dashboard(
         <div class="info-card" style="border-left: 3px solid #2ecc71;">
             <h3 style="color: #2ecc71;">Run Health — All Clear</h3>
             <p style="color: var(--muted);">All sources fetched successfully. No errors or warnings.</p>
+        </div>"""
+
+    # Editorial memory stats
+    editorial_html = ""
+    if editorial_stats:
+        total_stories = editorial_stats.get("total_stories", 0)
+        total_reports = editorial_stats.get("total_reports", 0)
+        run_counts = editorial_stats.get("run_classification", {})
+        b = run_counts.get("BREAKING", 0)
+        d = run_counts.get("DISCOVERY", 0)
+        f = run_counts.get("FOLLOW_UP", 0)
+        r = run_counts.get("REHASH", 0)
+        editorial_html = f"""
+        <div class="info-card" style="border-left: 3px solid #8e44ad;">
+            <h3 style="color: #8e44ad;">Editorial Memory</h3>
+            <p style="color: var(--muted);">
+                {total_stories} stories tracked across {total_reports} reports
+            </p>
+            <p style="color: var(--muted);">
+                This run: <span style="color:#2ecc71">{b} breaking</span> &middot;
+                <span style="color:#8e44ad">{d} discoveries</span> &middot;
+                <span style="color:#2980b9">{f} follow-ups</span> &middot;
+                <span style="color:#7f8c8d">{r} rehashes suppressed</span>
+            </p>
         </div>"""
 
     # Meta-agent actions
@@ -274,6 +299,8 @@ tr:hover {{ background: rgba(88, 166, 255, 0.04); }}
 {run_html}
 
 {health_html}
+
+{editorial_html}
 
 {meta_html}
 

@@ -30,6 +30,7 @@ dev/sample_output/
 workspace/skills/neuro_hound/sources.json
 workspace/skills/neuro_hound/seen_items.json
 workspace/skills/neuro_hound/discovery_memory.json
+workspace/skills/neuro_hound/editorial_memory.json
 
 # Log files
 *.log

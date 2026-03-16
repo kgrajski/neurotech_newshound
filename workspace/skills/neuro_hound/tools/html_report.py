@@ -148,11 +148,15 @@ def generate_html_report(
             <span class="theme-items">{item_count} items</span>
         </div>"""
 
-    # Alert cards (skip cluster secondaries)
-    alert_html = ""
+    # Alert cards — split by editorial classification
     primary_alerts = [a for a in alerts if not a.get("_cluster_secondary")]
-    if primary_alerts:
-        for a in primary_alerts:
+    breaking_alerts = [a for a in primary_alerts if a.get("_editorial_class") in ("BREAKING", None)]
+    discovery_alerts = [a for a in primary_alerts if a.get("_editorial_class") == "DISCOVERY"]
+    followup_alerts = [a for a in primary_alerts if a.get("_editorial_class") == "FOLLOW_UP"]
+
+    def _render_alert_cards(items):
+        cards = ""
+        for a in items:
             score = a.get("llm_score", "?")
             title = _esc(a.get("title", "")[:120])
             cat = a.get("category", "?")
@@ -172,7 +176,7 @@ def generate_html_report(
             cluster_badge = ""
             if a.get("_cluster_size", 0) > 1:
                 cluster_badge = f' <span class="cluster-badge">{a["_cluster_size"]} sources</span>'
-            alert_html += f"""
+            cards += f"""
             <div class="alert-card">
                 <div class="alert-score" style="background:{_score_color(int(score) if str(score).isdigit() else 0)}">{score}</div>
                 <div class="alert-body">
@@ -183,8 +187,27 @@ def generate_html_report(
                     {also_html}
                 </div>
             </div>"""
+        return cards
+
+    alert_html = ""
+    if breaking_alerts:
+        alert_html += _render_alert_cards(breaking_alerts)
     else:
-        alert_html = '<p class="muted">No priority alerts this week.</p>'
+        alert_html = '<p class="muted">No breaking news this run.</p>'
+
+    discovery_html = ""
+    if discovery_alerts:
+        discovery_html = f"""
+        <h2>Discoveries</h2>
+        <p class="muted">Older items surfaced for the first time &mdash; not recent news, but new to us.</p>
+        {_render_alert_cards(discovery_alerts)}"""
+
+    followup_html = ""
+    if followup_alerts:
+        followup_html = f"""
+        <h2>Follow-ups</h2>
+        <p class="muted">Previously reported stories with new sources.</p>
+        {_render_alert_cards(followup_alerts)}"""
 
     # Scored items table (skip cluster secondaries)
     primary_scored = [x for x in scored_items if not x.get("_cluster_secondary")]
@@ -202,11 +225,19 @@ def generate_html_report(
         cat_color = CATEGORY_COLORS.get(cat, "#95a5a6")
         sc = int(score) if str(score).isdigit() else 0
         title_link = f'<a href="{_esc(url)}" target="_blank">{title}</a>' if url else title
+        ed_class = item.get("_editorial_class", "")
+        ed_badge = ""
+        if ed_class == "DISCOVERY":
+            ed_badge = ' <span class="badge" style="background:#8e44ad">DISCOVERY</span>'
+        elif ed_class == "FOLLOW_UP":
+            ed_badge = ' <span class="badge" style="background:#2980b9">FOLLOW-UP</span>'
+        elif ed_class == "REHASH":
+            ed_badge = ' <span class="badge" style="background:#7f8c8d">REHASH</span>'
         items_rows += f"""
             <tr>
                 <td><span class="score-pill" style="background:{_score_color(sc)}">{score}{adjusted}</span></td>
                 <td><span class="cat-badge" style="background:{cat_color}">{_esc(cat)}</span></td>
-                <td>{title_link}{vap}</td>
+                <td>{title_link}{vap}{ed_badge}</td>
                 <td class="assessment-cell"><span class="assess-text">{assessment_short}<span class="assess-tip">{assessment_full}</span></span></td>
                 <td class="source-cell">{source}</td>
             </tr>"""
@@ -483,9 +514,13 @@ body {{
 <div class="themes">{theme_html}</div>
 
 <div class="alerts-section">
-    <h2>Priority Alerts</h2>
+    <h2>Breaking News</h2>
     {alert_html}
 </div>
+
+{discovery_html}
+
+{followup_html}
 
 {review_html}
 

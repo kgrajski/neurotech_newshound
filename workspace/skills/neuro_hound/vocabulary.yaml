@@ -267,6 +267,32 @@ provenance:
     - implanting electrodes
     - penetrating electrodes
     - robotically implant
+  auto_2026-03-15:
+    date: '2026-03-15'
+    source: meta-agent auto-extraction
+    terms_added:
+    - speech implant
+    - brain implants
+    - brain implant
+    - channel implant
+  auto_2026-03-16:
+    date: '2026-03-16'
+    source: meta-agent auto-extraction
+    terms_added:
+    - ultrathin electrodes
+    - from electrodes
+    - these electrodes
+    - individualized electrode
+    - ultrathin electrodes
+    - intracranial electrodes
+    - 100 electrode
+    - from electrodes
+    - the electrode
+    - to electrode
+    - and electrode
+    - implanting electrodes
+    - interface implant
+    - human implant
 materials_terms:
   materials:
   - graphene electrodes
@@ -305,6 +331,14 @@ implantable_bci_terms:
   - implanting electrodes
   - penetrating electrodes
   - robotically implant
+  - speech implant
+  - brain implants
+  - brain implant
+  - channel implant
+  - ultrathin electrodes
+  - from electrodes
+  - these electrodes
+  - individualized electrode
   regulatory:
   - developing implant
 neurotechnology_terms:
@@ -342,3 +376,15 @@ implant_terms:
   - robotically implant
   - human implant
   - has implant
+technology_terms:
+  implantable_bci:
+  - ultrathin electrodes
+  - intracranial electrodes
+  - 100 electrode
+  - from electrodes
+  - the electrode
+  - to electrode
+  - and electrode
+  - implanting electrodes
+  - interface implant
+  - human implant

@@ -48,6 +48,7 @@ rsync -avz --delete \
     --exclude 'sources.json' \
     --exclude 'seen_items.json' \
     --exclude 'discovery_memory.json' \
+    --exclude 'editorial_memory.json' \
     --exclude 'mlruns/' \
     --exclude '.env' \
     --exclude 'backfill_log.txt' \
