@@ -193,44 +193,48 @@ flowchart LR
 
 **Browse the actual output from a real run:**
 
-- [**HTML Intelligence Briefing**](https://kgrajski.github.io/neurotech_newshound/docs/samples/report.html) — the full report with executive brief, themes, alerts, and scored items
-- [**Operational Dashboard**](https://kgrajski.github.io/neurotech_newshound/docs/samples/dashboard.html) — source health, config, run metrics, dedup history
+- [**HTML Intelligence Briefing**](https://kgrajski.github.io/neurotech_newshound/docs/samples/report.html) — the full report with Breaking News, Discoveries, Follow-ups, themes, and scored items with editorial classification badges
+- [**Operational Dashboard**](https://kgrajski.github.io/neurotech_newshound/docs/samples/dashboard.html) — source health, editorial memory stats, config, run metrics, dedup history
 
-From a real run (2026-03-14, 7-day lookback, 24 sources, Phases 11–13 active):
+From a real run (2026-03-16, 7-day lookback, 24 sources, Phases 11–14 active):
 
 | Metric | Value |
 |--------|-------|
-| Raw items fetched | 629 |
+| Raw items fetched | 651 |
 | Sources active | 24 (incl. medRxiv/bioRxiv API, company news pages) |
-| After regex + date gate | 101 |
-| LLM-scored items | 101 |
-| Unique stories (after clustering) | 81 |
-| Redundant items demoted | 20 |
-| Priority alerts (9–10, unique) | 11 |
+| After regex + date gate | 89 (30 stale items removed) |
+| LLM-scored items | 89 |
+| Unique stories (after clustering) | 59 |
+| Redundant items demoted | 30 |
+| Editorial classification | 49 breaking, 1 discovery, 0 follow-ups, 0 rehashes |
+| Priority alerts (9–10, unique) | 14 |
 | Themes identified | 4 (1 breakthrough) |
 | Meta-agent tool calls | 5 (vocabulary, source health, coverage, discovery) |
-| Total tokens | 94,131 |
-| Cost | $0.020 |
+| Total tokens | 86,360 |
+| Cost | $0.018 |
 | Duration | ~10 min |
 
-**Alerts detected** — 11 unique stories after story-level dedup (down from 21 raw):
-- *"Paradromics Completes First-In-Human Recording"* — score 9, **6 sources** (implantable_bci)
-- *"FDA Clears Brain–Computer Interface Device"* — score 9, **2 sources** (regulatory)
-- *"China approves world's first brain implant for commercialisation"* — score 9, **2 sources** (regulatory)
-- *"Long-term independent use of an intracortical brain-computer interface"* — score 9 (implantable_bci)
-- *"Self-paced silent speech brain-computer interface for device control"* — score 9 (ecog_seeg)
-- *"Neuralink's First User Describes Life with Brain Chip"* — score 9 (implantable_bci)
-- ...plus 5 more unique alerts
+**Breaking News** — 14 unique stories after story-level dedup and editorial classification:
+- *"Neuralink completes first-in-human brain-computer interface"* — score 9, **5 sources** (implantable_bci)
+- *"Precision Neuroscience Begins First-in-Human Study"* — score 9, **4 sources** (implantable_bci)
+- *"Brain-Computer Interface Clinical Trials"* — score 9, **5 sources** (implantable_bci)
+- *"Paradromics Completes First-In-Human Recording"* — score 9, **3 sources** (implantable_bci)
+- *"FDA Approves Layer 7-T BCI | Precision Neuroscience"* — score 9 (regulatory)
+- *"INBRAIN Neuroelectronics Announces World's First Human"* — score 9 (implantable_bci)
+- ...plus 8 more breaking alerts
 
-Each multi-source alert shows "also reported by" links in the report. The Paradromics story, for example, was covered by CNBC, BioWorld, Wired, and Paradromics' own press page — all collapsed into one alert.
+**Discoveries** — 1 older item surfaced for the first time (>90 days old, but never reported):
+- Items classified as DISCOVERY are separated from breaking news, so the reader knows they're valuable finds rather than current events.
 
-**Theme: "Implantable BCI Milestones"** — rated **breakthrough** (items from Tavily, bioRxiv API, company news pages).
+Each multi-source alert shows "also reported by" links in the report. The Neuralink story, for example, was covered by 5 different outlets — all collapsed into one alert.
 
-**Story clustering in action:** The raw pipeline produced 21 score-9 alerts. After LLM clustering + DOI-based post-validation, these collapsed to 11 unique stories. The remaining 10 were duplicates from different outlets covering the same event.
+**Editorial memory in action:** This was the first run with editorial memory (empty store), so almost everything was classified as BREAKING. On subsequent runs, previously reported stories will be classified as FOLLOW-UP (new sources) or REHASH (suppressed from alerts). The editorial memory now tracks 50 stories with embedding vectors for semantic matching.
 
-**Date gate in action:** 26 stale items removed — Tavily returned articles from months ago despite a 7-day lookback parameter. The date gate caught them before LLM scoring.
+**Story clustering in action:** The raw pipeline produced 89 scored items. After LLM clustering + DOI-based post-validation, these collapsed to 59 unique stories. 30 redundant items were demoted.
 
-**Academic coverage:** bioRxiv content API contributed 26 BCI-relevant preprints (supplements the RSS feed). medRxiv API added 1 item. Site-scoped Tavily safety net queries provided additional preprint coverage.
+**Date gate in action:** 30 stale items removed — Tavily returned articles from months ago despite a 7-day lookback parameter. The date gate caught them before LLM scoring.
+
+**Academic coverage:** bioRxiv content API contributed 11 BCI-relevant preprints. medRxiv API added 2 items. Site-scoped Tavily safety net queries provided additional preprint coverage.
 
 ---
 
