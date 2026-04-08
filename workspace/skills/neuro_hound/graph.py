@@ -4,8 +4,8 @@ LangGraph workflow for the NeuroTech NewsHound agent.
 Architecture:
     fetch_pubmed → fetch_clinicaltrials → fetch_rss → fetch_preprints_api
         → fetch_tavily → save_registry → prefilter → [conditional] → score_items
-        → summarize_themes → write_brief → review → cluster_stories
-        → classify_editorial → retain_memory → meta_reflect → END
+        → cluster_stories → classify_editorial → summarize_themes → write_brief
+        → review → retain_memory → meta_reflect → END
 
 Sources are registry-driven (sources.json):
     - PubMed (API), ClinicalTrials.gov (API), RSS feeds (journals, preprints, press, regulatory), Tavily (wideband)
@@ -83,13 +83,14 @@ def build_hound_graph():
         {"score": "score_items", "skip": END},
     )
 
-    # LLM pipeline
-    wf.add_edge("score_items", "summarize_themes")
+    # LLM pipeline: cluster + editorial classification BEFORE brief so the
+    # executive summary only sees genuinely new items (not REHASH)
+    wf.add_edge("score_items", "cluster_stories")
+    wf.add_edge("cluster_stories", "classify_editorial")
+    wf.add_edge("classify_editorial", "summarize_themes")
     wf.add_edge("summarize_themes", "write_brief")
     wf.add_edge("write_brief", "review")
-    wf.add_edge("review", "cluster_stories")
-    wf.add_edge("cluster_stories", "classify_editorial")
-    wf.add_edge("classify_editorial", "retain_memory")
+    wf.add_edge("review", "retain_memory")
     wf.add_edge("retain_memory", "meta_reflect")
     wf.add_edge("meta_reflect", END)
 

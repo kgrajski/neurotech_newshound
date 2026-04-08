@@ -13,15 +13,46 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 from typing import Any, Dict, List, Tuple
+from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), "..", "seen_items.json")
 RE_EVALUATE_THRESHOLD = 7  # Items scored >= this are re-evaluated each run
 
+_STRIP_SUFFIXES = re.compile(
+    r'(\.full-text|\.full|\.abstract|\.long|\.short|/abstract|/full)/*$',
+    re.IGNORECASE,
+)
+_TRACKING_PARAMS = {
+    'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+    'ref', 'fbclid', 'gclid', 'mc_cid', 'mc_eid', 'msclkid',
+}
+
+
+def _normalize_url(url: str) -> str:
+    """Normalize URL to reduce near-duplicate variants to a canonical form."""
+    url = url.strip().lower()
+    parsed = urlparse(url)
+
+    host = parsed.hostname or ''
+    if host.startswith('www.'):
+        host = host[4:]
+
+    path = parsed.path.rstrip('/')
+    path = _STRIP_SUFFIXES.sub('', path)
+
+    params = parse_qs(parsed.query, keep_blank_values=False)
+    params = {k: v for k, v in params.items() if k not in _TRACKING_PARAMS}
+    query = urlencode(params, doseq=True) if params else ''
+
+    normalized = urlunparse(('', host, path, '', query, ''))
+    return normalized
+
 
 def _item_hash(title: str, url: str) -> str:
-    """Stable hash from title + url."""
-    key = f"{title.strip().lower()}|{url.strip().lower()}"
+    """Stable hash from title + normalized url."""
+    key = f"{title.strip().lower()}|{_normalize_url(url)}"
     return hashlib.sha256(key.encode()).hexdigest()[:16]
 
 

@@ -16,7 +16,7 @@
 score_item: |
   You are a senior neurotechnology research analyst specializing in {domain}.
 
-  Score this research item for relevance to the NeuroTech field.
+  Score this research item for relevance AND freshness to the NeuroTech field.
 
   TITLE: {title}
   SOURCE: {source}
@@ -30,15 +30,25 @@ score_item: |
   - 3-4: Non-invasive BCI companies (competitive intelligence), BCI industry/market news, funding rounds for BCI companies, tangentially related neuroscience
   - 1-2: Truly out of scope (consumer EEG headbands, scalp-only wearables with no BCI application, oncology, unrelated clinical, pure marketing fluff)
 
+  FRESHNESS — CRITICAL:
+  - Estimate the content_type: "research_paper", "news_article", "press_release", "clinical_trial", "conference", "evergreen_page", or "company_page"
+  - Company "About" pages, product pages, and permanent institutional pages are "evergreen_page" or "company_page" — cap these at score 5 maximum regardless of topical relevance
+  - Review articles and meta-analyses that summarize existing work (not new findings) should be capped at 6
+  - If you can estimate when this was originally published from dates in the text, provide estimated_date as "YYYY-MM" or "YYYY"
+  - Items that appear to be older than 6 months should lose 2-3 points from what they would otherwise score
+  - NEW results, NEW trials, NEW approvals, NEW funding rounds deserve full scores
+
   IMPORTANT:
-  - If it's about a BCI company — even a non-invasive one — score it AT LEAST 3-4 for competitive intelligence. Non-invasive BCIs with significant funding, novel technology, or a credible team are industry-relevant signals.
-  - Reserve 1-2 ONLY for items genuinely unrelated to brain-computer interfaces.
+  - If it's about a BCI company — even a non-invasive one — score it AT LEAST 3-4 for competitive intelligence
+  - Reserve 1-2 ONLY for items genuinely unrelated to brain-computer interfaces
   - Prefer peer-reviewed work over press releases
   - If it smells like vaporware or marketing, say so
 
   Respond in JSON:
   {{"score": <1-10>,
    "category": "<implantable_bci|ecog_seeg|stimulation|materials|regulatory|funding|animal_study|methods|out_of_scope>",
+   "content_type": "<research_paper|news_article|press_release|clinical_trial|conference|evergreen_page|company_page|review_article>",
+   "estimated_date": "<YYYY-MM or YYYY or null if unknown>",
    "assessment": "<1-2 sentences: what this is and why it matters or doesn't>",
    "vaporware": <true/false>}}
 

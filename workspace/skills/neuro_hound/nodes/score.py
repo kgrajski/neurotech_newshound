@@ -7,7 +7,7 @@ from tools.config import get_prompt, get_agent_domain
 
 FALLBACK_SCORE_PROMPT = """You are a senior neurotechnology research analyst specializing in {domain}.
 
-Score this research item for relevance to the NeuroTech field.
+Score this research item for relevance AND freshness to the NeuroTech field.
 
 TITLE: {title}
 SOURCE: {source}
@@ -21,14 +21,17 @@ SCORING CRITERIA (from most to least significant):
 - 3-4: Tangentially related neuroscience (not BCI/implant focused)
 - 1-2: Out of scope (scalp EEG wearables, marketing, unrelated clinical)
 
-IMPORTANT:
-- If this is NOT about implantable neural interfaces, intracranial recording, or BCI, score it LOW (1-3) regardless of regex matches
-- Prefer peer-reviewed work over press releases
-- If it smells like vaporware or marketing, say so
+FRESHNESS — CRITICAL:
+- Estimate the content_type: "research_paper", "news_article", "press_release", "clinical_trial", "conference", "evergreen_page", or "company_page"
+- Company "About" pages, product pages, and permanent institutional pages are "evergreen_page" or "company_page" — cap these at score 5 maximum
+- If you can estimate when published, provide estimated_date as "YYYY-MM" or "YYYY"
+- Items older than 6 months should lose 2-3 points
 
 Respond in JSON:
 {{"score": <1-10>,
  "category": "<implantable_bci|ecog_seeg|stimulation|materials|regulatory|funding|animal_study|methods|out_of_scope>",
+ "content_type": "<research_paper|news_article|press_release|clinical_trial|conference|evergreen_page|company_page|review_article>",
+ "estimated_date": "<YYYY-MM or YYYY or null if unknown>",
  "assessment": "<1-2 sentences: what this is and why it matters or doesn't>",
  "vaporware": <true/false>}}"""
 
@@ -70,6 +73,8 @@ def score_items(state: HoundState) -> HoundState:
                 **item,
                 "llm_score": result.get("score", 4),
                 "category": result.get("category", "unknown"),
+                "content_type": result.get("content_type", "unknown"),
+                "estimated_date": result.get("estimated_date"),
                 "assessment": result.get("assessment", ""),
                 "vaporware": result.get("vaporware", False),
             })

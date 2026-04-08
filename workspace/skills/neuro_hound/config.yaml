@@ -14,7 +14,7 @@ agent:
 # ── Defaults ─────────────────────────────────────────────────────────
 
 defaults:
-  model: "gpt-4o-mini"            # LLM for scoring + synthesis
+  model: "gpt-4o"                  # LLM for scoring + synthesis (upgraded from gpt-4o-mini for better freshness judgment)
   reviewer_model: ""               # Reviewer LLM (empty = same as model)
   days: 7                          # Lookback window (7 days even for nightly runs —
                                    # dedup prevents re-scoring, and longer lookback
@@ -302,6 +302,21 @@ company_watchlist:
     domain: "augmental.tech"
     enabled: true
 
+  - name: neuroClues
+    aliases: ["neuroclues", "neuro clues"]
+    domain: "neuroclues.com"
+    enabled: true
+
+  - name: Nia Therapeutics
+    aliases: ["nia therapeutics"]
+    domain: "niatx.com"
+    enabled: true
+
+  - name: Protocol Labs Neuro
+    aliases: ["PL Neuro", "protocol labs neuro"]
+    domain: "protocol.ai"
+    enabled: true
+
 # ── Curated Industry Sources ────────────────────────────────────────
 # Websites without RSS feeds — searched via Tavily site: queries.
 # Good for newsletters, aggregators, and company pages.
@@ -325,6 +340,16 @@ curated_industry_sources:
   - name: BCI Society
     url: "https://bcisociety.org/"
     tavily_query: 'site:bcisociety.org conference OR workshop OR symposium OR meeting'
+    enabled: true
+
+  - name: IEEE Brain
+    url: "https://brain.ieee.org/"
+    tavily_query: 'site:brain.ieee.org OR "IEEE Brain" workshop OR conference OR neurotech'
+    enabled: true
+
+  - name: LinkedIn BCI News
+    url: "https://www.linkedin.com/"
+    tavily_query: 'site:linkedin.com "brain-computer interface" OR "neural implant" OR neurotech clinical OR FDA OR "series A" 2026'
     enabled: true
 
   - name: medRxiv Preprints
@@ -356,6 +381,8 @@ tavily_queries:
   - '"intracranial EEG" OR ECoG OR sEEG neural recording human'
   - 'FDA "neural device" OR "brain implant" approval OR clearance'
   - 'BCI funding OR investment "neural interface"'
+  - 'site:linkedin.com "brain-computer interface" OR BCI OR "neural implant" 2026'
+  - 'site:linkedin.com neurotech funding OR "series A" OR "series B" OR acquisition 2026'
 
 # ── Vocabulary ───────────────────────────────────────────────────────
 # Domain vocabulary for dynamic search query construction.

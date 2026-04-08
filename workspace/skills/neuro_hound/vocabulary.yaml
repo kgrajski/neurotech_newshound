@@ -293,6 +293,28 @@ provenance:
     - implanting electrodes
     - interface implant
     - human implant
+  auto_2026-04-07:
+    date: '2026-04-07'
+    source: meta-agent auto-extraction
+    terms_added:
+    - ultrathin electrodes
+    - subdural electrodes
+    - tiny electrodes
+    - intracranial electrodes
+    - implanting electrodes
+    - ecog electrodes
+    - an electrode
+    - an implant
+    - interface implant
+  auto_2026-04-08:
+    date: '2026-04-08'
+    source: meta-agent auto-extraction
+    terms_added:
+    - depth electrodes
+    - tiny electrodes
+    - intracranial electrodes
+    - of electrodes
+    - will implant
 materials_terms:
   materials:
   - graphene electrodes
@@ -368,6 +390,10 @@ electrode_terms:
   - each electrode
   - the electrode
   - to electrode
+  - depth electrodes
+  - tiny electrodes
+  - intracranial electrodes
+  - of electrodes
 implant_terms:
   implantable_bci:
   - brain implants
@@ -376,6 +402,7 @@ implant_terms:
   - robotically implant
   - human implant
   - has implant
+  - will implant
 technology_terms:
   implantable_bci:
   - ultrathin electrodes
@@ -388,3 +415,15 @@ technology_terms:
   - implanting electrodes
   - interface implant
   - human implant
+BCI_terms:
+  implantable_bci:
+  - ultrathin electrodes
+  - subdural electrodes
+  - tiny electrodes
+  - intracranial electrodes
+  - implanting electrodes
+  - an electrode
+  - an implant
+  - interface implant
+  ecog_seeg:
+  - ecog electrodes

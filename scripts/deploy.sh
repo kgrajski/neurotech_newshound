@@ -52,6 +52,7 @@ rsync -avz --delete \
     --exclude 'mlruns/' \
     --exclude '.env' \
     --exclude 'backfill_log.txt' \
+    --exclude 'cron_run.sh' \
     "${PROJECT_DIR}/workspace/" \
     "${DROPLET_USER}@${DROPLET_HOST}:${REMOTE_WORKSPACE}/"
 echo ""

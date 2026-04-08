@@ -46,11 +46,14 @@ def classify_editorial(state: HoundState) -> HoundState:
         suppressed = [
             item for item in classified
             if item.get("_editorial_class") == "REHASH"
-            and item.get("llm_score", 0) >= 9
+            and item.get("llm_score", 0) >= 7
         ]
+        for item in suppressed:
+            item["_original_score"] = item.get("llm_score", 0)
+            item["llm_score"] = min(item.get("llm_score", 0), 6)
         if suppressed:
             titles = [f"'{item.get('title', '')[:50]}'" for item in suppressed[:3]]
-            print(f"    Suppressed from alerts: {', '.join(titles)}")
+            print(f"    Demoted {len(suppressed)} rehash items (capped at 6): {', '.join(titles)}")
 
     alerts = [
         item for item in scored

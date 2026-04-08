@@ -3,12 +3,25 @@
 # Fetch reports and archives from OpenClaw droplet back to local.
 #
 # Usage:
-#   bash scripts/fetch_reports.sh
+#   bash scripts/fetch_reports.sh              # fetch only
+#   bash scripts/fetch_reports.sh --cleanup    # fetch, then remove dated reports from droplet
 #
 # Pulls archives/neurotech/ from the droplet into workspace/archives/neurotech/.
 # Includes HTML reports, dashboard, markdown, JSON, and alert files.
+#
+# With --cleanup, dated report files (YYYY-MM-DD.*) are removed from the droplet
+# after a successful fetch. Aggregate files (dashboard, discoveries, meta_actions,
+# cron.log) and state files are kept.
 
 set -euo pipefail
+
+CLEANUP=false
+for arg in "$@"; do
+    case "$arg" in
+        --cleanup) CLEANUP=true ;;
+        *) echo "Unknown argument: $arg"; exit 1 ;;
+    esac
+done
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -104,4 +117,22 @@ if [[ -n "$LATEST" ]]; then
     echo "To view:"
     echo "  open \"${LATEST}\""
     [[ "$HAS_DASHBOARD" == "yes" ]] && echo "  open \"${LOCAL_ARCHIVES}dashboard.html\""
+fi
+
+# Cleanup: remove dated report files from the droplet (keeps aggregates + state)
+if [[ "$CLEANUP" == "true" ]]; then
+    echo ""
+    echo "=== Cleaning up dated reports on droplet ==="
+    ssh "${DROPLET_USER}@${DROPLET_HOST}" "\
+        cd ${REMOTE_ARCHIVES} && \
+        rm -f [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].* && \
+        echo '  Dated reports removed from droplet'"
+
+    OPENCLAW_REPORTS="/home/openclaw/.openclaw/workspace/skills/neurotech_reports"
+    ssh "${DROPLET_USER}@${DROPLET_HOST}" "\
+        cd ${OPENCLAW_REPORTS} 2>/dev/null && \
+        rm -f [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].* && \
+        echo '  Dated reports removed from OpenClaw workspace'" 2>/dev/null || true
+
+    echo "  Aggregate files (dashboard, discoveries, meta_actions, cron.log) preserved"
 fi
