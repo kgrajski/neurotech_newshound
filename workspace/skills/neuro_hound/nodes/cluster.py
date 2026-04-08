@@ -26,6 +26,7 @@ from urllib.parse import urlparse
 from state import HoundState
 from tools.llm import create_llm, invoke_llm, parse_json
 from tools.config import get_agent_domain
+from nodes.score import _enforce_freshness, _extract_year_from_url
 
 
 CLUSTER_PROMPT = """You are deduplicating a research intelligence feed about {domain}.
@@ -254,8 +255,61 @@ def _split_mismerged_papers(scored: list, clusters: list) -> int:
     return total_splits
 
 
+def _propagate_cluster_dates(scored: list, cluster_indices: list):
+    """Propagate the most reliable date signal across items in a cluster.
+
+    If any item has a _parsed_date or extractable URL year, share it with
+    cluster siblings that lack date info, then re-run freshness enforcement.
+    """
+    from datetime import datetime
+
+    best_date = None
+    best_source = None
+
+    for idx in cluster_indices:
+        item = scored[idx]
+        pd = item.get("_parsed_date")
+        if pd:
+            try:
+                candidate = datetime.fromisoformat(str(pd))
+                if not best_date or candidate < best_date:
+                    best_date = candidate
+                    best_source = "cluster sibling (source metadata)"
+            except (ValueError, TypeError):
+                pass
+
+        url_yr = _extract_year_from_url(item.get("url", ""))
+        if url_yr:
+            candidate = datetime(url_yr, 6, 1)
+            if not best_date or candidate < best_date:
+                best_date = candidate
+                best_source = "cluster sibling (url)"
+
+    if not best_date:
+        return 0
+
+    adjustments = 0
+    for idx in cluster_indices:
+        item = scored[idx]
+        has_own_date = item.get("_parsed_date") or _extract_year_from_url(item.get("url", ""))
+        if has_own_date:
+            continue
+        if "_freshness_adjustment" in item:
+            continue
+
+        item["_cluster_inherited_date"] = best_date.isoformat()
+        item["_parsed_date"] = best_date.isoformat()
+        old_score = item.get("llm_score", 0)
+        _enforce_freshness(item)
+        if item.get("llm_score", 0) != old_score:
+            adjustments += 1
+
+    return adjustments
+
+
 def _apply_clusters(scored: List[Dict[str, Any]], clusters: list):
     """Mark secondary items in each cluster and attach 'also reported by' to primary."""
+    total_date_adj = 0
     for cluster in clusters:
         indices = cluster.get("indices", [])
         label = cluster.get("label", "")
@@ -266,7 +320,9 @@ def _apply_clusters(scored: List[Dict[str, Any]], clusters: list):
         if len(valid) < 2:
             continue
 
-        # Primary = highest scored item in the cluster
+        total_date_adj += _propagate_cluster_dates(scored, valid)
+
+        # Primary = highest scored item in the cluster (after date propagation)
         valid.sort(key=lambda i: scored[i].get("llm_score", 0), reverse=True)
         primary_idx = valid[0]
         secondary_indices = valid[1:]
@@ -286,3 +342,6 @@ def _apply_clusters(scored: List[Dict[str, Any]], clusters: list):
         scored[primary_idx]["_also_reported_by"] = also_reported
         scored[primary_idx]["_cluster_label"] = label
         scored[primary_idx]["_cluster_size"] = len(valid)
+
+    if total_date_adj:
+        print(f"  [fix] Cluster date propagation adjusted {total_date_adj} items")
