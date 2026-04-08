@@ -371,7 +371,14 @@ body {{
     border-left: 3px solid var(--accent-blue);
 }}
 .brief-box h2 {{ font-size: 1.1rem; color: var(--accent-blue); margin-bottom: 12px; }}
-.brief-box p, .brief-box li {{ color: var(--text); font-size: 0.92rem; margin-bottom: 8px; }}
+.brief-box h3 {{ font-size: 1.05rem; color: var(--accent-blue); margin: 20px 0 10px 0; }}
+.brief-box h4 {{ font-size: 0.95rem; color: var(--accent-gold); margin: 18px 0 8px 0; letter-spacing: 0.02em; text-transform: uppercase; }}
+.brief-box h5 {{
+    font-size: 0.92rem; color: var(--text); font-weight: 600;
+    margin: 16px 0 6px 0; padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+}}
+.brief-box p, .brief-box li {{ color: var(--text); font-size: 0.88rem; margin-bottom: 6px; line-height: 1.5; }}
 
 /* Themes */
 .themes {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }}
